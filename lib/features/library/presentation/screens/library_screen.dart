@@ -27,7 +27,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soultune/app/constants/frequencies.dart';
 import 'package:soultune/features/player/presentation/providers/player_providers.dart';
-import 'package:soultune/features/player/presentation/screens/now_playing_screen.dart';
 import 'package:soultune/shared/models/audio_file.dart';
 
 /// Library screen displaying all audio files.
@@ -35,7 +34,13 @@ import 'package:soultune/shared/models/audio_file.dart';
 /// Main screen for browsing and selecting music to play.
 class LibraryScreen extends ConsumerStatefulWidget {
   /// Creates a [LibraryScreen].
-  const LibraryScreen({super.key});
+  const LibraryScreen({
+    super.key,
+    this.onNavigateToPlayer,
+  });
+
+  /// Callback to navigate to Now Playing screen.
+  final VoidCallback? onNavigateToPlayer;
 
   @override
   ConsumerState<LibraryScreen> createState() => _LibraryScreenState();
@@ -156,13 +161,6 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           ),
         ),
       ),
-      floatingActionButton: _isScanning
-          ? null
-          : FloatingActionButton.extended(
-              onPressed: () => _scanForMusic(),
-              icon: const Icon(Icons.refresh),
-              label: const Text('Scan for Music'),
-            ),
     );
   }
 
@@ -355,15 +353,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             pitchShift: kPitch432Hz,
           );
 
-      // Navigate to Now Playing screen
-      if (mounted) {
-        Navigator.push<void>(
-          context,
-          MaterialPageRoute(
-            builder: (_) => const NowPlayingScreen(),
-          ),
-        );
-      }
+      // Navigate to Now Playing tab (using callback from HomeScreen)
+      widget.onNavigateToPlayer?.call();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

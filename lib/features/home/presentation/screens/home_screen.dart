@@ -64,12 +64,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             _selectedIndex = index;
           });
         },
-        children: const [
+        children: [
           // Library tab
-          LibraryScreen(),
+          LibraryScreen(
+            onNavigateToPlayer: () {
+              // Navigate to Now Playing tab when music starts
+              setState(() {
+                _selectedIndex = 1;
+              });
+              _pageController.animateToPage(
+                1,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            },
+          ),
 
           // Now Playing tab
-          NowPlayingScreen(),
+          const NowPlayingScreen(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
