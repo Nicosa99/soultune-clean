@@ -34,8 +34,8 @@ class PlayerControls extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isPlaying = ref.watch(isPlayingProvider);
-    final currentFileAsync = ref.watch(currentAudioFileProvider);
-    final currentFile = currentFileAsync.value;
+    final currentFile = ref.watch(currentAudioFileProvider);
+    
 
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;

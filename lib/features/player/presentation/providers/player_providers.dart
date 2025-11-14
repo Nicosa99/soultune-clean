@@ -112,8 +112,6 @@ Future<PlayerRepository> playerRepository(PlayerRepositoryRef ref) async {
 ///
 /// Returns `null` if no track is playing.
 ///
-/// Watches the player state stream to reactively update when playback changes.
-///
 /// ## Example
 ///
 /// ```dart
@@ -124,16 +122,9 @@ Future<PlayerRepository> playerRepository(PlayerRepositoryRef ref) async {
 /// }
 /// ```
 @riverpod
-Stream<AudioFile?> currentAudioFile(CurrentAudioFileRef ref) async* {
-  final repository = await ref.watch(playerRepositoryProvider.future);
-
-  // Emit current file immediately
-  yield repository.currentAudioFile;
-
-  // Watch player state stream and emit current file on each change
-  await for (final _ in repository.playingStream) {
-    yield repository.currentAudioFile;
-  }
+AudioFile? currentAudioFile(CurrentAudioFileRef ref) {
+  final repository = ref.watch(playerRepositoryProvider).value;
+  return repository?.currentAudioFile;
 }
 
 /// Provides the current playing state.
