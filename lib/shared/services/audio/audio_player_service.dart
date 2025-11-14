@@ -231,10 +231,7 @@ class AudioPlayerService {
       // Explicitly activate the session for background playback
       await session.setActive(true);
 
-      _logger.d(
-        'Audio session configured: ${session.configuration}, '
-        'active: ${session.active}',
-      );
+      _logger.d('Audio session configured: ${session.configuration}');
 
       // Handle audio interruptions (phone calls, etc.)
       session.interruptionEventStream.listen((event) {
