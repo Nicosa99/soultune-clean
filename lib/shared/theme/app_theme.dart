@@ -305,7 +305,7 @@ class AppTheme {
     }),
   );
 
-  static const CardTheme _cardTheme = CardTheme(
+  static const CardThemeData _cardTheme = CardThemeData(
     elevation: 2,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.all(Radius.circular(16)),
@@ -402,7 +402,7 @@ class AppTheme {
     space: 1,
   );
 
-  static const DialogTheme _dialogTheme = DialogTheme(
+  static const DialogThemeData _dialogTheme = DialogThemeData(
     elevation: 24,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.all(Radius.circular(28)),
