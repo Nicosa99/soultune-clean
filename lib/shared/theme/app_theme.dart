@@ -206,8 +206,8 @@ class AppTheme {
     outline: AppColors.outline,
     shadow: AppColors.shadow,
     scrim: AppColors.scrim,
-    inverseSurface: Colors.grey[200]!,
-    onInverseSurface: Colors.grey[900]!,
+    inverseSurface: Color(0xFFEEEEEE), // grey[200]
+    onInverseSurface: Color(0xFF212121), // grey[900]
     inversePrimary: AppColors.primaryLight,
   );
 
@@ -227,15 +227,15 @@ class AppTheme {
     onTertiaryContainer: AppColors.tertiaryDark,
     error: AppColors.error,
     onError: Colors.white,
-    errorContainer: Colors.red[100]!,
-    onErrorContainer: Colors.red[900]!,
+    errorContainer: Color(0xFFFFCDD2), // red[100]
+    onErrorContainer: Color(0xFFB71C1C), // red[900]
     surface: Colors.white,
-    onSurface: Colors.black87,
-    onSurfaceVariant: Colors.grey[700]!,
-    outline: Colors.grey[400]!,
-    shadow: Colors.black26,
-    scrim: Colors.black54,
-    inverseSurface: Colors.grey[800]!,
+    onSurface: Color(0xDD000000), // black87
+    onSurfaceVariant: Color(0xFF616161), // grey[700]
+    outline: Color(0xFFBDBDBD), // grey[400]
+    shadow: Color(0x42000000), // black26
+    scrim: Color(0x8A000000), // black54
+    inverseSurface: Color(0xFF424242), // grey[800]
     onInverseSurface: Colors.white,
     inversePrimary: AppColors.primary,
   );
@@ -305,14 +305,13 @@ class AppTheme {
     }),
   );
 
-  static final CardTheme _cardTheme = CardTheme(
-    color: AppColors.surfaceVariant,
+  static const CardTheme _cardTheme = CardTheme(
     elevation: 2,
     shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.all(Radius.circular(16)),
     ),
     clipBehavior: Clip.antiAlias,
-    margin: const EdgeInsets.all(8),
+    margin: EdgeInsets.all(8),
   );
 
   static final ElevatedButtonThemeData _elevatedButtonTheme =
@@ -403,14 +402,11 @@ class AppTheme {
     space: 1,
   );
 
-  static final DialogTheme _dialogTheme = DialogTheme(
-    backgroundColor: AppColors.surfaceHigh,
+  static const DialogTheme _dialogTheme = DialogTheme(
     elevation: 24,
     shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(28),
+      borderRadius: BorderRadius.all(Radius.circular(28)),
     ),
-    titleTextStyle: AppTextStyles.headlineSmall,
-    contentTextStyle: AppTextStyles.bodyMedium,
   );
 
   static const BottomSheetThemeData _bottomSheetTheme = BottomSheetThemeData(

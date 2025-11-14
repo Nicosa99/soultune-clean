@@ -272,7 +272,6 @@ class HiveService {
   /// ## Parameters
   ///
   /// - [boxName]: Unique identifier for the box
-  /// - [lazy]: If true, opens box in lazy mode (values loaded on demand)
   ///
   /// ## Error Handling
   ///
@@ -288,10 +287,7 @@ class HiveService {
   /// // Later, access synchronously
   /// final audioBox = HiveService.instance.getBox<AudioFile>('audio_files');
   /// ```
-  Future<Box<T>> openBox<T>(
-    String boxName, {
-    bool lazy = false,
-  }) async {
+  Future<Box<T>> openBox<T>(String boxName) async {
     if (!_isInitialized) {
       throw const StorageException(
         'HiveService not initialized. Call init() first.',
@@ -305,11 +301,9 @@ class HiveService {
         return _openBoxes[boxName]! as Box<T>;
       }
 
-      _logger.d('Opening box: $boxName (lazy: $lazy)');
+      _logger.d('Opening box: $boxName');
 
-      final Box<T> box = lazy
-          ? await Hive.openLazyBox<T>(boxName)
-          : await Hive.openBox<T>(boxName);
+      final box = await Hive.openBox<T>(boxName);
 
       // Cache the box
       _openBoxes[boxName] = box;
