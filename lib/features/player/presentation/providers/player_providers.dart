@@ -353,21 +353,22 @@ Future<List<AudioFile>> searchResults(
 ///
 /// ```dart
 /// // In button onPressed
-/// onPressed: () {
-///   ref.read(playAudioProvider)(
+/// onPressed: () async {
+///   await ref.read(playAudioProvider.notifier).play(
 ///     audioFile,
 ///     pitchShift: kPitch432Hz,
 ///   );
 /// }
 /// ```
 @riverpod
-Future<void> Function(
-  AudioFile audioFile, {
-  double pitchShift,
-  Duration? startPosition,
-}) playAudio(PlayAudioRef ref) {
-  return ({
-    required AudioFile audioFile,
+class PlayAudio extends _$PlayAudio {
+  @override
+  FutureOr<void> build() {
+    // No-op build
+  }
+
+  Future<void> play(
+    AudioFile audioFile, {
     double pitchShift = 0.0,
     Duration? startPosition,
   }) async {
@@ -382,7 +383,7 @@ Future<void> Function(
     // Invalidate current audio file to refresh UI
     ref.invalidate(currentAudioFileProvider);
     ref.invalidate(isPlayingProvider);
-  };
+  }
 }
 
 /// Action: Toggle play/pause.

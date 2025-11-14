@@ -64,7 +64,7 @@ class HiveAudioDataSource {
   ///
   /// Optionally accepts custom [HiveService] for dependency injection.
   HiveAudioDataSource({HiveService? hiveService})
-      : _hiveService = hiveService ?? HiveService() {
+      : _hiveService = hiveService ?? HiveService.instance {
     _logger.d('HiveAudioDataSource created');
   }
 

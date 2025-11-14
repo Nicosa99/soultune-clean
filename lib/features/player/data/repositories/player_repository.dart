@@ -60,9 +60,7 @@ import 'package:soultune/features/player/data/datasources/hive_audio_datasource.
 import 'package:soultune/shared/exceptions/app_exceptions.dart';
 import 'package:soultune/shared/models/audio_file.dart';
 import 'package:soultune/shared/services/audio/audio_player_service.dart';
-import 'package:soultune/shared/services/audio/metadata_service.dart';
 import 'package:soultune/shared/services/file/file_system_service.dart';
-import 'package:soultune/shared/services/file/permission_service.dart';
 
 /// Repository for player feature business logic.
 ///
@@ -78,14 +76,10 @@ class PlayerRepository {
   PlayerRepository({
     HiveAudioDataSource? dataSource,
     FileSystemService? fileSystemService,
-    MetadataService? metadataService,
     AudioPlayerService? audioPlayerService,
-    PermissionService? permissionService,
   })  : _dataSource = dataSource ?? HiveAudioDataSource(),
         _fileSystemService = fileSystemService ?? FileSystemService(),
-        _metadataService = metadataService ?? MetadataService(),
-        _audioPlayerService = audioPlayerService ?? AudioPlayerService(),
-        _permissionService = permissionService ?? PermissionService() {
+        _audioPlayerService = audioPlayerService ?? AudioPlayerService() {
     _logger.d('PlayerRepository created');
   }
 
@@ -107,14 +101,8 @@ class PlayerRepository {
   /// File system scanning service.
   final FileSystemService _fileSystemService;
 
-  /// Metadata extraction service.
-  final MetadataService _metadataService;
-
   /// Audio playback service.
   final AudioPlayerService _audioPlayerService;
-
-  /// Permission management service.
-  final PermissionService _permissionService;
 
   /// Whether the repository has been initialized.
   bool _isInitialized = false;
@@ -169,7 +157,7 @@ class PlayerRepository {
         stackTrace: stackTrace,
       );
 
-      throw AppException(
+      throw StorageException(
         'Failed to initialize player',
         e,
       );
@@ -266,7 +254,7 @@ class PlayerRepository {
         stackTrace: stackTrace,
       );
 
-      throw AppException(
+      throw FileException(
         'Failed to scan music library',
         e,
       );
@@ -337,7 +325,7 @@ class PlayerRepository {
         stackTrace: stackTrace,
       );
 
-      throw AppException(
+      throw FileException(
         'Failed to import audio files',
         e,
       );
@@ -367,7 +355,7 @@ class PlayerRepository {
       _logger.i('Removed file from library: $id');
     } on Exception catch (e) {
       _logger.e('Failed to remove from library', error: e);
-      throw AppException('Failed to remove from library', e);
+      throw StorageException('Failed to remove from library', e);
     }
   }
 
@@ -389,7 +377,7 @@ class PlayerRepository {
       _logger.w('Library cleared');
     } on Exception catch (e) {
       _logger.e('Failed to clear library', error: e);
-      throw AppException('Failed to clear library', e);
+      throw StorageException('Failed to clear library', e);
     }
   }
 
@@ -411,7 +399,7 @@ class PlayerRepository {
       return await _dataSource.getAllAudioFiles();
     } on Exception catch (e) {
       _logger.e('Failed to get all audio files', error: e);
-      throw AppException('Failed to load library', e);
+      throw StorageException('Failed to load library', e);
     }
   }
 
@@ -431,7 +419,7 @@ class PlayerRepository {
       return await _dataSource.getAudioFile(id);
     } on Exception catch (e) {
       _logger.e('Failed to get audio file', error: e);
-      throw AppException('Failed to load audio file', e);
+      throw StorageException('Failed to load audio file', e);
     }
   }
 
@@ -449,7 +437,7 @@ class PlayerRepository {
       return await _dataSource.getFavorites();
     } on Exception catch (e) {
       _logger.e('Failed to get favorites', error: e);
-      throw AppException('Failed to load favorites', e);
+      throw StorageException('Failed to load favorites', e);
     }
   }
 
@@ -471,7 +459,7 @@ class PlayerRepository {
       return await _dataSource.getRecentlyAdded(limit: limit);
     } on Exception catch (e) {
       _logger.e('Failed to get recently added', error: e);
-      throw AppException('Failed to load recently added', e);
+      throw StorageException('Failed to load recently added', e);
     }
   }
 
@@ -493,7 +481,7 @@ class PlayerRepository {
       return await _dataSource.getMostPlayed(limit: limit);
     } on Exception catch (e) {
       _logger.e('Failed to get most played', error: e);
-      throw AppException('Failed to load most played', e);
+      throw StorageException('Failed to load most played', e);
     }
   }
 
@@ -515,7 +503,7 @@ class PlayerRepository {
       return await _dataSource.searchAudioFiles(query);
     } on Exception catch (e) {
       _logger.e('Failed to search audio files', error: e);
-      throw AppException('Failed to search library', e);
+      throw StorageException('Failed to search library', e);
     }
   }
 
@@ -739,7 +727,7 @@ class PlayerRepository {
       return await _dataSource.toggleFavorite(id);
     } on Exception catch (e) {
       _logger.e('Failed to toggle favorite', error: e);
-      throw AppException('Failed to toggle favorite', e);
+      throw StorageException('Failed to toggle favorite', e);
     }
   }
 
@@ -767,7 +755,7 @@ class PlayerRepository {
       return await _dataSource.incrementPlayCount(id);
     } on Exception catch (e) {
       _logger.e('Failed to record play', error: e);
-      throw AppException('Failed to record play', e);
+      throw StorageException('Failed to record play', e);
     }
   }
 
@@ -812,7 +800,7 @@ class PlayerRepository {
   /// Ensures the repository is initialized.
   void _ensureInitialized() {
     if (!_isInitialized) {
-      throw const AppException(
+      throw const StorageException(
         'PlayerRepository not initialized. Call init() first.',
       );
     }
