@@ -134,16 +134,17 @@ class StorageException extends AppException {
 /// }
 /// ```
 class PermissionException extends AppException {
-  /// Creates a [PermissionException] with a message and optional cause.
-  const PermissionException(
-    super.message, [
-    super.cause,
-  ]);
-
   /// Whether the permission was permanently denied by the user.
   ///
   /// When true, the app should guide users to app settings to grant permission.
   final bool isPermanentlyDenied;
+
+  /// Creates a [PermissionException] with a message and optional cause.
+  const PermissionException(
+    super.message, [
+    super.cause,
+    this.isPermanentlyDenied = false,
+  ]);
 
   /// Creates a [PermissionException] for permanently denied permissions.
   const PermissionException.permanentlyDenied(
