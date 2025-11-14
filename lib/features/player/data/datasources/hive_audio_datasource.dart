@@ -723,11 +723,17 @@ class HiveAudioDataSource {
     try {
       _logger.i('Disposing HiveAudioDataSource...');
 
-      await _hiveService.closeBox(_boxName);
+      // DO NOT close Hive boxes on dispose!
+      // Boxes should remain open for app lifetime to prevent
+      // "Box has already been closed" errors during hot reload
+      // and provider rebuilds.
+      //
+      // Hive boxes will be closed automatically when app terminates.
+      // await _hiveService.closeBox(_boxName); // ← REMOVED
 
       _isInitialized = false;
 
-      _logger.i('✓ HiveAudioDataSource disposed');
+      _logger.i('✓ HiveAudioDataSource disposed (box kept open)');
     } on Exception catch (e) {
       _logger.e('Error during disposal', error: e);
       // Don't throw during cleanup

@@ -53,8 +53,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentFile = ref.watch(currentAudioFileProvider);
-    final hasAudio = currentFile != null;
+    final currentFileAsync = ref.watch(currentAudioFileProvider);
+    final hasAudio = currentFileAsync.value != null;
 
     return Scaffold(
       body: PageView(

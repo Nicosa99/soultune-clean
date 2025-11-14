@@ -112,6 +112,8 @@ Future<PlayerRepository> playerRepository(PlayerRepositoryRef ref) async {
 ///
 /// Returns `null` if no track is playing.
 ///
+/// Watches the player state stream to reactively update when playback changes.
+///
 /// ## Example
 ///
 /// ```dart
@@ -122,9 +124,16 @@ Future<PlayerRepository> playerRepository(PlayerRepositoryRef ref) async {
 /// }
 /// ```
 @riverpod
-AudioFile? currentAudioFile(CurrentAudioFileRef ref) {
-  final repository = ref.watch(playerRepositoryProvider).value;
-  return repository?.currentAudioFile;
+Stream<AudioFile?> currentAudioFile(CurrentAudioFileRef ref) async* {
+  final repository = await ref.watch(playerRepositoryProvider.future);
+
+  // Emit current file immediately
+  yield repository.currentAudioFile;
+
+  // Watch player state stream and emit current file on each change
+  await for (final _ in repository.playingStream) {
+    yield repository.currentAudioFile;
+  }
 }
 
 /// Provides the current playing state.
@@ -374,23 +383,16 @@ class PlayAudio extends _$PlayAudio {
   }) async {
     final repository = await ref.read(playerRepositoryProvider.future);
 
-    // Invalidate BEFORE play to prepare for state change
-    ref.invalidate(currentAudioFileProvider);
-    ref.invalidate(isPlayingProvider);
-
     await repository.playAudioFile(
       audioFile,
       pitchShift: pitchShift,
       startPosition: startPosition,
     );
 
-    // Invalidate AFTER play to refresh UI with new state
+    // Force state refresh without disposing repository
+    // Note: We invalidate the state providers, not the repository itself
     ref.invalidate(currentAudioFileProvider);
     ref.invalidate(isPlayingProvider);
-
-    // Force immediate rebuild by invalidating the parent repository provider
-    // This ensures the UI picks up the new currentAudioFile immediately
-    ref.invalidate(playerRepositoryProvider);
   }
 }
 
