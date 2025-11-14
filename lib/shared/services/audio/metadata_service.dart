@@ -40,7 +40,6 @@
 library;
 
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:audiotags/audiotags.dart';
 import 'package:logger/logger.dart';
@@ -140,7 +139,7 @@ class MetadataService {
 
       // Extract basic metadata with fallbacks
       final title = tag.title?.trim() ?? _getFileNameWithoutExtension(filePath);
-      final artist = tag.artist?.trim();
+      final artist = tag.trackArtist?.trim();
       final album = tag.album?.trim();
       final genre = tag.genre?.trim();
       final year = tag.year;
@@ -207,7 +206,7 @@ class MetadataService {
     try {
       // Check if album art exists
       final pictures = tag.pictures;
-      if (pictures == null || pictures.isEmpty) {
+      if (pictures.isEmpty) {
         _logger.d('No album art found in: $filePath');
         return null;
       }
@@ -215,7 +214,7 @@ class MetadataService {
       final picture = pictures.first;
       final imageData = picture.bytes;
 
-      if (imageData == null || imageData.isEmpty) {
+      if (imageData.isEmpty) {
         _logger.d('Empty album art data in: $filePath');
         return null;
       }
