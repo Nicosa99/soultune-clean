@@ -26,7 +26,6 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hive/hive.dart';
 import 'package:soultune/app/constants/frequencies.dart';
 import 'package:soultune/shared/theme/app_colors.dart';
 
@@ -50,44 +49,43 @@ part 'frequency_setting.g.dart';
 ///
 /// ## Serialization
 ///
-/// Supports JSON serialization via `json_serializable` and Hive storage
-/// via type adapter (TypeId: 0).
+/// Supports JSON serialization via `json_serializable`.
+/// Hive storage uses manual TypeAdapter (see frequency_setting_adapter.dart).
 @freezed
-@HiveType(typeId: 0)
 class FrequencySetting with _$FrequencySetting {
   /// Creates a [FrequencySetting] with all required parameters.
   const factory FrequencySetting({
     /// Unique identifier for this frequency setting.
     ///
     /// Examples: "432", "528", "639", "standard"
-    @HiveField(0) required String id,
+    required String id,
 
     /// Target frequency in Hertz (e.g., 432.0, 528.0).
-    @HiveField(1) required double targetHz,
+    required double targetHz,
 
     /// User-friendly display name.
     ///
     /// Examples: "432 Hz - Deep Peace", "528 Hz - Love Frequency"
-    @HiveField(2) required String displayName,
+    required String displayName,
 
     /// Detailed description of frequency benefits and characteristics.
-    @HiveField(3) required String description,
+    required String description,
 
     /// Pitch shift in semitones from standard 440Hz tuning.
     ///
     /// Negative values shift down, positive values shift up.
     /// Example: -0.31767 for 432Hz
-    @HiveField(4) required double pitchShift,
+    required double pitchShift,
 
     /// Whether this frequency requires premium subscription.
     ///
     /// Free tier includes only 432Hz. All other frequencies require premium.
-    @HiveField(5) @Default(false) bool isPremium,
+    @Default(false) bool isPremium,
 
     /// Distinctive color for UI representation.
     ///
     /// Used for frequency selector chips, indicators, and visualizations.
-    @HiveField(6) @ColorConverter() required Color color,
+    @ColorConverter() required Color color,
   }) = _FrequencySetting;
 
   /// Creates a [FrequencySetting] from JSON data.

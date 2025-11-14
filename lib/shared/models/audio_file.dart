@@ -37,7 +37,6 @@
 library;
 
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hive/hive.dart';
 
 part 'audio_file.freezed.dart';
 part 'audio_file.g.dart';
@@ -52,9 +51,8 @@ part 'audio_file.g.dart';
 ///
 /// ## Persistence
 ///
-/// Uses Hive for local storage (TypeId: 1) with automatic adapter
-/// generation. Each field is annotated with @HiveField for efficient
-/// binary serialization.
+/// Supports JSON serialization via `json_serializable`.
+/// Hive storage uses manual TypeAdapter (see audio_file_adapter.dart).
 ///
 /// ## Equality
 ///
@@ -62,7 +60,6 @@ part 'audio_file.g.dart';
 /// auto-generates == and hashCode). However, for collection operations,
 /// prefer comparing by [id] for performance.
 @freezed
-@HiveType(typeId: 1)
 class AudioFile with _$AudioFile {
   /// Creates an [AudioFile] with required and optional metadata.
   ///
@@ -92,14 +89,14 @@ class AudioFile with _$AudioFile {
     /// ```dart
     /// id: const Uuid().v4()
     /// ```
-    @HiveField(0) required String id,
+    required String id,
 
     /// Absolute file system path to the audio file.
     ///
     /// Example: `/storage/emulated/0/Music/song.mp3`
     ///
     /// Must be accessible with current app permissions.
-    @HiveField(1) required String filePath,
+    required String filePath,
 
     /// Track title.
     ///
@@ -107,7 +104,7 @@ class AudioFile with _$AudioFile {
     /// if metadata is missing.
     ///
     /// Example: "Healing Meditation in 432Hz"
-    @HiveField(2) required String title,
+    required String title,
 
     /// Artist or band name.
     ///
@@ -115,7 +112,7 @@ class AudioFile with _$AudioFile {
     /// is missing or file is instrumental.
     ///
     /// Example: "Nature Sounds Collective"
-    @HiveField(3) String? artist,
+    String? artist,
 
     /// Album name.
     ///
@@ -123,7 +120,7 @@ class AudioFile with _$AudioFile {
     /// or files without proper tagging.
     ///
     /// Example: "Meditation & Healing Frequencies Vol. 1"
-    @HiveField(4) String? album,
+    String? album,
 
     /// Path to cached album artwork image.
     ///
@@ -134,42 +131,36 @@ class AudioFile with _$AudioFile {
     /// Example: `/cache/album_art/a1b2c3d4.jpg`
     ///
     /// Null if no album art is available.
-    @HiveField(5) String? albumArt,
+    String? albumArt,
 
     /// Music genre.
     ///
     /// Extracted from ID3 tags (TCON frame). Examples: "Meditation",
     /// "Ambient", "New Age", "Classical", etc.
-    @HiveField(6) String? genre,
+    String? genre,
 
     /// Release year.
     ///
     /// Extracted from ID3 tags (TDRC or TYER frame). Null if not
     /// available in metadata.
-    @HiveField(7) int? year,
+    int? year,
 
     /// Track number in album.
     ///
     /// Extracted from ID3 tags (TRCK frame). Null for singles or
     /// files without proper album organization.
-    @HiveField(8) int? trackNumber,
+    int? trackNumber,
 
     /// Audio file duration.
     ///
     /// Calculated during metadata extraction. Required for seek bar
     /// and duration display.
-    ///
-    /// Stored as microseconds integer in Hive for efficient serialization.
-    @HiveField(9)
-    @DurationConverter()
-    required Duration duration,
+    @DurationConverter() required Duration duration,
 
     /// Timestamp when file was added to library.
     ///
     /// Set once during initial import. Used for "Recently Added" sorting.
-    @HiveField(10)
-    @DateTimeConverter()
-    required DateTime dateAdded,
+    @DateTimeConverter() required DateTime dateAdded,
 
     /// Number of times this track has been played.
     ///
@@ -178,20 +169,20 @@ class AudioFile with _$AudioFile {
     /// analytics.
     ///
     /// Default: 0
-    @HiveField(11) @Default(0) int playCount,
+    @Default(0) int playCount,
 
     /// Whether user marked this track as favorite.
     ///
     /// Used for quick access to favorite tracks and filtering.
     ///
     /// Default: false
-    @HiveField(12) @Default(false) bool isFavorite,
+    @Default(false) bool isFavorite,
 
     /// Timestamp of last playback.
     ///
     /// Updated each time track is played. Used for "Recently Played"
     /// sorting. Null if never played.
-    @HiveField(13) @DateTimeConverter() DateTime? lastPlayed,
+    @DateTimeConverter() DateTime? lastPlayed,
   }) = _AudioFile;
 
   /// Creates an [AudioFile] from JSON data.
