@@ -99,6 +99,68 @@ Füge folgende Permissions **vor** dem `<application>` Tag hinzu:
 
 ---
 
+## Background Playback Setup
+
+### Android Background Audio
+
+#### Erforderliche Permissions
+
+Die folgenden Permissions sind bereits im obigen Beispiel enthalten:
+
+```xml
+<!-- Foreground Service für Background Playback -->
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+```
+
+#### Zusätzliche Konfiguration (Optional)
+
+Für optimale Background-Performance kann folgendes im `<application>` Tag hinzugefügt werden:
+
+```xml
+<application
+    ...
+    android:usesCleartextTraffic="false"
+    android:requestLegacyExternalStorage="true">
+
+    <!-- Foreground Service für Media Playback -->
+    <service
+        android:name="com.ryanheise.audioservice.AudioService"
+        android:foregroundServiceType="mediaPlayback"
+        android:exported="true">
+        <intent-filter>
+            <action android:name="android.media.browse.MediaBrowserService" />
+        </intent-filter>
+    </service>
+
+    ...
+</application>
+```
+
+**Hinweis**: Die Audio Session wird bereits im Code konfiguriert (`AudioPlayerService.init()`), daher funktioniert Background Playback meist ohne zusätzliche Service-Konfiguration.
+
+#### Background Playback Testen
+
+1. **App starten** und Musik abspielen
+2. **Home Button** drücken → Musik sollte weiterlaufen ✓
+3. **Screen Lock** → Musik sollte weiterlaufen ✓
+4. **Notification** sollte Media-Controls zeigen (Play/Pause) - nur mit audio_service package
+
+### iOS Background Audio
+
+iOS erfordert zusätzliche Konfiguration in `Info.plist`:
+
+```xml
+<!-- Background Modes -->
+<key>UIBackgroundModes</key>
+<array>
+    <string>audio</string>
+    <string>processing</string>
+</array>
+```
+
+---
+
 ## iOS Permissions (Info.plist)
 
 Öffne die Datei:

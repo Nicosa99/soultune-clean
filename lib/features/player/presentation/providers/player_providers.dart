@@ -374,15 +374,23 @@ class PlayAudio extends _$PlayAudio {
   }) async {
     final repository = await ref.read(playerRepositoryProvider.future);
 
+    // Invalidate BEFORE play to prepare for state change
+    ref.invalidate(currentAudioFileProvider);
+    ref.invalidate(isPlayingProvider);
+
     await repository.playAudioFile(
       audioFile,
       pitchShift: pitchShift,
       startPosition: startPosition,
     );
 
-    // Invalidate current audio file to refresh UI
+    // Invalidate AFTER play to refresh UI with new state
     ref.invalidate(currentAudioFileProvider);
     ref.invalidate(isPlayingProvider);
+
+    // Force immediate rebuild by invalidating the parent repository provider
+    // This ensures the UI picks up the new currentAudioFile immediately
+    ref.invalidate(playerRepositoryProvider);
   }
 }
 
