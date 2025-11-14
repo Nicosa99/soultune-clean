@@ -190,7 +190,7 @@ class FileSystemService {
           );
 
           audioFiles.add(audioFile);
-        on Exception catch (e) {
+        } on Exception catch (e) {
           _logger.w('Skipping file due to error: $filePath ($e)');
           // Continue processing remaining files
         }
