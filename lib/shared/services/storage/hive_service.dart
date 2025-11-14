@@ -31,6 +31,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:soultune/shared/exceptions/app_exceptions.dart';
+import 'package:soultune/shared/models/hive_adapters.dart';
 
 /// Manages Hive local database initialization, box access, and lifecycle.
 ///
@@ -166,29 +167,30 @@ class HiveService {
   /// custom types. This method is called automatically during [init].
   ///
   /// **Important**: Each adapter must have a unique `typeId` to avoid
-  /// conflicts. TypeIds are defined in the model classes.
-  ///
-  /// ## Adapter Registration Pattern
-  ///
-  /// ```dart
-  /// if (!Hive.isAdapterRegistered(AudioFileAdapter().typeId)) {
-  ///   Hive.registerAdapter(AudioFileAdapter());
-  /// }
-  /// ```
+  /// conflicts. TypeIds are defined in the adapter classes:
+  /// - 0: FrequencySetting
+  /// - 1: AudioFile
+  /// - 2: Playlist
   void _registerAdapters() {
     _logger.d('Registering Hive type adapters...');
 
-    // Type adapters will be registered here as models are implemented
-    // Phase 1.3 will add:
-    // - AudioFile adapter
-    // - Playlist adapter
-    // - FrequencySetting adapter (if stored locally)
+    // Register FrequencySetting adapter (TypeId: 0)
+    if (!Hive.isAdapterRegistered(0)) {
+      Hive.registerAdapter(FrequencySettingAdapter());
+      _logger.d('✓ Registered FrequencySettingAdapter (typeId: 0)');
+    }
 
-    // Example pattern:
-    // if (!Hive.isAdapterRegistered(1)) {
-    //   Hive.registerAdapter(AudioFileAdapter());
-    //   _logger.d('Registered AudioFileAdapter (typeId: 1)');
-    // }
+    // Register AudioFile adapter (TypeId: 1)
+    if (!Hive.isAdapterRegistered(1)) {
+      Hive.registerAdapter(AudioFileAdapter());
+      _logger.d('✓ Registered AudioFileAdapter (typeId: 1)');
+    }
+
+    // Register Playlist adapter (TypeId: 2)
+    if (!Hive.isAdapterRegistered(2)) {
+      Hive.registerAdapter(PlaylistAdapter());
+      _logger.d('✓ Registered PlaylistAdapter (typeId: 2)');
+    }
 
     _logger.d('Type adapter registration complete');
   }

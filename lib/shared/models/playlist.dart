@@ -37,7 +37,6 @@
 library;
 
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hive/hive.dart';
 import 'package:soultune/shared/models/audio_file.dart';
 
 part 'playlist.freezed.dart';
@@ -55,11 +54,10 @@ part 'playlist.g.dart';
 ///
 /// ## Persistence
 ///
-/// Uses Hive for local storage (TypeId: 2) with automatic adapter
-/// generation. Playlists persist across app restarts and can be
-/// synced to cloud in Phase 3.
+/// Supports JSON serialization via `json_serializable`.
+/// Hive storage uses manual TypeAdapter (see playlist_adapter.dart).
+/// Playlists persist across app restarts and can be synced to cloud in Phase 3.
 @freezed
-@HiveType(typeId: 2)
 class Playlist with _$Playlist {
   /// Creates a [Playlist] with required and optional fields.
   ///
@@ -82,7 +80,7 @@ class Playlist with _$Playlist {
     /// ```dart
     /// id: const Uuid().v4()
     /// ```
-    @HiveField(0) required String id,
+    required String id,
 
     /// Playlist name.
     ///
@@ -92,7 +90,7 @@ class Playlist with _$Playlist {
     /// - "Morning Meditation"
     /// - "432Hz Healing Collection"
     /// - "Focus & Concentration"
-    @HiveField(1) required String name,
+    required String name,
 
     /// List of audio file IDs in this playlist.
     ///
@@ -107,7 +105,7 @@ class Playlist with _$Playlist {
     /// ```
     ///
     /// Order is preserved - first ID plays first.
-    @HiveField(2) @Default([]) List<String> audioFileIds,
+    @Default([]) List<String> audioFileIds,
 
     /// Optional playlist description.
     ///
@@ -118,24 +116,24 @@ class Playlist with _$Playlist {
     /// - "Focused study music in healing frequencies"
     ///
     /// Maximum recommended length: 200 chars.
-    @HiveField(3) String? description,
+    String? description,
 
     /// Path to custom playlist cover art.
     ///
     /// Phase 2+ feature. If null, UI should generate cover from
     /// first track's album art or use default gradient.
-    @HiveField(4) String? coverArtPath,
+    String? coverArtPath,
 
     /// Timestamp when playlist was created.
     ///
     /// Set once during creation. Used for sorting playlists by age.
-    @HiveField(5) @DateTimeConverter() required DateTime createdAt,
+    @DateTimeConverter() required DateTime createdAt,
 
     /// Timestamp when playlist was last modified.
     ///
     /// Updated whenever tracks are added/removed or metadata changes.
     /// Used for "Recently Updated" sorting.
-    @HiveField(6) @DateTimeConverter() required DateTime updatedAt,
+    @DateTimeConverter() required DateTime updatedAt,
   }) = _Playlist;
 
   /// Creates a [Playlist] from JSON data.
