@@ -84,10 +84,15 @@ class AudioServiceIntegration {
 
       // Update notification if initialized
       if (NotificationService.isInitialized) {
-        await NotificationService.audioHandler.playAudioFile(
-          audioFile,
-          pitchShift: pitchShift,
-        );
+        try {
+          await NotificationService.audioHandler.playAudioFile(
+            audioFile,
+            pitchShift: pitchShift,
+          );
+        } catch (e) {
+          _logger.w('Failed to update notification: $e');
+          // Continue anyway - app still works without notifications
+        }
       }
     } catch (e, stackTrace) {
       _logger.e(
@@ -128,7 +133,11 @@ class AudioServiceIntegration {
 
     // Update notification if initialized
     if (NotificationService.isInitialized) {
-      NotificationService.audioHandler.setPlaylist(playlist);
+      try {
+        NotificationService.audioHandler.setPlaylist(playlist);
+      } catch (e) {
+        _logger.w('Failed to update notification playlist: $e');
+      }
     }
   }
 
@@ -159,7 +168,11 @@ class AudioServiceIntegration {
 
       // Update notification if initialized
       if (NotificationService.isInitialized) {
-        await NotificationService.audioHandler.updatePitchShift(semitones);
+        try {
+          await NotificationService.audioHandler.updatePitchShift(semitones);
+        } catch (e) {
+          _logger.w('Failed to update notification pitch: $e');
+        }
       }
     } catch (e, stackTrace) {
       _logger.e(
@@ -191,7 +204,11 @@ class AudioServiceIntegration {
 
       // Pause notification if initialized
       if (NotificationService.isInitialized) {
-        await NotificationService.audioHandler.pause();
+        try {
+          await NotificationService.audioHandler.pause();
+        } catch (e) {
+          _logger.w('Failed to pause notification: $e');
+        }
       }
     } catch (e, stackTrace) {
       _logger.e('Failed to pause', error: e, stackTrace: stackTrace);
@@ -219,7 +236,11 @@ class AudioServiceIntegration {
 
       // Resume notification if initialized
       if (NotificationService.isInitialized) {
-        await NotificationService.audioHandler.play();
+        try {
+          await NotificationService.audioHandler.play();
+        } catch (e) {
+          _logger.w('Failed to resume notification: $e');
+        }
       }
     } catch (e, stackTrace) {
       _logger.e('Failed to resume', error: e, stackTrace: stackTrace);
@@ -247,7 +268,11 @@ class AudioServiceIntegration {
 
       // Stop notification if initialized
       if (NotificationService.isInitialized) {
-        await NotificationService.audioHandler.stop();
+        try {
+          await NotificationService.audioHandler.stop();
+        } catch (e) {
+          _logger.w('Failed to stop notification: $e');
+        }
       }
     } catch (e, stackTrace) {
       _logger.e('Failed to stop', error: e, stackTrace: stackTrace);

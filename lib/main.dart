@@ -20,7 +20,16 @@ void main() async {
   await HiveService.instance.init();
 
   // Initialize notification service for system media controls
-  await NotificationService.init();
+  // (Optional: App works without it, but notifications won't show)
+  try {
+    await NotificationService.init();
+  } catch (e) {
+    // Ignore if notification service fails to initialize
+    // This can happen if Android configuration is missing
+    debugPrint('⚠️ NotificationService failed to initialize: $e');
+    debugPrint('📱 App will continue without system notifications');
+    debugPrint('📖 See NOTIFICATION_SETUP.md for configuration instructions');
+  }
 
   // Set system UI overlay style (status bar, navigation bar)
   SystemChrome.setSystemUIOverlayStyle(
