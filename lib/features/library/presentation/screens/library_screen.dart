@@ -349,11 +349,24 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   /// Plays an audio file and navigates to Now Playing screen.
   Future<void> _playAudioFile(AudioFile audioFile) async {
     try {
-      // Play with default 432Hz transformation
-      await ref.read(playAudioProvider.notifier).play(
-            audioFile,
-            pitchShift: kPitch432Hz,
-          );
+      // Get all files from library
+      final libraryAsync = ref.read(audioLibraryProvider);
+      final allFiles = libraryAsync.value ?? [];
+
+      // Find the index of the clicked file
+      final index = allFiles.indexWhere((file) => file.id == audioFile.id);
+
+      if (index == -1 || allFiles.isEmpty) {
+        // Fallback to single file play if not found
+        await ref.read(playAudioProvider.notifier).play(
+              audioFile,
+              pitchShift: kPitch432Hz,
+            );
+      } else {
+        // Play with entire library as playlist
+        final playWithPlaylist = ref.read(playWithPlaylistProvider);
+        await playWithPlaylist(allFiles, index, pitchShift: kPitch432Hz);
+      }
 
       // Navigate to Now Playing tab (using callback from HomeScreen)
       widget.onNavigateToPlayer?.call();
