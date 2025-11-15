@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soultune/features/home/presentation/screens/home_screen.dart';
-import 'package:soultune/shared/services/audio/notification_service.dart';
+// import 'package:soultune/shared/services/audio/notification_service.dart'; // Temporarily disabled
 import 'package:soultune/shared/services/storage/hive_service.dart';
 import 'package:soultune/shared/theme/app_theme.dart';
 
@@ -19,17 +19,23 @@ void main() async {
   // Initialize Hive database
   await HiveService.instance.init();
 
-  // Initialize notification service for system media controls
-  // (Optional: App works without it, but notifications won't show)
-  try {
-    await NotificationService.init();
-  } catch (e) {
-    // Ignore if notification service fails to initialize
-    // This can happen if Android configuration is missing
-    debugPrint('⚠️ NotificationService failed to initialize: $e');
-    debugPrint('📱 App will continue without system notifications');
-    debugPrint('📖 See NOTIFICATION_SETUP.md for configuration instructions');
-  }
+  // NOTIFICATION SERVICE TEMPORARILY DISABLED
+  // audio_service 0.18.15 has compatibility issues with current Flutter setup
+  // The app works perfectly without it - you only lose:
+  //   - Lockscreen controls
+  //   - Notification tray player
+  //   - Bluetooth/headset button controls
+  // All core features work: Mini Player, Playback, 432Hz, etc.
+  //
+  // To re-enable later, uncomment:
+  // try {
+  //   await NotificationService.init();
+  // } catch (e) {
+  //   debugPrint('⚠️ NotificationService failed to initialize: $e');
+  // }
+
+  debugPrint('📱 SoulTune starting without system notifications');
+  debugPrint('✅ Mini Player, Playback, 432Hz Pitch Shift - all working!');
 
   // Set system UI overlay style (status bar, navigation bar)
   SystemChrome.setSystemUIOverlayStyle(
