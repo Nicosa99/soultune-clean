@@ -838,6 +838,24 @@ class PlayerRepository {
     _logger.i('Loop mode set to: ${mode.displayName}');
   }
 
+  /// Sets the current playlist for playback.
+  ///
+  /// ## Parameters
+  ///
+  /// - [playlist]: List of audio files to play
+  /// - [startIndex]: Index of track to start from (default: 0)
+  ///
+  /// ## Example
+  ///
+  /// ```dart
+  /// repository.setPlaylist(playlistTracks, startIndex: 2);
+  /// ```
+  void setPlaylist(List<AudioFile> playlist, {int startIndex = 0}) {
+    _ensureInitialized();
+    _audioPlayerService.setPlaylist(playlist, startIndex: startIndex);
+    _logger.i('Playlist set: ${playlist.length} tracks, starting at $startIndex');
+  }
+
   /// Plays the next track in the playlist.
   ///
   /// Returns `true` if successful, `false` if at end of playlist.

@@ -1,11 +1,11 @@
 /// SoulTune Home Screen
 ///
 /// Main app screen with bottom navigation.
-/// Provides access to Library and Now Playing screens.
+/// Provides access to Library, Playlists, and Now Playing screens.
 ///
 /// ## Features
 ///
-/// - Bottom navigation bar (Library, Now Playing)
+/// - Bottom navigation bar (Library, Playlists, Now Playing)
 /// - Smooth page transitions
 /// - Persistent state between tabs
 /// - Material 3 navigation bar
@@ -25,11 +25,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soultune/features/library/presentation/screens/library_screen.dart';
 import 'package:soultune/features/player/presentation/providers/player_providers.dart';
 import 'package:soultune/features/player/presentation/screens/now_playing_screen.dart';
+import 'package:soultune/features/playlist/presentation/screens/playlists_screen.dart';
 
 /// Home screen with bottom navigation.
 ///
 /// Main entry point of the app, providing navigation between
-/// Library and Now Playing screens.
+/// Library, Playlists, and Now Playing screens.
 class HomeScreen extends ConsumerStatefulWidget {
   /// Creates a [HomeScreen].
   const HomeScreen({super.key});
@@ -70,15 +71,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             onNavigateToPlayer: () {
               // Navigate to Now Playing tab when music starts
               setState(() {
-                _selectedIndex = 1;
+                _selectedIndex = 2;
               });
               _pageController.animateToPage(
-                1,
+                2,
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOut,
               );
             },
           ),
+
+          // Playlists tab
+          const PlaylistsScreen(),
 
           // Now Playing tab
           NowPlayingScreen(
@@ -114,6 +118,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             icon: Icon(Icons.library_music_outlined),
             selectedIcon: Icon(Icons.library_music),
             label: 'Library',
+          ),
+
+          // Playlists destination
+          const NavigationDestination(
+            icon: Icon(Icons.queue_music_outlined),
+            selectedIcon: Icon(Icons.queue_music),
+            label: 'Playlists',
           ),
 
           // Now Playing destination

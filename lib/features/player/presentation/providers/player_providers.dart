@@ -812,7 +812,52 @@ Future<void> Function() playPreviousTrack(PlayPreviousTrackRef ref) {
   return () async {
     final repository = await ref.read(playerRepositoryProvider.future);
     await repository.playPrevious();
-    
+
+    // Refresh state
+    ref.invalidate(currentAudioFileProvider);
+    ref.invalidate(isPlayingProvider);
+  };
+}
+
+/// Action: Play a track from a playlist.
+///
+/// Sets the playlist and starts playing from the specified index.
+///
+/// ## Parameters
+///
+/// - [playlist]: List of tracks to play
+/// - [startIndex]: Index of track to start playing (default: 0)
+/// - [pitchShift]: Optional frequency transformation (default: 0.0)
+///
+/// ## Example
+///
+/// ```dart
+/// // Play all tracks in playlist from beginning
+/// await ref.read(playWithPlaylistProvider)(playlistTracks, 0);
+///
+/// // Play from specific track
+/// await ref.read(playWithPlaylistProvider)(playlistTracks, 5);
+/// ```
+@riverpod
+Future<void> Function(List<AudioFile> playlist, int startIndex, {double pitchShift}) playWithPlaylist(
+  PlayWithPlaylistRef ref,
+) {
+  return (List<AudioFile> playlist, int startIndex, {double pitchShift = 0.0}) async {
+    if (playlist.isEmpty) {
+      throw Exception('Cannot play empty playlist');
+    }
+
+    final repository = await ref.read(playerRepositoryProvider.future);
+
+    // Set the playlist in the audio service
+    repository.setPlaylist(playlist, startIndex: startIndex);
+
+    // Play the track at startIndex
+    await repository.playAudioFile(
+      playlist[startIndex],
+      pitchShift: pitchShift,
+    );
+
     // Refresh state
     ref.invalidate(currentAudioFileProvider);
     ref.invalidate(isPlayingProvider);
