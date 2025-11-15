@@ -44,36 +44,58 @@ class PlayerControls extends ConsumerWidget {
     // Disable controls if no audio file loaded
     final hasAudio = currentFile != null;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        // Skip previous track button
-        IconButton(
-          onPressed: hasAudio
-              ? () async {
-                  HapticFeedback.lightImpact();
-                  await ref.read(playPreviousTrackProvider)();
-                }
-              : null,
-          icon: const Icon(Icons.skip_previous),
-          iconSize: 36,
-          tooltip: 'Previous track',
-        ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Loop mode button (far left)
+          IconButton(
+            onPressed: hasAudio
+                ? () async {
+                    HapticFeedback.lightImpact();
+                    await ref.read(toggleLoopModeProvider)();
+                  }
+                : null,
+            icon: Icon(
+              loopMode == LoopMode.off
+                  ? Icons.repeat
+                  : loopMode == LoopMode.one
+                      ? Icons.repeat_one
+                      : Icons.repeat,
+            ),
+            color: loopMode == LoopMode.off ? null : colorScheme.primary,
+            iconSize: 24,
+            tooltip: loopMode.displayName,
+          ),
 
-        // Skip backward button (10 seconds)
-        IconButton(
-          onPressed: hasAudio
-              ? () {
-                  HapticFeedback.lightImpact();
-                  _skipBackward(ref);
-                }
-              : null,
-          icon: const Icon(Icons.replay_10),
-          iconSize: 28,
-          tooltip: 'Skip backward 10 seconds',
-        ),
+          // Skip previous track button
+          IconButton(
+            onPressed: hasAudio
+                ? () async {
+                    HapticFeedback.lightImpact();
+                    await ref.read(playPreviousTrackProvider)();
+                  }
+                : null,
+            icon: const Icon(Icons.skip_previous),
+            iconSize: 32,
+            tooltip: 'Previous track',
+          ),
 
-        const SizedBox(width: 8),
+          // Skip backward button (10 seconds)
+          IconButton(
+            onPressed: hasAudio
+                ? () {
+                    HapticFeedback.lightImpact();
+                    _skipBackward(ref);
+                  }
+                : null,
+            icon: const Icon(Icons.replay_10),
+            iconSize: 24,
+            tooltip: 'Skip backward 10 seconds',
+          ),
+
+          const SizedBox(width: 4),
 
         // Play/Pause button (large, centered)
         Container(
@@ -127,58 +149,35 @@ class PlayerControls extends ConsumerWidget {
           ),
         ),
 
-        const SizedBox(width: 8),
+        const SizedBox(width: 4),
 
-        // Skip forward button (10 seconds)
-        IconButton(
-          onPressed: hasAudio
-              ? () {
-                  HapticFeedback.lightImpact();
-                  _skipForward(ref);
-                }
-              : null,
-          icon: const Icon(Icons.forward_10),
-          iconSize: 28,
-          tooltip: 'Skip forward 10 seconds',
-        ),
-
-        // Skip next track button
-        IconButton(
-          onPressed: hasAudio
-              ? () async {
-                  HapticFeedback.lightImpact();
-                  await ref.read(playNextTrackProvider)();
-                }
-              : null,
-          icon: const Icon(Icons.skip_next),
-          iconSize: 36,
-          tooltip: 'Next track',
-        ),
-
-        const SizedBox(width: 8),
-
-        // Loop mode button
-        IconButton(
-          onPressed: hasAudio
-              ? () async {
-                  HapticFeedback.lightImpact();
-                  await ref.read(toggleLoopModeProvider)();
-                }
-              : null,
-          icon: Icon(
-            loopMode == LoopMode.off
-                ? Icons.repeat
-                : loopMode == LoopMode.one
-                    ? Icons.repeat_one
-                    : Icons.repeat,
+          // Skip forward button (10 seconds)
+          IconButton(
+            onPressed: hasAudio
+                ? () {
+                    HapticFeedback.lightImpact();
+                    _skipForward(ref);
+                  }
+                : null,
+            icon: const Icon(Icons.forward_10),
+            iconSize: 24,
+            tooltip: 'Skip forward 10 seconds',
           ),
-          color: loopMode == LoopMode.off
-              ? null
-              : colorScheme.primary,
-          iconSize: 28,
-          tooltip: loopMode.displayName,
-        ),
-      ],
+
+          // Skip next track button
+          IconButton(
+            onPressed: hasAudio
+                ? () async {
+                    HapticFeedback.lightImpact();
+                    await ref.read(playNextTrackProvider)();
+                  }
+                : null,
+            icon: const Icon(Icons.skip_next),
+            iconSize: 32,
+            tooltip: 'Next track',
+          ),
+        ],
+      ),
     );
   }
 
