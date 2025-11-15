@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soultune/features/home/presentation/screens/home_screen.dart';
+import 'package:soultune/shared/services/audio/notification_service.dart';
 import 'package:soultune/shared/services/storage/hive_service.dart';
 import 'package:soultune/shared/theme/app_theme.dart';
 
@@ -17,6 +18,9 @@ void main() async {
 
   // Initialize Hive database
   await HiveService.instance.init();
+
+  // Initialize notification service for system media controls
+  await NotificationService.init();
 
   // Set system UI overlay style (status bar, navigation bar)
   SystemChrome.setSystemUIOverlayStyle(
