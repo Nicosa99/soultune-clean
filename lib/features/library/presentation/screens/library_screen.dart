@@ -353,6 +353,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       final libraryAsync = ref.read(audioLibraryProvider);
       final allFiles = libraryAsync.value ?? [];
 
+      // Get current pitch shift (frequency setting)
+      final currentPitch = ref.read(currentPitchShiftProvider);
+
       // Find the index of the clicked file
       final index = allFiles.indexWhere((file) => file.id == audioFile.id);
 
@@ -360,12 +363,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         // Fallback to single file play if not found
         await ref.read(playAudioProvider.notifier).play(
               audioFile,
-              pitchShift: kPitch432Hz,
+              pitchShift: currentPitch,
             );
       } else {
         // Play with entire library as playlist
         final playWithPlaylist = ref.read(playWithPlaylistProvider);
-        await playWithPlaylist(allFiles, index, pitchShift: kPitch432Hz);
+        await playWithPlaylist(allFiles, index, pitchShift: currentPitch);
       }
 
       // Navigate to Now Playing tab (using callback from HomeScreen)

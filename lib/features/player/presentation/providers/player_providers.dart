@@ -790,10 +790,12 @@ Future<void> Function() playNextTrack(PlayNextTrackRef ref) {
   return () async {
     final repository = await ref.read(playerRepositoryProvider.future);
     await repository.playNext();
-    
-    // Refresh state
+
+    // Refresh ALL state providers
     ref.invalidate(currentAudioFileProvider);
     ref.invalidate(isPlayingProvider);
+    ref.invalidate(playbackDurationProvider);
+    ref.invalidate(playbackPositionProvider);
   };
 }
 
@@ -813,9 +815,11 @@ Future<void> Function() playPreviousTrack(PlayPreviousTrackRef ref) {
     final repository = await ref.read(playerRepositoryProvider.future);
     await repository.playPrevious();
 
-    // Refresh state
+    // Refresh ALL state providers
     ref.invalidate(currentAudioFileProvider);
     ref.invalidate(isPlayingProvider);
+    ref.invalidate(playbackDurationProvider);
+    ref.invalidate(playbackPositionProvider);
   };
 }
 

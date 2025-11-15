@@ -213,8 +213,11 @@ class PlaylistDetailScreen extends ConsumerWidget {
     if (tracks.isEmpty) return;
 
     try {
+      // Get current pitch shift (frequency setting)
+      final currentPitch = ref.read(currentPitchShiftProvider);
+
       final playWithPlaylist = ref.read(playWithPlaylistProvider);
-      await playWithPlaylist(tracks, 0);
+      await playWithPlaylist(tracks, 0, pitchShift: currentPitch);
 
       // Navigate to Now Playing screen
       onNavigateToPlayer?.call();
@@ -230,8 +233,11 @@ class PlaylistDetailScreen extends ConsumerWidget {
     int index,
   ) async {
     try {
+      // Get current pitch shift (frequency setting)
+      final currentPitch = ref.read(currentPitchShiftProvider);
+
       final playWithPlaylist = ref.read(playWithPlaylistProvider);
-      await playWithPlaylist(tracks, index);
+      await playWithPlaylist(tracks, index, pitchShift: currentPitch);
 
       // Navigate to Now Playing screen
       onNavigateToPlayer?.call();
