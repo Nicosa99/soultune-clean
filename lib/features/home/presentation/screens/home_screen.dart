@@ -47,38 +47,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   /// Page controller for smooth transitions.
   final _pageController = PageController();
 
-  /// GlobalKey to measure NavigationBar height
-  final _navigationBarKey = GlobalKey();
-
-  /// Measured height of NavigationBar (null until measured)
-  double? _navigationBarHeight;
-
-  @override
-  void initState() {
-    super.initState();
-    // Measure NavigationBar height after first frame
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _measureNavigationBar();
-    });
-  }
-
   @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
-  }
-
-  /// Measures the actual height of the NavigationBar
-  void _measureNavigationBar() {
-    final renderBox =
-        _navigationBarKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox != null && mounted) {
-      final height = renderBox.size.height;
-      debugPrint('📐 NavigationBar measured height: $height px');
-      setState(() {
-        _navigationBarHeight = height;
-      });
-    }
   }
 
   @override
@@ -89,55 +61,49 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // Show mini player only on Library and Playlists tabs
     final showMiniPlayer = hasAudio && _selectedIndex != 2;
 
-    // Use measured NavigationBar height, or fallback to estimated 80px
-    final navigationBarHeight = _navigationBarHeight ?? 80.0;
-
     return Scaffold(
-      body: Stack(
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
         children: [
-          // Main content (PageView)
-          PageView(
-            controller: _pageController,
-            onPageChanged: (index) {
-              setState(() {
-                _selectedIndex = index;
-              });
-            },
-            children: [
-              // Library tab
-              LibraryScreen(
-                onNavigateToPlayer: _showNowPlayingModal,
-              ),
-
-              // Playlists tab
-              PlaylistsScreen(
-                onNavigateToPlayer: _showNowPlayingModal,
-              ),
-
-              // Now Playing tab
-              NowPlayingScreen(
-                onNavigateBack: () {
-                  // Navigate back to Library tab
-                  setState(() {
-                    _selectedIndex = 0;
-                  });
-                  _pageController.animateToPage(
-                    0,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
-                },
-              ),
-            ],
+          // Library tab
+          LibraryScreen(
+            onNavigateToPlayer: _showNowPlayingModal,
           ),
 
-          // Mini Player overlay (flush above navigation bar using measured height)
-          if (showMiniPlayer)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: navigationBarHeight,
-              child: AnimatedSlide(
+          // Playlists tab
+          PlaylistsScreen(
+            onNavigateToPlayer: _showNowPlayingModal,
+          ),
+
+          // Now Playing tab
+          NowPlayingScreen(
+            onNavigateBack: () {
+              // Navigate back to Library tab
+              setState(() {
+                _selectedIndex = 0;
+              });
+              _pageController.animateToPage(
+                0,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            },
+          ),
+        ],
+      ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Mini Player (directly above navigation bar)
+            if (showMiniPlayer)
+              AnimatedSlide(
                 offset: Offset.zero,
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOut,
@@ -145,50 +111,51 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   onTap: _showNowPlayingModal,
                 ),
               ),
-            ),
-        ],
-      ),
-      bottomNavigationBar: NavigationBar(
-        key: _navigationBarKey,
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-          _pageController.animateToPage(
-            index,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-          );
-        },
-        destinations: [
-          // Library destination
-          const NavigationDestination(
-            icon: Icon(Icons.library_music_outlined),
-            selectedIcon: Icon(Icons.library_music),
-            label: 'Library',
-          ),
 
-          // Playlists destination
-          const NavigationDestination(
-            icon: Icon(Icons.queue_music_outlined),
-            selectedIcon: Icon(Icons.queue_music),
-            label: 'Playlists',
-          ),
+            // Navigation Bar
+            NavigationBar(
+              selectedIndex: _selectedIndex,
+              onDestinationSelected: (index) {
+                setState(() {
+                  _selectedIndex = index;
+                });
+                _pageController.animateToPage(
+                  index,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                );
+              },
+              destinations: [
+                // Library destination
+                const NavigationDestination(
+                  icon: Icon(Icons.library_music_outlined),
+                  selectedIcon: Icon(Icons.library_music),
+                  label: 'Library',
+                ),
 
-          // Now Playing destination
-          NavigationDestination(
-            icon: Badge(
-              isLabelVisible: hasAudio,
-              child: const Icon(Icons.music_note_outlined),
+                // Playlists destination
+                const NavigationDestination(
+                  icon: Icon(Icons.queue_music_outlined),
+                  selectedIcon: Icon(Icons.queue_music),
+                  label: 'Playlists',
+                ),
+
+                // Now Playing destination
+                NavigationDestination(
+                  icon: Badge(
+                    isLabelVisible: hasAudio,
+                    child: const Icon(Icons.music_note_outlined),
+                  ),
+                  selectedIcon: Badge(
+                    isLabelVisible: hasAudio,
+                    child: const Icon(Icons.music_note),
+                  ),
+                  label: 'Now Playing',
+                ),
+              ],
             ),
-            selectedIcon: Badge(
-              isLabelVisible: hasAudio,
-              child: const Icon(Icons.music_note),
-            ),
-            label: 'Now Playing',
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
