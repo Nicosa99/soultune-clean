@@ -32,6 +32,7 @@ import 'package:soultune/features/player/presentation/providers/player_providers
 import 'package:soultune/features/player/presentation/widgets/frequency_selector.dart';
 import 'package:soultune/features/player/presentation/widgets/player_controls.dart';
 import 'package:soultune/features/player/presentation/widgets/seek_bar.dart';
+import 'package:soultune/features/playlist/presentation/widgets/add_to_playlist_dialog.dart';
 
 /// Now Playing screen - main playback interface.
 ///
@@ -160,12 +161,32 @@ class NowPlayingScreen extends ConsumerWidget {
           ),
 
           // Menu button
-          IconButton(
-            onPressed: () {
-              // TODO: Show menu (add to favorites, share, etc.)
-            },
+          PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
             tooltip: 'More options',
+            onSelected: (value) {
+              if (value == 'add_to_playlist' && currentFile != null) {
+                _showAddToPlaylistDialog(context, currentFile);
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem<String>(
+                value: 'add_to_playlist',
+                enabled: currentFile != null,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.playlist_add,
+                      color: currentFile != null
+                          ? colorScheme.onSurface
+                          : colorScheme.onSurfaceVariant.withOpacity(0.5),
+                    ),
+                    const SizedBox(width: 12),
+                    Text('Add to Playlist'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -277,6 +298,14 @@ class NowPlayingScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  /// Shows add to playlist dialog.
+  void _showAddToPlaylistDialog(BuildContext context, currentFile) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AddToPlaylistDialog(track: currentFile),
     );
   }
 }

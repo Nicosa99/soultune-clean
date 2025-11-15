@@ -27,6 +27,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soultune/app/constants/frequencies.dart';
 import 'package:soultune/features/player/presentation/providers/player_providers.dart';
+import 'package:soultune/features/playlist/presentation/widgets/add_to_playlist_dialog.dart';
 import 'package:soultune/shared/models/audio_file.dart';
 
 /// Library screen displaying all audio files.
@@ -113,6 +114,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 return _AudioFileTile(
                   audioFile: audioFile,
                   onTap: () => _playAudioFile(audioFile),
+                  onLongPress: () => _showAddToPlaylistDialog(audioFile),
                 );
               },
             ),
@@ -398,6 +400,14 @@ class _ScanProgressDialog extends StatelessWidget {
       ),
     );
   }
+
+  /// Shows add to playlist dialog.
+  void _showAddToPlaylistDialog(AudioFile audioFile) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AddToPlaylistDialog(track: audioFile),
+    );
+  }
 }
 
 /// Audio file list tile.
@@ -405,10 +415,12 @@ class _AudioFileTile extends StatelessWidget {
   const _AudioFileTile({
     required this.audioFile,
     required this.onTap,
+    this.onLongPress,
   });
 
   final AudioFile audioFile;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -417,6 +429,7 @@ class _AudioFileTile extends StatelessWidget {
 
     return ListTile(
       onTap: onTap,
+      onLongPress: onLongPress,
       contentPadding: const EdgeInsets.symmetric(
         horizontal: 16,
         vertical: 8,

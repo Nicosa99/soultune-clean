@@ -59,6 +59,12 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
         ),
         centerTitle: false,
         actions: [
+          // Create playlist button
+          IconButton(
+            onPressed: () => _showCreatePlaylistDialog(context),
+            icon: const Icon(Icons.add),
+            tooltip: 'Create playlist',
+          ),
           // Search button
           IconButton(
             onPressed: () {
@@ -137,11 +143,6 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
             ],
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showCreatePlaylistDialog(context),
-        icon: const Icon(Icons.add),
-        label: const Text('New Playlist'),
       ),
     );
   }
