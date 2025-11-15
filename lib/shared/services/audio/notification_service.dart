@@ -97,7 +97,7 @@ class NotificationService {
       _audioHandler = await AudioService.init(
         builder: () => SoulTuneAudioHandler(),
         config: const AudioServiceConfig(
-          androidNotificationChannelId: 'com.soultune.app.audio',
+          androidNotificationChannelId: 'com.example.soultune.audio',
           androidNotificationChannelName: 'SoulTune Playback',
           androidNotificationChannelDescription:
               'Notification controls for SoulTune music player',
