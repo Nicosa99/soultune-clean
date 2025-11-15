@@ -34,12 +34,15 @@ class PlayerControls extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isPlaying = ref.watch(isPlayingProvider);
+    final isPlayingAsync = ref.watch(isPlayingProvider);
     final currentFile = ref.watch(currentAudioFileProvider);
     final loopMode = ref.watch(loopModeProvider);
 
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+
+    // Get playing state from async value
+    final isPlaying = isPlayingAsync.valueOrNull ?? false;
 
     // Disable controls if no audio file loaded
     final hasAudio = currentFile != null;

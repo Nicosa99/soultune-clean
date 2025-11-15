@@ -143,9 +143,14 @@ AudioFile? currentAudioFile(CurrentAudioFileRef ref) {
 /// );
 /// ```
 @riverpod
-bool isPlaying(IsPlayingRef ref) {
-  final repository = ref.watch(playerRepositoryProvider).value;
-  return repository?.isPlaying ?? false;
+Stream<bool> isPlaying(IsPlayingRef ref) async* {
+  final repository = await ref.watch(playerRepositoryProvider.future);
+
+  // Emit initial state
+  yield repository.isPlaying;
+
+  // Listen to playing state stream from audio service
+  yield* repository.playingStream;
 }
 
 /// Provides a stream of playback positions.
@@ -381,10 +386,8 @@ class PlayAudio extends _$PlayAudio {
       startPosition: startPosition,
     );
 
-    // Force state refresh without disposing repository
-    // Note: We invalidate the state providers, not the repository itself
+    // Force state refresh (streams update automatically)
     ref.invalidate(currentAudioFileProvider);
-    ref.invalidate(isPlayingProvider);
   }
 }
 
@@ -411,8 +414,7 @@ Future<void> Function() togglePlayPause(TogglePlayPauseRef ref) {
       await repository.resume();
     }
 
-    // Refresh playing state
-    ref.invalidate(isPlayingProvider);
+    // No need to invalidate - playingStream automatically updates
   };
 }
 
@@ -428,7 +430,7 @@ Future<void> Function() pausePlayback(PausePlaybackRef ref) {
   return () async {
     final repository = await ref.read(playerRepositoryProvider.future);
     await repository.pause();
-    ref.invalidate(isPlayingProvider);
+    // No need to invalidate - playingStream automatically updates
   };
 }
 
@@ -444,7 +446,7 @@ Future<void> Function() resumePlayback(ResumePlaybackRef ref) {
   return () async {
     final repository = await ref.read(playerRepositoryProvider.future);
     await repository.resume();
-    ref.invalidate(isPlayingProvider);
+    // No need to invalidate - playingStream automatically updates
   };
 }
 
@@ -460,7 +462,7 @@ Future<void> Function() stopPlayback(StopPlaybackRef ref) {
   return () async {
     final repository = await ref.read(playerRepositoryProvider.future);
     await repository.stop();
-    ref.invalidate(isPlayingProvider);
+    // playingStream automatically updates, but we need to refresh currentFile
     ref.invalidate(currentAudioFileProvider);
   };
 }
@@ -791,9 +793,8 @@ Future<void> Function() playNextTrack(PlayNextTrackRef ref) {
     final repository = await ref.read(playerRepositoryProvider.future);
     await repository.playNext();
 
-    // Refresh ALL state providers
+    // Refresh state providers (streams update automatically)
     ref.invalidate(currentAudioFileProvider);
-    ref.invalidate(isPlayingProvider);
     ref.invalidate(playbackDurationProvider);
     ref.invalidate(playbackPositionProvider);
   };
@@ -815,9 +816,8 @@ Future<void> Function() playPreviousTrack(PlayPreviousTrackRef ref) {
     final repository = await ref.read(playerRepositoryProvider.future);
     await repository.playPrevious();
 
-    // Refresh ALL state providers
+    // Refresh state providers (streams update automatically)
     ref.invalidate(currentAudioFileProvider);
-    ref.invalidate(isPlayingProvider);
     ref.invalidate(playbackDurationProvider);
     ref.invalidate(playbackPositionProvider);
   };
@@ -862,8 +862,7 @@ Future<void> Function(List<AudioFile> playlist, int startIndex, {double pitchShi
       pitchShift: pitchShift,
     );
 
-    // Refresh state
+    // Refresh state (streams update automatically)
     ref.invalidate(currentAudioFileProvider);
-    ref.invalidate(isPlayingProvider);
   };
 }

@@ -896,8 +896,14 @@ class PlayerRepository {
 
     switch (_loopMode) {
       case LoopMode.off:
-        // Do nothing - playback stops
-        _logger.d('Loop mode OFF - stopping playback');
+        // Play next track, but stop at end of playlist (no loop)
+        _logger.d('Loop mode OFF - playing next track');
+        playNext().then((success) {
+          if (!success) {
+            // Reached end of playlist - stop
+            _logger.i('End of playlist reached - stopping');
+          }
+        });
         break;
 
       case LoopMode.one:
@@ -912,7 +918,7 @@ class PlayerRepository {
         playNext().then((success) {
           if (!success) {
             // Reached end, restart playlist
-            _logger.i('End of playlist - restarting');
+            _logger.i('End of playlist - restarting from beginning');
             _audioPlayerService.restartPlaylist(pitchShift: _currentPitchShift);
           }
         });
