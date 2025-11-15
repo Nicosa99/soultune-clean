@@ -47,10 +47,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   /// Page controller for smooth transitions.
   final _pageController = PageController();
 
+  /// GlobalKey to measure NavigationBar height
+  final _navigationBarKey = GlobalKey();
+
+  /// Measured height of NavigationBar (null until measured)
+  double? _navigationBarHeight;
+
+  @override
+  void initState() {
+    super.initState();
+    // Measure NavigationBar height after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _measureNavigationBar();
+    });
+  }
+
   @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  /// Measures the actual height of the NavigationBar
+  void _measureNavigationBar() {
+    final renderBox =
+        _navigationBarKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox != null && mounted) {
+      final height = renderBox.size.height;
+      debugPrint('📐 NavigationBar measured height: $height px');
+      setState(() {
+        _navigationBarHeight = height;
+      });
+    }
   }
 
   @override
@@ -61,10 +89,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // Show mini player only on Library and Playlists tabs
     final showMiniPlayer = hasAudio && _selectedIndex != 2;
 
-    // Get safe area padding to calculate precise position
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
-    // NavigationBar height (80) + safe area padding
-    final navigationBarTotalHeight = 80.0 + bottomPadding;
+    // Use measured NavigationBar height, or fallback to estimated 80px
+    final navigationBarHeight = _navigationBarHeight ?? 80.0;
 
     return Scaffold(
       body: Stack(
@@ -105,12 +131,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ],
           ),
 
-          // Mini Player overlay (flush above navigation bar, accounting for safe area)
+          // Mini Player overlay (flush above navigation bar using measured height)
           if (showMiniPlayer)
             Positioned(
               left: 0,
               right: 0,
-              bottom: navigationBarTotalHeight,
+              bottom: navigationBarHeight,
               child: AnimatedSlide(
                 offset: Offset.zero,
                 duration: const Duration(milliseconds: 300),
@@ -123,6 +149,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ],
       ),
       bottomNavigationBar: NavigationBar(
+        key: _navigationBarKey,
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) {
           setState(() {
