@@ -42,6 +42,7 @@ library;
 import 'dart:io';
 
 import 'package:audiotags/audiotags.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:soultune/shared/exceptions/app_exceptions.dart';
@@ -145,14 +146,9 @@ class MetadataService {
       final year = tag.year;
       final trackNumber = tag.trackNumber;
 
-      // Extract duration (required field)
-      final durationMs = tag.duration;
-      if (durationMs == null || durationMs <= 0) {
-        throw MetadataException(
-          'Invalid or missing duration in file: $filePath',
-        );
-      }
-      final duration = Duration(milliseconds: durationMs);
+      // Always use just_audio for accurate duration
+      // (audiotags sometimes returns incorrect values)
+      final duration = await _getDurationWithJustAudio(filePath);
 
       // Extract and cache album art if requested
       String? albumArtPath;
@@ -243,6 +239,43 @@ class MetadataService {
       _logger.w('Failed to extract album art: $e');
       // Non-critical error - return null instead of throwing
       return null;
+    }
+  }
+
+  /// Gets accurate duration using just_audio as fallback.
+  ///
+  /// Used when metadata doesn't contain duration information.
+  /// Creates a temporary audio player to load the file and read duration.
+  Future<Duration> _getDurationWithJustAudio(String filePath) async {
+    AudioPlayer? player;
+    try {
+      player = AudioPlayer();
+
+      // Load the audio file
+      await player.setFilePath(filePath);
+
+      // Get duration (wait a bit for it to be available)
+      Duration? duration = player.duration;
+
+      // Sometimes duration isn't immediately available, wait a bit
+      if (duration == null) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        duration = player.duration;
+      }
+
+      if (duration == null || duration == Duration.zero) {
+        _logger.w('Could not get duration for: $filePath, using default');
+        return const Duration(seconds: 180); // 3 min default
+      }
+
+      _logger.d('Got duration from just_audio: ${duration.inSeconds}s');
+      return duration;
+    } catch (e) {
+      _logger.e('Error getting duration with just_audio: $e');
+      return const Duration(seconds: 180); // 3 min default fallback
+    } finally {
+      // Always dispose the player
+      await player?.dispose();
     }
   }
 
