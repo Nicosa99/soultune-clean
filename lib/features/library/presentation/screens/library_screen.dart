@@ -369,6 +369,14 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       }
     }
   }
+
+  /// Shows add to playlist dialog.
+  void _showAddToPlaylistDialog(AudioFile audioFile) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AddToPlaylistDialog(track: audioFile),
+    );
+  }
 }
 
 /// Scan progress dialog.
@@ -398,14 +406,6 @@ class _ScanProgressDialog extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  /// Shows add to playlist dialog.
-  void _showAddToPlaylistDialog(AudioFile audioFile) {
-    showDialog<void>(
-      context: context,
-      builder: (context) => AddToPlaylistDialog(track: audioFile),
     );
   }
 }

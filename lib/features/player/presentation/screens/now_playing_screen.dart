@@ -133,6 +133,7 @@ class NowPlayingScreen extends ConsumerWidget {
   ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final currentFile = ref.watch(currentAudioFileProvider);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
