@@ -101,8 +101,8 @@ class NotificationService {
           androidNotificationChannelName: 'SoulTune Playback',
           androidNotificationChannelDescription:
               'Notification controls for SoulTune music player',
-          androidNotificationOngoing: true,
-          androidStopForegroundOnPause: false,
+          androidNotificationOngoing: false,
+          androidStopForegroundOnPause: true,
           androidNotificationIcon: 'mipmap/ic_launcher',
           notificationColor: null, // Uses app primary color
         ),
