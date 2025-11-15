@@ -23,6 +23,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soultune/features/player/presentation/providers/player_providers.dart';
+import 'package:soultune/shared/models/loop_mode.dart';
 
 /// Player controls widget with play/pause and skip buttons.
 ///
@@ -35,7 +36,7 @@ class PlayerControls extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isPlaying = ref.watch(isPlayingProvider);
     final currentFile = ref.watch(currentAudioFileProvider);
-    
+    final loopMode = ref.watch(loopModeProvider);
 
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -46,6 +47,19 @@ class PlayerControls extends ConsumerWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
+        // Skip previous track button
+        IconButton(
+          onPressed: hasAudio
+              ? () async {
+                  HapticFeedback.lightImpact();
+                  await ref.read(playPreviousTrackProvider)();
+                }
+              : null,
+          icon: const Icon(Icons.skip_previous),
+          iconSize: 36,
+          tooltip: 'Previous track',
+        ),
+
         // Skip backward button (10 seconds)
         IconButton(
           onPressed: hasAudio
@@ -55,11 +69,11 @@ class PlayerControls extends ConsumerWidget {
                 }
               : null,
           icon: const Icon(Icons.replay_10),
-          iconSize: 32,
+          iconSize: 28,
           tooltip: 'Skip backward 10 seconds',
         ),
 
-        const SizedBox(width: 16),
+        const SizedBox(width: 8),
 
         // Play/Pause button (large, centered)
         Container(
@@ -113,7 +127,7 @@ class PlayerControls extends ConsumerWidget {
           ),
         ),
 
-        const SizedBox(width: 16),
+        const SizedBox(width: 8),
 
         // Skip forward button (10 seconds)
         IconButton(
@@ -124,8 +138,45 @@ class PlayerControls extends ConsumerWidget {
                 }
               : null,
           icon: const Icon(Icons.forward_10),
-          iconSize: 32,
+          iconSize: 28,
           tooltip: 'Skip forward 10 seconds',
+        ),
+
+        // Skip next track button
+        IconButton(
+          onPressed: hasAudio
+              ? () async {
+                  HapticFeedback.lightImpact();
+                  await ref.read(playNextTrackProvider)();
+                }
+              : null,
+          icon: const Icon(Icons.skip_next),
+          iconSize: 36,
+          tooltip: 'Next track',
+        ),
+
+        const SizedBox(width: 8),
+
+        // Loop mode button
+        IconButton(
+          onPressed: hasAudio
+              ? () async {
+                  HapticFeedback.lightImpact();
+                  await ref.read(toggleLoopModeProvider)();
+                }
+              : null,
+          icon: Icon(
+            loopMode == LoopMode.off
+                ? Icons.repeat
+                : loopMode == LoopMode.one
+                    ? Icons.repeat_one
+                    : Icons.repeat,
+          ),
+          color: loopMode == LoopMode.off
+              ? null
+              : colorScheme.primary,
+          iconSize: 28,
+          tooltip: loopMode.displayName,
         ),
       ],
     );

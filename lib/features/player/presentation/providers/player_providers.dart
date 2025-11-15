@@ -73,6 +73,7 @@ library;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:soultune/features/player/data/repositories/player_repository.dart';
 import 'package:soultune/shared/models/audio_file.dart';
+import 'package:soultune/shared/models/loop_mode.dart';
 
 part 'player_providers.g.dart';
 
@@ -728,5 +729,92 @@ Future<void> Function(String id) removeFromLibraryAction(
 
     // Refresh library
     ref.invalidate(audioLibraryProvider);
+  };
+}
+
+// =============================================================================
+// Loop & Auto-Play Providers
+// =============================================================================
+
+/// Provides the current loop mode.
+///
+/// ## Example
+///
+/// ```dart
+/// final loopMode = ref.watch(loopModeProvider);
+/// ```
+@riverpod
+LoopMode loopMode(LoopModeRef ref) {
+  final repository = ref.watch(playerRepositoryProvider).value;
+  return repository?.loopMode ?? LoopMode.off;
+}
+
+/// Action: Toggle loop mode.
+///
+/// Cycles through: Off → All → One → Off
+///
+/// ## Example
+///
+/// ```dart
+/// IconButton(
+///   icon: Icon(Icons.repeat),
+///   onPressed: () => ref.read(toggleLoopModeProvider)(),
+/// );
+/// ```
+@riverpod
+Future<void> Function() toggleLoopMode(ToggleLoopModeRef ref) {
+  return () async {
+    final repository = await ref.read(playerRepositoryProvider.future);
+    final currentMode = repository.loopMode;
+    final nextMode = currentMode.next;
+    
+    repository.setLoopMode(nextMode);
+    
+    // Refresh loop mode provider
+    ref.invalidate(loopModeProvider);
+  };
+}
+
+/// Action: Play next track in playlist.
+///
+/// ## Example
+///
+/// ```dart
+/// IconButton(
+///   icon: Icon(Icons.skip_next),
+///   onPressed: () => ref.read(playNextTrackProvider)(),
+/// );
+/// ```
+@riverpod
+Future<void> Function() playNextTrack(PlayNextTrackRef ref) {
+  return () async {
+    final repository = await ref.read(playerRepositoryProvider.future);
+    await repository.playNext();
+    
+    // Refresh state
+    ref.invalidate(currentAudioFileProvider);
+    ref.invalidate(isPlayingProvider);
+  };
+}
+
+/// Action: Play previous track in playlist.
+///
+/// ## Example
+///
+/// ```dart
+/// IconButton(
+///   icon: Icon(Icons.skip_previous),
+///   onPressed: () => ref.read(playPreviousTrackProvider)(),
+/// );
+/// ```
+@riverpod
+Future<void> Function() playPreviousTrack(PlayPreviousTrackRef ref) {
+  return () async {
+    final repository = await ref.read(playerRepositoryProvider.future);
+    await repository.playPrevious();
+    
+    // Refresh state
+    ref.invalidate(currentAudioFileProvider);
+    ref.invalidate(isPlayingProvider);
   };
 }
