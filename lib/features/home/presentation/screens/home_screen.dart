@@ -170,22 +170,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   /// - Mini player tap
   /// - Library/Playlist track tap
   void _showNowPlayingModal() {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useRootNavigator: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 1.0,
-        minChildSize: 0.5,
-        maxChildSize: 1.0,
-        builder: (context, scrollController) => NowPlayingScreen(
-          onNavigateBack: () {
-            Navigator.pop(context);
-          },
+    // Use post-frame callback to ensure UI is ready
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        useRootNavigator: true,
+        useSafeArea: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => DraggableScrollableSheet(
+          initialChildSize: 1.0,
+          minChildSize: 0.5,
+          maxChildSize: 1.0,
+          builder: (context, scrollController) => NowPlayingScreen(
+            onNavigateBack: () {
+              Navigator.pop(context);
+            },
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 }

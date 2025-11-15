@@ -10,7 +10,7 @@
 /// - Album artwork thumbnail
 /// - Tap to expand to full Now Playing screen
 /// - Smooth slide-up animation
-/// - Material 3 design
+/// - Material 3 design with glassmorphism
 /// - Hero animation for album art
 ///
 /// ## Usage
@@ -23,6 +23,7 @@
 library;
 
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -58,128 +59,140 @@ class MiniPlayer extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
     final isPlaying = isPlayingAsync.valueOrNull ?? false;
 
-    return Material(
-      elevation: 8,
-      shadowColor: colorScheme.shadow.withOpacity(0.4),
-      child: Container(
-        height: 72,
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHigh,
-          border: Border(
-            top: BorderSide(
-              color: colorScheme.outlineVariant,
-              width: 1,
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          height: 72,
+          decoration: BoxDecoration(
+            // Glassmorphism effect
+            color: colorScheme.surfaceContainerHigh.withOpacity(0.85),
+            border: Border(
+              top: BorderSide(
+                color: colorScheme.primary.withOpacity(0.3),
+                width: 2,
+              ),
             ),
+            boxShadow: [
+              BoxShadow(
+                color: colorScheme.shadow.withOpacity(0.2),
+                blurRadius: 16,
+                offset: const Offset(0, -4),
+              ),
+            ],
           ),
-        ),
-        child: InkWell(
-          onTap: () {
-            HapticFeedback.lightImpact();
-            onTap();
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(
-              children: [
-                // Album art with Hero animation
-                Hero(
-                  tag: 'album_art_${currentFile.id}',
-                  child: _buildAlbumArt(context, currentFile),
-                ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                onTap();
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Row(
+                  children: [
+                    // Album art with Hero animation
+                    Hero(
+                      tag: 'album_art_${currentFile.id}',
+                      child: _buildAlbumArt(context, currentFile),
+                    ),
 
-                const SizedBox(width: 12),
+                    const SizedBox(width: 12),
 
-                // Track info (title + artist)
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Track title
-                      Text(
-                        currentFile.title,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: colorScheme.onSurface,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-
-                      const SizedBox(height: 2),
-
-                      // Artist + Frequency badge
-                      Row(
+                    // Track info (title + artist)
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Artist name
-                          Flexible(
-                            child: Text(
-                              currentFile.artist ?? 'Unknown Artist',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: colorScheme.onSurfaceVariant,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                          // Track title
+                          Text(
+                            currentFile.title,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: colorScheme.onSurface,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
 
-                          // Frequency indicator
-                          if (pitchShift != 0.0) ...[
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: colorScheme.primaryContainer,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                _getFrequencyLabel(pitchShift),
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: colorScheme.onPrimaryContainer,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 10,
+                          const SizedBox(height: 2),
+
+                          // Artist + Frequency badge
+                          Row(
+                            children: [
+                              // Artist name
+                              Flexible(
+                                child: Text(
+                                  currentFile.artist ?? 'Unknown Artist',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                            ),
-                          ],
+
+                              // Frequency indicator
+                              if (pitchShift != 0.0) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.primaryContainer,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    _getFrequencyLabel(pitchShift),
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: colorScheme.onPrimaryContainer,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(width: 8),
-
-                // Play/Pause button
-                IconButton(
-                  onPressed: () async {
-                    HapticFeedback.mediumImpact();
-                    await ref.read(togglePlayPauseProvider)();
-                  },
-                  icon: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    transitionBuilder: (child, animation) {
-                      return ScaleTransition(
-                        scale: animation,
-                        child: child,
-                      );
-                    },
-                    child: Icon(
-                      isPlaying ? Icons.pause : Icons.play_arrow,
-                      key: ValueKey<bool>(isPlaying),
-                      size: 32,
                     ),
-                  ),
-                  iconSize: 32,
-                  color: colorScheme.primary,
-                  tooltip: isPlaying ? 'Pause' : 'Play',
-                ),
 
-                const SizedBox(width: 4),
-              ],
+                    const SizedBox(width: 8),
+
+                    // Play/Pause button
+                    IconButton(
+                      onPressed: () async {
+                        HapticFeedback.mediumImpact();
+                        await ref.read(togglePlayPauseProvider)();
+                      },
+                      icon: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        transitionBuilder: (child, animation) {
+                          return ScaleTransition(
+                            scale: animation,
+                            child: child,
+                          );
+                        },
+                        child: Icon(
+                          isPlaying ? Icons.pause : Icons.play_arrow,
+                          key: ValueKey<bool>(isPlaying),
+                          size: 32,
+                        ),
+                      ),
+                      iconSize: 32,
+                      color: colorScheme.primary,
+                      tooltip: isPlaying ? 'Pause' : 'Play',
+                    ),
+
+                    const SizedBox(width: 4),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
