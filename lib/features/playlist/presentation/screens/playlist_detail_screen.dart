@@ -19,10 +19,14 @@ class PlaylistDetailScreen extends ConsumerWidget {
   const PlaylistDetailScreen({
     super.key,
     required this.playlistId,
+    this.onNavigateToPlayer,
   });
 
   /// The playlist ID to display.
   final String playlistId;
+
+  /// Callback to navigate to Now Playing screen.
+  final VoidCallback? onNavigateToPlayer;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -211,6 +215,9 @@ class PlaylistDetailScreen extends ConsumerWidget {
     try {
       final playWithPlaylist = ref.read(playWithPlaylistProvider);
       await playWithPlaylist(tracks, 0);
+
+      // Navigate to Now Playing screen
+      onNavigateToPlayer?.call();
     } catch (e) {
       // Error handled by provider
     }
@@ -225,6 +232,9 @@ class PlaylistDetailScreen extends ConsumerWidget {
     try {
       final playWithPlaylist = ref.read(playWithPlaylistProvider);
       await playWithPlaylist(tracks, index);
+
+      // Navigate to Now Playing screen
+      onNavigateToPlayer?.call();
     } catch (e) {
       // Error handled by provider
     }

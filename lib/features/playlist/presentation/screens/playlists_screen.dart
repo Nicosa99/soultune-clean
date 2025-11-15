@@ -32,7 +32,13 @@ import 'package:soultune/shared/models/playlist.dart';
 /// Main screen for managing playlist collections.
 class PlaylistsScreen extends ConsumerStatefulWidget {
   /// Creates a [PlaylistsScreen].
-  const PlaylistsScreen({super.key});
+  const PlaylistsScreen({
+    super.key,
+    this.onNavigateToPlayer,
+  });
+
+  /// Callback to navigate to Now Playing screen.
+  final VoidCallback? onNavigateToPlayer;
 
   @override
   ConsumerState<PlaylistsScreen> createState() => _PlaylistsScreenState();
@@ -307,7 +313,10 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
     Navigator.push<void>(
       context,
       MaterialPageRoute(
-        builder: (context) => PlaylistDetailScreen(playlistId: playlist.id),
+        builder: (context) => PlaylistDetailScreen(
+          playlistId: playlist.id,
+          onNavigateToPlayer: widget.onNavigateToPlayer,
+        ),
       ),
     );
   }

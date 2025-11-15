@@ -82,7 +82,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
 
           // Playlists tab
-          const PlaylistsScreen(),
+          PlaylistsScreen(
+            onNavigateToPlayer: () {
+              // Navigate to Now Playing tab when music starts from playlist
+              setState(() {
+                _selectedIndex = 2;
+              });
+              _pageController.animateToPage(
+                2,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            },
+          ),
 
           // Now Playing tab
           NowPlayingScreen(
