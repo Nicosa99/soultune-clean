@@ -62,102 +62,95 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final showMiniPlayer = hasAudio && _selectedIndex != 2;
 
     return Scaffold(
-      body: Stack(
-        children: [
-          // Main content (PageView)
-          PageView(
-            controller: _pageController,
-            onPageChanged: (index) {
-              setState(() {
-                _selectedIndex = index;
-              });
-            },
-            children: [
-              // Library tab
-              LibraryScreen(
-                onNavigateToPlayer: _showNowPlayingModal,
-              ),
-
-              // Playlists tab
-              PlaylistsScreen(
-                onNavigateToPlayer: _showNowPlayingModal,
-              ),
-
-              // Now Playing tab
-              NowPlayingScreen(
-                onNavigateBack: () {
-                  // Navigate back to Library tab
-                  setState(() {
-                    _selectedIndex = 0;
-                  });
-                  _pageController.animateToPage(
-                    0,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
-                },
-              ),
-            ],
-          ),
-
-          // Mini Player overlay (above Library/Playlists, below nav bar)
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 80, // Height of NavigationBar
-            child: AnimatedSlide(
-              offset: showMiniPlayer ? Offset.zero : const Offset(0, 2),
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              child: AnimatedOpacity(
-                opacity: showMiniPlayer ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 300),
-                child: MiniPlayer(
-                  onTap: _showNowPlayingModal,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (index) {
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
           setState(() {
             _selectedIndex = index;
           });
-          _pageController.animateToPage(
-            index,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-          );
         },
-        destinations: [
-          // Library destination
-          const NavigationDestination(
-            icon: Icon(Icons.library_music_outlined),
-            selectedIcon: Icon(Icons.library_music),
-            label: 'Library',
+        children: [
+          // Library tab
+          LibraryScreen(
+            onNavigateToPlayer: _showNowPlayingModal,
           ),
 
-          // Playlists destination
-          const NavigationDestination(
-            icon: Icon(Icons.queue_music_outlined),
-            selectedIcon: Icon(Icons.queue_music),
-            label: 'Playlists',
+          // Playlists tab
+          PlaylistsScreen(
+            onNavigateToPlayer: _showNowPlayingModal,
           ),
 
-          // Now Playing destination
-          NavigationDestination(
-            icon: Badge(
-              isLabelVisible: hasAudio,
-              child: const Icon(Icons.music_note_outlined),
+          // Now Playing tab
+          NowPlayingScreen(
+            onNavigateBack: () {
+              // Navigate back to Library tab
+              setState(() {
+                _selectedIndex = 0;
+              });
+              _pageController.animateToPage(
+                0,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            },
+          ),
+        ],
+      ),
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Mini Player (directly above navigation bar)
+          if (showMiniPlayer)
+            AnimatedSlide(
+              offset: Offset.zero,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              child: MiniPlayer(
+                onTap: _showNowPlayingModal,
+              ),
             ),
-            selectedIcon: Badge(
-              isLabelVisible: hasAudio,
-              child: const Icon(Icons.music_note),
-            ),
-            label: 'Now Playing',
+
+          // Navigation Bar
+          NavigationBar(
+            selectedIndex: _selectedIndex,
+            onDestinationSelected: (index) {
+              setState(() {
+                _selectedIndex = index;
+              });
+              _pageController.animateToPage(
+                index,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            },
+            destinations: [
+              // Library destination
+              const NavigationDestination(
+                icon: Icon(Icons.library_music_outlined),
+                selectedIcon: Icon(Icons.library_music),
+                label: 'Library',
+              ),
+
+              // Playlists destination
+              const NavigationDestination(
+                icon: Icon(Icons.queue_music_outlined),
+                selectedIcon: Icon(Icons.queue_music),
+                label: 'Playlists',
+              ),
+
+              // Now Playing destination
+              NavigationDestination(
+                icon: Badge(
+                  isLabelVisible: hasAudio,
+                  child: const Icon(Icons.music_note_outlined),
+                ),
+                selectedIcon: Badge(
+                  isLabelVisible: hasAudio,
+                  child: const Icon(Icons.music_note),
+                ),
+                label: 'Now Playing',
+              ),
+            ],
           ),
         ],
       ),
