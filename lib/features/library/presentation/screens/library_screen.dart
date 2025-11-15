@@ -108,7 +108,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             },
             child: ListView.builder(
               itemCount: filteredFiles.length,
-              padding: const EdgeInsets.only(bottom: 80),
+              padding: const EdgeInsets.only(bottom: 152), // Nav bar (80) + Mini player (72)
               itemBuilder: (context, index) {
                 final audioFile = filteredFiles[index];
                 return _AudioFileTile(

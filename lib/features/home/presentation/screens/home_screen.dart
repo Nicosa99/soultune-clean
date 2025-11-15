@@ -26,6 +26,7 @@ import 'package:soultune/features/library/presentation/screens/library_screen.da
 import 'package:soultune/features/player/presentation/providers/player_providers.dart';
 import 'package:soultune/features/player/presentation/screens/now_playing_screen.dart';
 import 'package:soultune/features/playlist/presentation/screens/playlists_screen.dart';
+import 'package:soultune/shared/widgets/mini_player.dart';
 
 /// Home screen with bottom navigation.
 ///
@@ -57,58 +58,65 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final currentFile = ref.watch(currentAudioFileProvider);
     final hasAudio = currentFile != null;
 
+    // Show mini player only on Library and Playlists tabs
+    final showMiniPlayer = hasAudio && _selectedIndex != 2;
+
     return Scaffold(
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
+      body: Stack(
         children: [
-          // Library tab
-          LibraryScreen(
-            onNavigateToPlayer: () {
-              // Navigate to Now Playing tab when music starts
+          // Main content (PageView)
+          PageView(
+            controller: _pageController,
+            onPageChanged: (index) {
               setState(() {
-                _selectedIndex = 2;
+                _selectedIndex = index;
               });
-              _pageController.animateToPage(
-                2,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-              );
             },
+            children: [
+              // Library tab
+              LibraryScreen(
+                onNavigateToPlayer: _showNowPlayingModal,
+              ),
+
+              // Playlists tab
+              PlaylistsScreen(
+                onNavigateToPlayer: _showNowPlayingModal,
+              ),
+
+              // Now Playing tab
+              NowPlayingScreen(
+                onNavigateBack: () {
+                  // Navigate back to Library tab
+                  setState(() {
+                    _selectedIndex = 0;
+                  });
+                  _pageController.animateToPage(
+                    0,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                },
+              ),
+            ],
           ),
 
-          // Playlists tab
-          PlaylistsScreen(
-            onNavigateToPlayer: () {
-              // Navigate to Now Playing tab when music starts from playlist
-              setState(() {
-                _selectedIndex = 2;
-              });
-              _pageController.animateToPage(
-                2,
+          // Mini Player overlay (above Library/Playlists, below nav bar)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 80, // Height of NavigationBar
+            child: AnimatedSlide(
+              offset: showMiniPlayer ? Offset.zero : const Offset(0, 2),
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              child: AnimatedOpacity(
+                opacity: showMiniPlayer ? 1.0 : 0.0,
                 duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-              );
-            },
-          ),
-
-          // Now Playing tab
-          NowPlayingScreen(
-            onNavigateBack: () {
-              // Navigate back to Library tab
-              setState(() {
-                _selectedIndex = 0;
-              });
-              _pageController.animateToPage(
-                0,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-              );
-            },
+                child: MiniPlayer(
+                  onTap: _showNowPlayingModal,
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -152,6 +160,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             label: 'Now Playing',
           ),
         ],
+      ),
+    );
+  }
+
+  /// Shows Now Playing screen as modal bottom sheet.
+  ///
+  /// Can be triggered from:
+  /// - Mini player tap
+  /// - Library/Playlist track tap
+  void _showNowPlayingModal() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 1.0,
+        minChildSize: 0.5,
+        maxChildSize: 1.0,
+        builder: (context, scrollController) => NowPlayingScreen(
+          onNavigateBack: () {
+            Navigator.pop(context);
+          },
+        ),
       ),
     );
   }

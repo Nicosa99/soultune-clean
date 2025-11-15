@@ -85,8 +85,7 @@ class NowPlayingScreen extends ConsumerWidget {
                       // Album art
                       _buildAlbumArt(
                         context,
-                        currentFile?.albumArt,
-                        currentFile?.title,
+                        currentFile,
                       ),
 
                       const SizedBox(height: 32),
@@ -197,14 +196,18 @@ class NowPlayingScreen extends ConsumerWidget {
   /// Builds the album artwork section.
   Widget _buildAlbumArt(
     BuildContext context,
-    String? albumArtPath,
-    String? title,
+    currentFile,
   ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
+    // Use file ID for Hero tag to match Mini Player
+    final heroTag = currentFile != null
+        ? 'album_art_${currentFile.id}'
+        : 'album_art_default';
+
     return Hero(
-      tag: 'album_art_${title ?? "default"}',
+      tag: heroTag,
       child: Container(
         width: 320,
         height: 320,
@@ -221,9 +224,10 @@ class NowPlayingScreen extends ConsumerWidget {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
-          child: albumArtPath != null && File(albumArtPath).existsSync()
+          child: currentFile?.albumArt != null &&
+                 File(currentFile.albumArt!).existsSync()
               ? Image.file(
-                  File(albumArtPath),
+                  File(currentFile.albumArt!),
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => _buildPlaceholderArt(theme),
                 )

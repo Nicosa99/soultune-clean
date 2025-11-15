@@ -159,7 +159,7 @@ class _PlaylistsScreenState extends ConsumerState<PlaylistsScreen> {
     final colorScheme = theme.colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 152), // Extra bottom padding for mini player + nav bar
       child: GridView.builder(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
