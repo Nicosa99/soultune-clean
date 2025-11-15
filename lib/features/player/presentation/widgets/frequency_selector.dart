@@ -69,7 +69,63 @@ class FrequencySelector extends ConsumerWidget {
             spacing: 12,
             runSpacing: 12,
             children: [
-              // 432 Hz - FREE (Deep Peace)
+              // 174 Hz - Pain Relief & Grounding
+              _FrequencyChip(
+                label: '174 Hz',
+                subtitle: 'Pain Relief',
+                pitchShift: kPitch174Hz,
+                currentPitchShift: currentPitchShift,
+                color: AppColors.frequency174,
+                isEnabled: isEnabled,
+                onTap: () {
+                  HapticFeedback.mediumImpact();
+                  ref.read(changePitchShiftProvider)(kPitch174Hz);
+                },
+              ),
+
+              // 285 Hz - Cellular Healing
+              _FrequencyChip(
+                label: '285 Hz',
+                subtitle: 'Cell Healing',
+                pitchShift: kPitch285Hz,
+                currentPitchShift: currentPitchShift,
+                color: AppColors.frequency285,
+                isEnabled: isEnabled,
+                onTap: () {
+                  HapticFeedback.mediumImpact();
+                  ref.read(changePitchShiftProvider)(kPitch285Hz);
+                },
+              ),
+
+              // 396 Hz - Liberation from Fear
+              _FrequencyChip(
+                label: '396 Hz',
+                subtitle: 'Liberation',
+                pitchShift: kPitch396Hz,
+                currentPitchShift: currentPitchShift,
+                color: AppColors.frequency396,
+                isEnabled: isEnabled,
+                onTap: () {
+                  HapticFeedback.mediumImpact();
+                  ref.read(changePitchShiftProvider)(kPitch396Hz);
+                },
+              ),
+
+              // 417 Hz - Trauma Healing
+              _FrequencyChip(
+                label: '417 Hz',
+                subtitle: 'Trauma Healing',
+                pitchShift: kPitch417Hz,
+                currentPitchShift: currentPitchShift,
+                color: AppColors.frequency417,
+                isEnabled: isEnabled,
+                onTap: () {
+                  HapticFeedback.mediumImpact();
+                  ref.read(changePitchShiftProvider)(kPitch417Hz);
+                },
+              ),
+
+              // 432 Hz - Deep Peace
               _FrequencyChip(
                 label: '432 Hz',
                 subtitle: 'Deep Peace',
@@ -83,7 +139,7 @@ class FrequencySelector extends ConsumerWidget {
                 },
               ),
 
-              // 528 Hz - PREMIUM (Love Frequency)
+              // 528 Hz - Love Frequency
               _FrequencyChip(
                 label: '528 Hz',
                 subtitle: 'Love Frequency',
@@ -99,23 +155,63 @@ class FrequencySelector extends ConsumerWidget {
                 },
               ),
 
-              // 639 Hz - PREMIUM (Relationships)
+              // 639 Hz - Harmony & Connection
               _FrequencyChip(
                 label: '639 Hz',
-                subtitle: 'Relationships',
+                subtitle: 'Harmony',
                 pitchShift: kPitch639Hz,
                 currentPitchShift: currentPitchShift,
                 color: AppColors.frequency639,
-                
                 isEnabled: isEnabled,
                 onTap: () {
                   HapticFeedback.mediumImpact();
-                  
                   ref.read(changePitchShiftProvider)(kPitch639Hz);
                 },
               ),
 
-              // Standard tuning (440 Hz) - OFF
+              // 741 Hz - Detoxification
+              _FrequencyChip(
+                label: '741 Hz',
+                subtitle: 'Detox',
+                pitchShift: kPitch741Hz,
+                currentPitchShift: currentPitchShift,
+                color: AppColors.frequency741,
+                isEnabled: isEnabled,
+                onTap: () {
+                  HapticFeedback.mediumImpact();
+                  ref.read(changePitchShiftProvider)(kPitch741Hz);
+                },
+              ),
+
+              // 852 Hz - Positive Thinking
+              _FrequencyChip(
+                label: '852 Hz',
+                subtitle: 'Positivity',
+                pitchShift: kPitch852Hz,
+                currentPitchShift: currentPitchShift,
+                color: AppColors.frequency852,
+                isEnabled: isEnabled,
+                onTap: () {
+                  HapticFeedback.mediumImpact();
+                  ref.read(changePitchShiftProvider)(kPitch852Hz);
+                },
+              ),
+
+              // 963 Hz - Pineal Activation
+              _FrequencyChip(
+                label: '963 Hz',
+                subtitle: 'Divine',
+                pitchShift: kPitch963Hz,
+                currentPitchShift: currentPitchShift,
+                color: AppColors.frequency963,
+                isEnabled: isEnabled,
+                onTap: () {
+                  HapticFeedback.mediumImpact();
+                  ref.read(changePitchShiftProvider)(kPitch963Hz);
+                },
+              ),
+
+              // Standard tuning (440 Hz)
               _FrequencyChip(
                 label: 'Standard',
                 subtitle: '440 Hz',
