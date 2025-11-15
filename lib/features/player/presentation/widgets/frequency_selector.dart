@@ -76,7 +76,6 @@ class FrequencySelector extends ConsumerWidget {
                 pitchShift: kPitch432Hz,
                 currentPitchShift: currentPitchShift,
                 color: AppColors.frequency432,
-                isPremium: false,
                 isEnabled: isEnabled,
                 onTap: () {
                   HapticFeedback.mediumImpact();
@@ -91,11 +90,11 @@ class FrequencySelector extends ConsumerWidget {
                 pitchShift: kPitch528Hz,
                 currentPitchShift: currentPitchShift,
                 color: AppColors.frequency528,
-                isPremium: true,
+                
                 isEnabled: isEnabled,
                 onTap: () {
                   HapticFeedback.mediumImpact();
-                  // TODO: Check premium status
+                  
                   ref.read(changePitchShiftProvider)(kPitch528Hz);
                 },
               ),
@@ -107,11 +106,11 @@ class FrequencySelector extends ConsumerWidget {
                 pitchShift: kPitch639Hz,
                 currentPitchShift: currentPitchShift,
                 color: AppColors.frequency639,
-                isPremium: true,
+                
                 isEnabled: isEnabled,
                 onTap: () {
                   HapticFeedback.mediumImpact();
-                  // TODO: Check premium status
+                  
                   ref.read(changePitchShiftProvider)(kPitch639Hz);
                 },
               ),
@@ -123,7 +122,7 @@ class FrequencySelector extends ConsumerWidget {
                 pitchShift: 0.0,
                 currentPitchShift: currentPitchShift,
                 color: colorScheme.surfaceContainerHighest,
-                isPremium: false,
+                
                 isEnabled: isEnabled,
                 onTap: () {
                   HapticFeedback.lightImpact();
@@ -171,7 +170,6 @@ class _FrequencyChip extends StatelessWidget {
     required this.pitchShift,
     required this.currentPitchShift,
     required this.color,
-    required this.isPremium,
     required this.isEnabled,
     required this.onTap,
   });
@@ -181,7 +179,6 @@ class _FrequencyChip extends StatelessWidget {
   final double pitchShift;
   final double currentPitchShift;
   final Color color;
-  final bool isPremium;
   final bool isEnabled;
   final VoidCallback onTap;
 
@@ -245,31 +242,6 @@ class _FrequencyChip extends StatelessWidget {
                               isSelected ? FontWeight.w700 : FontWeight.w600,
                         ),
                       ),
-                      if (isPremium) ...[
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.amber.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(
-                              color: Colors.amber,
-                              width: 1,
-                            ),
-                          ),
-                          child: Text(
-                            'PRO',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: Colors.amber.shade700,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ],
                     ],
                   ),
                   const SizedBox(height: 2),

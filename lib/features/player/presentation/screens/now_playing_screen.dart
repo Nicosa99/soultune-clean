@@ -39,12 +39,17 @@ import 'package:soultune/features/player/presentation/widgets/seek_bar.dart';
 /// frequency transformation options.
 class NowPlayingScreen extends ConsumerWidget {
   /// Creates a [NowPlayingScreen].
-  const NowPlayingScreen({super.key});
+  const NowPlayingScreen({
+    super.key,
+    this.onNavigateBack,
+  });
+
+  /// Callback to navigate back to Library.
+  final VoidCallback? onNavigateBack;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentFile = ref.watch(currentAudioFileProvider);
-    
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -134,10 +139,10 @@ class NowPlayingScreen extends ConsumerWidget {
         children: [
           // Back button
           IconButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => onNavigateBack?.call(),
             icon: const Icon(Icons.keyboard_arrow_down),
             iconSize: 32,
-            tooltip: 'Close',
+            tooltip: 'Back to Library',
           ),
 
           // Title

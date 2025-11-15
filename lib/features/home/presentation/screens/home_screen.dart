@@ -81,7 +81,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
 
           // Now Playing tab
-          const NowPlayingScreen(),
+          NowPlayingScreen(
+            onNavigateBack: () {
+              // Navigate back to Library tab
+              setState(() {
+                _selectedIndex = 0;
+              });
+              _pageController.animateToPage(
+                0,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            },
+          ),
         ],
       ),
       bottomNavigationBar: NavigationBar(

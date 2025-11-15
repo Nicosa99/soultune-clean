@@ -48,6 +48,33 @@ const double kStandardPitchHz = 440.0;
 /// original tuning.
 const double kPitchStandard = 0.0;
 
+// -----------------------------------------------------------------------------
+// Solfeggio Frequencies (Ancient Healing Tones)
+// -----------------------------------------------------------------------------
+
+/// Pitch shift for 174 Hz - Pain Relief & Grounding (−16.05 semitones).
+///
+/// Foundation frequency for physical healing and security. Known for
+/// pain relief and grounding effects.
+const double kPitch174Hz = -16.05053803;
+
+/// Pitch shift for 285 Hz - Cellular Healing & Regeneration (−7.52 semitones).
+///
+/// Supports tissue repair, cellular regeneration, and overall vitality.
+const double kPitch285Hz = -7.51526407;
+
+/// Pitch shift for 396 Hz - Liberation from Fear & Guilt (−1.82 semitones).
+///
+/// Root chakra frequency promoting emotional release and liberation
+/// from negative feelings.
+const double kPitch396Hz = -1.82403604;
+
+/// Pitch shift for 417 Hz - Trauma Healing & Change (−0.93 semitones).
+///
+/// Facilitates change, helps with trauma healing, and promotes
+/// restful sleep.
+const double kPitch417Hz = -0.93378058;
+
 /// Pitch shift for 432 Hz tuning (−0.31767 semitones).
 ///
 /// ## Scientific Background
@@ -138,11 +165,25 @@ const double kPitch528Hz = 0.3785116232537291;
 ///
 /// **Note**: As with 528 Hz, true Solfeggio tuning may require more complex
 /// implementation. The current value provides an approximation suitable for MVP.
-///
-/// ## Premium Feature
-///
-/// Requires premium subscription to unlock.
 const double kPitch639Hz = 0.6987658597333649;
+
+/// Pitch shift for 741 Hz - Detoxification & Cleansing (+9.02 semitones).
+///
+/// "Detox frequency" used for chronic pain relief and promoting a
+/// healthier lifestyle.
+const double kPitch741Hz = 9.01746542;
+
+/// Pitch shift for 852 Hz - Positive Thinking (+11.45 semitones).
+///
+/// Replaces negative thoughts with positive ones, helpful for
+/// nervousness and anxiety.
+const double kPitch852Hz = 11.44653237;
+
+/// Pitch shift for 963 Hz - Pineal Gland Activation (+13.55 semitones).
+///
+/// Activates the pineal gland, enhances consciousness and intuition.
+/// Known as the "frequency of the Gods".
+const double kPitch963Hz = 13.55139203;
 
 // -----------------------------------------------------------------------------
 // Frequency Display Names
