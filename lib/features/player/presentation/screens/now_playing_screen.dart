@@ -167,9 +167,35 @@ class NowPlayingScreen extends ConsumerWidget {
             onSelected: (value) {
               if (value == 'add_to_playlist' && currentFile != null) {
                 _showAddToPlaylistDialog(context, currentFile);
+              } else if (value == 'toggle_favorite' && currentFile != null) {
+                _toggleFavorite(context, ref, currentFile);
               }
             },
             itemBuilder: (context) => [
+              PopupMenuItem<String>(
+                value: 'toggle_favorite',
+                enabled: currentFile != null,
+                child: Row(
+                  children: [
+                    Icon(
+                      currentFile?.isFavorite == true
+                          ? Icons.favorite
+                          : Icons.favorite_border,
+                      color: currentFile != null
+                          ? (currentFile.isFavorite
+                              ? colorScheme.error
+                              : colorScheme.onSurface)
+                          : colorScheme.onSurfaceVariant.withOpacity(0.5),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      currentFile?.isFavorite == true
+                          ? 'Remove from Favorites'
+                          : 'Add to Favorites',
+                    ),
+                  ],
+                ),
+              ),
               PopupMenuItem<String>(
                 value: 'add_to_playlist',
                 enabled: currentFile != null,
@@ -312,5 +338,40 @@ class NowPlayingScreen extends ConsumerWidget {
       context: context,
       builder: (context) => AddToPlaylistDialog(track: currentFile),
     );
+  }
+
+  /// Toggles favorite status for the current audio file.
+  Future<void> _toggleFavorite(
+    BuildContext context,
+    WidgetRef ref,
+    currentFile,
+  ) async {
+    try {
+      await ref.read(toggleFavoriteActionProvider)(currentFile.id);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              currentFile.isFavorite
+                  ? 'Removed from favorites'
+                  : 'Added to favorites',
+            ),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update favorite: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 }

@@ -59,16 +59,19 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
   /// Whether a scan is in progress.
   bool _isScanning = false;
 
-  /// Tab controller for Songs/Folders/Favorites tabs.
+  /// Tab controller for Songs/Folders/Artists/Favorites tabs.
   late TabController _tabController;
 
   /// Current folder path for folder navigation (null = root).
   String? _currentFolderPath;
 
+  /// Current artist for artist navigation (null = all artists).
+  String? _currentArtist;
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -109,6 +112,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
         ],
         bottom: TabBar(
           controller: _tabController,
+          isScrollable: true, // Allow scrolling for 4 tabs
           tabs: const [
             Tab(
               icon: Icon(Icons.music_note),
@@ -117,6 +121,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
             Tab(
               icon: Icon(Icons.folder),
               text: 'Folders',
+            ),
+            Tab(
+              icon: Icon(Icons.person),
+              text: 'Artists',
             ),
             Tab(
               icon: Icon(Icons.favorite),
@@ -133,6 +141,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
 
           // Folders Tab
           _buildFoldersTab(),
+
+          // Artists Tab
+          _buildArtistsTab(),
 
           // Favorites Tab
           _buildFavoritesTab(),
@@ -182,6 +193,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                 audioFile: audioFile,
                 onTap: () => _playAudioFile(audioFile),
                 onLongPress: () => _showAddToPlaylistDialog(audioFile),
+                onFavoriteToggle: () => _toggleFavorite(audioFile),
               );
             },
           ),
@@ -281,6 +293,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                       audioFile: audioFile,
                       onTap: () => _playAudioFile(audioFile),
                       onLongPress: () => _showAddToPlaylistDialog(audioFile),
+                      onFavoriteToggle: () => _toggleFavorite(audioFile),
                     );
                   },
                 ),
@@ -324,6 +337,112 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
               onTap: () {
                 setState(() {
                   _currentFolderPath = folderPath;
+                });
+              },
+            );
+          },
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(
+        child: Text('Error: $error'),
+      ),
+    );
+  }
+
+  /// Builds the Artists tab content.
+  Widget _buildArtistsTab() {
+    final libraryAsync = ref.watch(audioLibraryProvider);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return libraryAsync.when(
+      data: (files) {
+        if (files.isEmpty) {
+          return _buildEmptyState(context);
+        }
+
+        // Group files by artist
+        final artistMap = <String, List<AudioFile>>{};
+        for (final file in files) {
+          final artistName = file.artist ?? 'Unknown Artist';
+          artistMap.putIfAbsent(artistName, () => []).add(file);
+        }
+
+        // If we're viewing a specific artist, show their songs
+        if (_currentArtist != null) {
+          final artistFiles = artistMap[_currentArtist] ?? [];
+          return Column(
+            children: [
+              // Back button
+              ListTile(
+                leading: const Icon(Icons.arrow_back),
+                title: Text(
+                  'Back to Artists',
+                  style: theme.textTheme.titleMedium,
+                ),
+                onTap: () {
+                  setState(() {
+                    _currentArtist = null;
+                  });
+                },
+              ),
+              const Divider(),
+              // Artist's songs
+              Expanded(
+                child: ListView.builder(
+                  itemCount: artistFiles.length,
+                  padding: const EdgeInsets.only(bottom: 152),
+                  itemBuilder: (context, index) {
+                    final audioFile = artistFiles[index];
+                    return _AudioFileTile(
+                      audioFile: audioFile,
+                      onTap: () => _playAudioFile(audioFile),
+                      onFavoriteToggle: () => _toggleFavorite(audioFile),
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        }
+
+        // Show artist list
+        final artists = artistMap.keys.toList()..sort();
+
+        return ListView.builder(
+          itemCount: artists.length,
+          padding: const EdgeInsets.only(bottom: 152),
+          itemBuilder: (context, index) {
+            final artistName = artists[index];
+            final songCount = artistMap[artistName]?.length ?? 0;
+
+            return ListTile(
+              leading: CircleAvatar(
+                backgroundColor: colorScheme.primaryContainer,
+                child: Icon(
+                  Icons.person,
+                  color: colorScheme.onPrimaryContainer,
+                ),
+              ),
+              title: Text(
+                artistName,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Text(
+                '$songCount ${songCount == 1 ? 'song' : 'songs'}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                setState(() {
+                  _currentArtist = artistName;
                 });
               },
             );
@@ -391,7 +510,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
               audioFile: audioFile,
               onTap: () => _playAudioFile(audioFile),
               onLongPress: () => _showAddToPlaylistDialog(audioFile),
-              showFavoriteIcon: true,
+              onFavoriteToggle: () => _toggleFavorite(audioFile),
             );
           },
         );
@@ -649,6 +768,37 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
       builder: (context) => AddToPlaylistDialog(track: audioFile),
     );
   }
+
+  /// Toggles favorite status for an audio file.
+  Future<void> _toggleFavorite(AudioFile audioFile) async {
+    try {
+      await ref.read(toggleFavoriteActionProvider)(audioFile.id);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              audioFile.isFavorite
+                  ? 'Removed from favorites'
+                  : 'Added to favorites',
+            ),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update favorite: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
 }
 
 /// Scan progress dialog.
@@ -688,12 +838,14 @@ class _AudioFileTile extends StatelessWidget {
     required this.audioFile,
     required this.onTap,
     this.onLongPress,
+    this.onFavoriteToggle,
     this.showFavoriteIcon = false,
   });
 
   final AudioFile audioFile;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
+  final VoidCallback? onFavoriteToggle;
   final bool showFavoriteIcon;
 
   @override
@@ -738,23 +890,26 @@ class _AudioFileTile extends StatelessWidget {
           ),
         ],
       ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (showFavoriteIcon)
-            Icon(
-              Icons.favorite,
-              size: 20,
-              color: colorScheme.error,
-            ),
-          if (showFavoriteIcon) const SizedBox(width: 8),
-          Icon(
-            Icons.play_circle_outline,
-            size: 32,
-            color: colorScheme.primary,
-          ),
-        ],
-      ),
+      trailing: onFavoriteToggle != null
+          ? IconButton(
+              onPressed: onFavoriteToggle,
+              icon: Icon(
+                audioFile.isFavorite ? Icons.favorite : Icons.favorite_border,
+                color: audioFile.isFavorite
+                    ? colorScheme.error
+                    : colorScheme.onSurfaceVariant,
+              ),
+              tooltip: audioFile.isFavorite
+                  ? 'Remove from favorites'
+                  : 'Add to favorites',
+            )
+          : showFavoriteIcon
+              ? Icon(
+                  Icons.favorite,
+                  size: 24,
+                  color: colorScheme.error,
+                )
+              : null,
     );
   }
 
