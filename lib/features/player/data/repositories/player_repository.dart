@@ -58,6 +58,7 @@ library;
 import 'dart:async';
 
 import 'package:logger/logger.dart';
+import 'package:soultune/app/constants/frequencies.dart';
 import 'package:soultune/features/player/data/datasources/hive_audio_datasource.dart';
 import 'package:soultune/shared/exceptions/app_exceptions.dart';
 import 'package:soultune/shared/models/audio_file.dart';
@@ -113,8 +114,8 @@ class PlayerRepository {
   /// Current loop mode for playback.
   LoopMode _loopMode = LoopMode.off;
 
-  /// Current pitch shift for new tracks.
-  double _currentPitchShift = 0.0;
+  /// Current pitch shift for new tracks (default: 432Hz for healing frequency).
+  double _currentPitchShift = kPitch432Hz;
 
   /// Subscription to track completion events.
   StreamSubscription<void>? _completionSubscription;

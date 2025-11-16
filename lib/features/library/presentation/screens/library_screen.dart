@@ -5,7 +5,10 @@
 ///
 /// ## Features
 ///
+/// - Tabbed interface: Songs, Folders, Favorites
 /// - List of all audio files with album art thumbnails
+/// - Folder-based browsing for organized music
+/// - Favorites section for quick access
 /// - Tap to play functionality
 /// - Search bar for filtering
 /// - Pull-to-refresh
@@ -33,6 +36,7 @@ import 'package:soultune/shared/models/audio_file.dart';
 /// Library screen displaying all audio files.
 ///
 /// Main screen for browsing and selecting music to play.
+/// Features tabbed navigation: Songs, Folders, Favorites.
 class LibraryScreen extends ConsumerStatefulWidget {
   /// Creates a [LibraryScreen].
   const LibraryScreen({
@@ -47,17 +51,34 @@ class LibraryScreen extends ConsumerStatefulWidget {
   ConsumerState<LibraryScreen> createState() => _LibraryScreenState();
 }
 
-class _LibraryScreenState extends ConsumerState<LibraryScreen> {
+class _LibraryScreenState extends ConsumerState<LibraryScreen>
+    with SingleTickerProviderStateMixin {
   /// Search query for filtering files.
   String _searchQuery = '';
 
   /// Whether a scan is in progress.
   bool _isScanning = false;
 
+  /// Tab controller for Songs/Folders/Favorites tabs.
+  late TabController _tabController;
+
+  /// Current folder path for folder navigation (null = root).
+  String? _currentFolderPath;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final libraryAsync = ref.watch(audioLibraryProvider);
-
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -79,91 +100,326 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             icon: const Icon(Icons.search),
             tooltip: 'Search',
           ),
+          // Scan button
+          IconButton(
+            onPressed: _scanForMusic,
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Scan for Music',
+          ),
+        ],
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(
+              icon: Icon(Icons.music_note),
+              text: 'Songs',
+            ),
+            Tab(
+              icon: Icon(Icons.folder),
+              text: 'Folders',
+            ),
+            Tab(
+              icon: Icon(Icons.favorite),
+              text: 'Favorites',
+            ),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          // Songs Tab
+          _buildSongsTab(),
+
+          // Folders Tab
+          _buildFoldersTab(),
+
+          // Favorites Tab
+          _buildFavoritesTab(),
         ],
       ),
-      body: libraryAsync.when(
-        data: (files) {
-          // Filter files based on search query
-          final filteredFiles = _searchQuery.isEmpty
-              ? files
-              : files.where((file) {
-                  final query = _searchQuery.toLowerCase();
-                  final titleMatch = file.title.toLowerCase().contains(query);
-                  final artistMatch =
-                      file.artist?.toLowerCase().contains(query) ?? false;
-                  return titleMatch || artistMatch;
-                }).toList();
+    );
+  }
 
-          if (filteredFiles.isEmpty && _searchQuery.isNotEmpty) {
-            return _buildEmptySearch(context);
-          }
+  /// Builds the Songs tab content.
+  Widget _buildSongsTab() {
+    final libraryAsync = ref.watch(audioLibraryProvider);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
-          if (filteredFiles.isEmpty) {
-            return _buildEmptyState(context);
-          }
+    return libraryAsync.when(
+      data: (files) {
+        // Filter files based on search query
+        final filteredFiles = _searchQuery.isEmpty
+            ? files
+            : files.where((file) {
+                final query = _searchQuery.toLowerCase();
+                final titleMatch = file.title.toLowerCase().contains(query);
+                final artistMatch =
+                    file.artist?.toLowerCase().contains(query) ?? false;
+                return titleMatch || artistMatch;
+              }).toList();
 
-          return RefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(audioLibraryProvider);
+        if (filteredFiles.isEmpty && _searchQuery.isNotEmpty) {
+          return _buildEmptySearch(context);
+        }
+
+        if (filteredFiles.isEmpty) {
+          return _buildEmptyState(context);
+        }
+
+        return RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(audioLibraryProvider);
+          },
+          child: ListView.builder(
+            itemCount: filteredFiles.length,
+            padding: const EdgeInsets.only(
+                bottom: 152), // Nav bar (80) + Mini player (72)
+            itemBuilder: (context, index) {
+              final audioFile = filteredFiles[index];
+              return _AudioFileTile(
+                audioFile: audioFile,
+                onTap: () => _playAudioFile(audioFile),
+                onLongPress: () => _showAddToPlaylistDialog(audioFile),
+              );
             },
-            child: ListView.builder(
-              itemCount: filteredFiles.length,
-              padding: const EdgeInsets.only(bottom: 152), // Nav bar (80) + Mini player (72)
-              itemBuilder: (context, index) {
-                final audioFile = filteredFiles[index];
-                return _AudioFileTile(
-                  audioFile: audioFile,
-                  onTap: () => _playAudioFile(audioFile),
-                  onLongPress: () => _showAddToPlaylistDialog(audioFile),
-                );
-              },
-            ),
-          );
-        },
-        loading: () => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(height: 16),
-              Text(
-                'Loading library...',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
           ),
+        );
+      },
+      loading: () => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(
+              'Loading library...',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
         ),
-        error: (error, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
+      ),
+      error: (error, stack) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: colorScheme.error,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Failed to load library',
+              style: theme.textTheme.titleMedium?.copyWith(
                 color: colorScheme.error,
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Failed to load library',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: colorScheme.error,
-                ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              error.toString(),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
               ),
-              const SizedBox(height: 8),
-              Text(
-                error.toString(),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  /// Builds the Folders tab content.
+  Widget _buildFoldersTab() {
+    final libraryAsync = ref.watch(audioLibraryProvider);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return libraryAsync.when(
+      data: (files) {
+        if (files.isEmpty) {
+          return _buildEmptyState(context);
+        }
+
+        // Group files by folder
+        final folderMap = <String, List<AudioFile>>{};
+        for (final file in files) {
+          final folderPath = _getFolderPath(file.filePath);
+          folderMap.putIfAbsent(folderPath, () => []).add(file);
+        }
+
+        // If we're in a specific folder, show its contents
+        if (_currentFolderPath != null) {
+          final folderFiles = folderMap[_currentFolderPath] ?? [];
+          return Column(
+            children: [
+              // Back button
+              ListTile(
+                leading: const Icon(Icons.arrow_back),
+                title: Text(
+                  'Back to Folders',
+                  style: theme.textTheme.titleMedium,
+                ),
+                onTap: () {
+                  setState(() {
+                    _currentFolderPath = null;
+                  });
+                },
+              ),
+              const Divider(),
+              // Folder contents
+              Expanded(
+                child: ListView.builder(
+                  itemCount: folderFiles.length,
+                  padding: const EdgeInsets.only(bottom: 152),
+                  itemBuilder: (context, index) {
+                    final audioFile = folderFiles[index];
+                    return _AudioFileTile(
+                      audioFile: audioFile,
+                      onTap: () => _playAudioFile(audioFile),
+                      onLongPress: () => _showAddToPlaylistDialog(audioFile),
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        }
+
+        // Show folder list
+        final folders = folderMap.keys.toList()..sort();
+
+        return ListView.builder(
+          itemCount: folders.length,
+          padding: const EdgeInsets.only(bottom: 152),
+          itemBuilder: (context, index) {
+            final folderPath = folders[index];
+            final folderName = _getFolderName(folderPath);
+            final fileCount = folderMap[folderPath]?.length ?? 0;
+
+            return ListTile(
+              leading: Icon(
+                Icons.folder,
+                size: 40,
+                color: colorScheme.primary,
+              ),
+              title: Text(
+                folderName,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Text(
+                '$fileCount ${fileCount == 1 ? 'song' : 'songs'}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                setState(() {
+                  _currentFolderPath = folderPath;
+                });
+              },
+            );
+          },
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(
+        child: Text('Error: $error'),
+      ),
+    );
+  }
+
+  /// Builds the Favorites tab content.
+  Widget _buildFavoritesTab() {
+    final libraryAsync = ref.watch(audioLibraryProvider);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return libraryAsync.when(
+      data: (files) {
+        // Filter only favorites
+        final favoriteFiles =
+            files.where((file) => file.isFavorite).toList();
+
+        if (favoriteFiles.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.favorite_border,
+                    size: 80,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No Favorites Yet',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Long-press a song and add to favorites',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return ListView.builder(
+          itemCount: favoriteFiles.length,
+          padding: const EdgeInsets.only(bottom: 152),
+          itemBuilder: (context, index) {
+            final audioFile = favoriteFiles[index];
+            return _AudioFileTile(
+              audioFile: audioFile,
+              onTap: () => _playAudioFile(audioFile),
+              onLongPress: () => _showAddToPlaylistDialog(audioFile),
+              showFavoriteIcon: true,
+            );
+          },
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(
+        child: Text('Error: $error'),
+      ),
+    );
+  }
+
+  /// Gets the folder path from a file path.
+  String _getFolderPath(String filePath) {
+    final lastSlash = filePath.lastIndexOf('/');
+    if (lastSlash == -1) return '/';
+    return filePath.substring(0, lastSlash);
+  }
+
+  /// Gets the folder display name from a folder path.
+  String _getFolderName(String folderPath) {
+    final parts = folderPath.split('/');
+    // Return the last meaningful part
+    for (var i = parts.length - 1; i >= 0; i--) {
+      if (parts[i].isNotEmpty) {
+        return parts[i];
+      }
+    }
+    return 'Root';
   }
 
   /// Builds empty state when no files in library.
@@ -432,11 +688,13 @@ class _AudioFileTile extends StatelessWidget {
     required this.audioFile,
     required this.onTap,
     this.onLongPress,
+    this.showFavoriteIcon = false,
   });
 
   final AudioFile audioFile;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
+  final bool showFavoriteIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -480,10 +738,22 @@ class _AudioFileTile extends StatelessWidget {
           ),
         ],
       ),
-      trailing: Icon(
-        Icons.play_circle_outline,
-        size: 32,
-        color: colorScheme.primary,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (showFavoriteIcon)
+            Icon(
+              Icons.favorite,
+              size: 20,
+              color: colorScheme.error,
+            ),
+          if (showFavoriteIcon) const SizedBox(width: 8),
+          Icon(
+            Icons.play_circle_outline,
+            size: 32,
+            color: colorScheme.primary,
+          ),
+        ],
       ),
     );
   }
