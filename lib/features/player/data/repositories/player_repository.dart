@@ -64,6 +64,7 @@ import 'package:soultune/shared/exceptions/app_exceptions.dart';
 import 'package:soultune/shared/models/audio_file.dart';
 import 'package:soultune/shared/models/loop_mode.dart';
 import 'package:soultune/shared/services/audio/audio_player_service.dart';
+import 'package:soultune/shared/services/audio/audio_service_integration.dart';
 import 'package:soultune/shared/services/file/file_system_service.dart';
 
 /// Repository for player feature business logic.
@@ -562,9 +563,25 @@ class PlayerRepository {
       // Set playlist (all library files) for auto-play
       final allFiles = await getAllAudioFiles();
       final currentIndex = allFiles.indexWhere((f) => f.id == audioFile.id);
-      _audioPlayerService.setPlaylist(allFiles, startIndex: currentIndex);
 
-      await _audioPlayerService.play(audioFile, pitchShift, startPosition);
+      // Use AudioServiceIntegration to sync internal player and notifications
+      AudioServiceIntegration.setPlaylist(
+        allFiles,
+        _audioPlayerService,
+        startIndex: currentIndex,
+      );
+
+      // Play with notification sync
+      await AudioServiceIntegration.playAudioFile(
+        audioFile,
+        _audioPlayerService,
+        pitchShift: pitchShift,
+      );
+
+      // Seek to start position if provided
+      if (startPosition != null) {
+        await seek(startPosition);
+      }
 
       _logger.i(
         'Playing: ${audioFile.title} '
@@ -595,7 +612,8 @@ class PlayerRepository {
     _ensureInitialized();
 
     try {
-      await _audioPlayerService.pause();
+      // Use AudioServiceIntegration to sync internal player and notifications
+      await AudioServiceIntegration.pause(_audioPlayerService);
     } on Exception catch (e) {
       _logger.e('Failed to pause', error: e);
       throw AudioException('Failed to pause playback', e);
@@ -613,7 +631,8 @@ class PlayerRepository {
     _ensureInitialized();
 
     try {
-      await _audioPlayerService.play();
+      // Use AudioServiceIntegration to sync internal player and notifications
+      await AudioServiceIntegration.resume(_audioPlayerService);
     } on Exception catch (e) {
       _logger.e('Failed to resume', error: e);
       throw AudioException('Failed to resume playback', e);
@@ -631,7 +650,8 @@ class PlayerRepository {
     _ensureInitialized();
 
     try {
-      await _audioPlayerService.stop();
+      // Use AudioServiceIntegration to sync internal player and notifications
+      await AudioServiceIntegration.stop(_audioPlayerService);
     } on Exception catch (e) {
       _logger.e('Failed to stop', error: e);
       throw AudioException('Failed to stop playback', e);
@@ -677,7 +697,14 @@ class PlayerRepository {
     _ensureInitialized();
 
     try {
-      await _audioPlayerService.setPitchShift(semitones);
+      // Save for auto-play continuity
+      _currentPitchShift = semitones;
+
+      // Use AudioServiceIntegration to sync internal player and notifications
+      await AudioServiceIntegration.updatePitchShift(
+        semitones,
+        _audioPlayerService,
+      );
     } on Exception catch (e) {
       _logger.e('Failed to set pitch shift', error: e);
       throw AudioException('Failed to change frequency', e);
@@ -853,7 +880,14 @@ class PlayerRepository {
   /// ```
   void setPlaylist(List<AudioFile> playlist, {int startIndex = 0}) {
     _ensureInitialized();
-    _audioPlayerService.setPlaylist(playlist, startIndex: startIndex);
+
+    // Use AudioServiceIntegration to sync internal player and notifications
+    AudioServiceIntegration.setPlaylist(
+      playlist,
+      _audioPlayerService,
+      startIndex: startIndex,
+    );
+
     _logger.i('Playlist set: ${playlist.length} tracks, starting at $startIndex');
   }
 

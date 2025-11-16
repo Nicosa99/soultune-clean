@@ -23,10 +23,7 @@
 /// ```
 library;
 
-import 'dart:async';
-
 import 'package:audio_service/audio_service.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:logger/logger.dart';
 import 'package:soultune/shared/models/audio_file.dart';
 
@@ -55,9 +52,6 @@ class SoulTuneAudioHandler extends BaseAudioHandler
     ),
   );
 
-  /// The underlying just_audio player.
-  final AudioPlayer _player = AudioPlayer();
-
   /// Current playlist.
   List<MediaItem> _queue = [];
 
@@ -67,23 +61,27 @@ class SoulTuneAudioHandler extends BaseAudioHandler
   /// Current pitch shift (for display in notification).
   double _currentPitchShift = 0.0;
 
-  /// Stream subscriptions.
-  final List<StreamSubscription> _subscriptions = [];
-
   /// Initializes the audio handler.
   Future<void> _init() async {
     _logger.i('Initializing SoulTuneAudioHandler...');
 
-    // Listen to player state changes and update system
-    _subscriptions.add(_player.playbackEventStream.listen(_broadcastState));
-
-    // Listen to player completion
-    _subscriptions.add(
-      _player.playerStateStream.listen((state) {
-        if (state.processingState == ProcessingState.completed) {
-          _handleTrackCompletion();
-        }
-      }),
+    // Initialize with default playback state
+    playbackState.add(
+      PlaybackState(
+        controls: [
+          MediaControl.skipToPrevious,
+          MediaControl.play,
+          MediaControl.skipToNext,
+        ],
+        systemActions: const {
+          MediaAction.seek,
+          MediaAction.seekForward,
+          MediaAction.seekBackward,
+        },
+        androidCompactActionIndices: const [0, 1, 2],
+        processingState: AudioProcessingState.idle,
+        playing: false,
+      ),
     );
 
     _logger.i('✓ SoulTuneAudioHandler initialized');
@@ -96,26 +94,34 @@ class SoulTuneAudioHandler extends BaseAudioHandler
   @override
   Future<void> play() async {
     _logger.d('play() called from system');
-    await _player.play();
+    // Update notification state only (actual playback via AudioPlayerService)
+    _broadcastPlayingState(true);
   }
 
   @override
   Future<void> pause() async {
     _logger.d('pause() called from system');
-    await _player.pause();
+    // Update notification state only (actual playback via AudioPlayerService)
+    _broadcastPlayingState(false);
   }
 
   @override
   Future<void> stop() async {
     _logger.d('stop() called from system');
-    await _player.stop();
+    _broadcastPlayingState(false);
     await super.stop();
   }
 
   @override
   Future<void> seek(Duration position) async {
     _logger.d('seek($position) called from system');
-    await _player.seek(position);
+    // Seek functionality would need integration with AudioPlayerService
+    // For now, just update the position in the notification
+    playbackState.add(
+      playbackState.value.copyWith(
+        updatePosition: position,
+      ),
+    );
   }
 
   @override
@@ -145,12 +151,11 @@ class SoulTuneAudioHandler extends BaseAudioHandler
     _currentIndex = index;
     final mediaItem = _queue[index];
 
-    // Update current media item
+    // Update current media item (notification only)
     this.mediaItem.add(mediaItem);
 
-    // Load and play the track
-    await _player.setFilePath(mediaItem.extras!['filePath'] as String);
-    await _player.play();
+    // Update playback state
+    _broadcastPlayingState(true);
   }
 
   // ---------------------------------------------------------------------------
@@ -158,6 +163,9 @@ class SoulTuneAudioHandler extends BaseAudioHandler
   // ---------------------------------------------------------------------------
 
   /// Plays an audio file with optional pitch shift.
+  ///
+  /// Note: This method only updates the notification metadata.
+  /// Actual playback is handled by AudioPlayerService.
   Future<void> playAudioFile(
     AudioFile audioFile, {
     double pitchShift = 0.0,
@@ -169,18 +177,33 @@ class SoulTuneAudioHandler extends BaseAudioHandler
     // Create media item from audio file
     final mediaItem = _createMediaItem(audioFile, pitchShift);
 
-    // Update current media item
+    // Update current media item (updates notification)
     this.mediaItem.add(mediaItem);
 
-    // Load audio source
-    await _player.setFilePath(audioFile.filePath);
+    // Update playback state to show as playing
+    _broadcastPlayingState(true);
+  }
 
-    // Apply pitch shift
-    final pitchValue = 1.0 + (pitchShift / 12.0);
-    await _player.setPitch(pitchValue);
-
-    // Start playback
-    await _player.play();
+  /// Updates playback state in notification.
+  void _broadcastPlayingState(bool playing) {
+    playbackState.add(
+      playbackState.value.copyWith(
+        controls: [
+          MediaControl.skipToPrevious,
+          if (playing) MediaControl.pause else MediaControl.play,
+          MediaControl.skipToNext,
+        ],
+        systemActions: const {
+          MediaAction.seek,
+          MediaAction.seekForward,
+          MediaAction.seekBackward,
+        },
+        androidCompactActionIndices: const [0, 1, 2],
+        processingState: AudioProcessingState.ready,
+        playing: playing,
+        queueIndex: _currentIndex,
+      ),
+    );
   }
 
   /// Sets the current playlist.
@@ -235,60 +258,6 @@ class SoulTuneAudioHandler extends BaseAudioHandler
     );
   }
 
-  /// Broadcasts current player state to system.
-  void _broadcastState(PlaybackEvent event) {
-    final playing = _player.playing;
-    final processingState = _getProcessingState();
-
-    playbackState.add(
-      playbackState.value.copyWith(
-        controls: [
-          MediaControl.skipToPrevious,
-          if (playing) MediaControl.pause else MediaControl.play,
-          MediaControl.skipToNext,
-        ],
-        systemActions: const {
-          MediaAction.seek,
-          MediaAction.seekForward,
-          MediaAction.seekBackward,
-        },
-        androidCompactActionIndices: const [0, 1, 2],
-        processingState: processingState,
-        playing: playing,
-        updatePosition: _player.position,
-        bufferedPosition: _player.bufferedPosition,
-        speed: _player.speed,
-        queueIndex: _currentIndex,
-      ),
-    );
-  }
-
-  /// Gets audio_service processing state from just_audio state.
-  AudioProcessingState _getProcessingState() {
-    switch (_player.processingState) {
-      case ProcessingState.idle:
-        return AudioProcessingState.idle;
-      case ProcessingState.loading:
-        return AudioProcessingState.loading;
-      case ProcessingState.buffering:
-        return AudioProcessingState.buffering;
-      case ProcessingState.ready:
-        return AudioProcessingState.ready;
-      case ProcessingState.completed:
-        return AudioProcessingState.completed;
-    }
-  }
-
-  /// Handles track completion (auto-play next).
-  Future<void> _handleTrackCompletion() async {
-    _logger.d('Track completed');
-
-    // Auto-play next track if available
-    if (_currentIndex < _queue.length - 1) {
-      await skipToNext();
-    }
-  }
-
   /// Gets frequency label from pitch shift value.
   String _getFrequencyLabel(double pitchShift) {
     if ((pitchShift - (-0.31767)).abs() < 0.01) {
@@ -308,11 +277,6 @@ class SoulTuneAudioHandler extends BaseAudioHandler
   /// Disposes resources.
   Future<void> dispose() async {
     _logger.d('Disposing SoulTuneAudioHandler...');
-
-    for (final subscription in _subscriptions) {
-      await subscription.cancel();
-    }
-
-    await _player.dispose();
+    // No internal player to dispose - actual playback handled by AudioPlayerService
   }
 }
