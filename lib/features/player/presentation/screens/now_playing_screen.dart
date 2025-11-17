@@ -50,7 +50,8 @@ class NowPlayingScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentFile = ref.watch(currentAudioFileProvider);
+    final currentFileAsync = ref.watch(currentAudioFileProvider);
+    final currentFile = currentFileAsync.valueOrNull;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -132,7 +133,7 @@ class NowPlayingScreen extends ConsumerWidget {
   ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final currentFile = ref.watch(currentAudioFileProvider);
+    final currentFile = ref.watch(currentAudioFileProvider).valueOrNull;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
