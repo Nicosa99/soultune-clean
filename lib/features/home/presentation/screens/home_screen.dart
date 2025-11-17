@@ -1,11 +1,11 @@
 /// SoulTune Home Screen
 ///
 /// Main app screen with bottom navigation.
-/// Provides access to Library, Playlists, and Now Playing screens.
+/// Provides access to Library and Now Playing screens.
 ///
 /// ## Features
 ///
-/// - Bottom navigation bar (Library, Playlists, Now Playing)
+/// - Bottom navigation bar (Library, Now Playing)
 /// - Smooth page transitions
 /// - Persistent state between tabs
 /// - Material 3 navigation bar
@@ -25,13 +25,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soultune/features/library/presentation/screens/library_screen.dart';
 import 'package:soultune/features/player/presentation/providers/player_providers.dart';
 import 'package:soultune/features/player/presentation/screens/now_playing_screen.dart';
-import 'package:soultune/features/playlist/presentation/screens/playlists_screen.dart';
 import 'package:soultune/shared/widgets/mini_player.dart';
 
 /// Home screen with bottom navigation.
 ///
 /// Main entry point of the app, providing navigation between
-/// Library, Playlists, and Now Playing screens.
+/// Library and Now Playing screens.
 class HomeScreen extends ConsumerStatefulWidget {
   /// Creates a [HomeScreen].
   const HomeScreen({super.key});
@@ -58,8 +57,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final currentFile = ref.watch(currentAudioFileProvider);
     final hasAudio = currentFile != null;
 
-    // Show mini player only on Library and Playlists tabs
-    final showMiniPlayer = hasAudio && _selectedIndex != 2;
+    // Show mini player only on Library tab (not on Now Playing)
+    final showMiniPlayer = hasAudio && _selectedIndex != 1;
 
     return Scaffold(
       body: PageView(
@@ -70,13 +69,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           });
         },
         children: [
-          // Library tab
+          // Library tab (includes Songs and Playlists sub-tabs)
           LibraryScreen(
-            onNavigateToPlayer: _showNowPlayingModal,
-          ),
-
-          // Playlists tab
-          PlaylistsScreen(
             onNavigateToPlayer: _showNowPlayingModal,
           ),
 
@@ -126,18 +120,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 );
               },
               destinations: [
-                // Library destination
+                // Library destination (includes Songs and Playlists tabs)
                 const NavigationDestination(
                   icon: Icon(Icons.library_music_outlined),
                   selectedIcon: Icon(Icons.library_music),
                   label: 'Library',
-                ),
-
-                // Playlists destination
-                const NavigationDestination(
-                  icon: Icon(Icons.queue_music_outlined),
-                  selectedIcon: Icon(Icons.queue_music),
-                  label: 'Playlists',
                 ),
 
                 // Now Playing destination
