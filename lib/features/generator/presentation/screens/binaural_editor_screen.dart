@@ -57,8 +57,22 @@ class _BinauralEditorScreenState extends ConsumerState<BinauralEditorScreen> {
   /// Current pan position for visualization.
   double _panPosition = 0.0;
 
+  /// Whether to use adaptive panning speed.
+  bool _useAdaptivePanning = true;
+
+  /// Manual panning speed (when adaptive is off).
+  double _manualPanningSpeed = 15.0;
+
   /// Beat frequency (auto-calculated).
   double get _beatFrequency => (_rightFrequency - _leftFrequency).abs();
+
+  /// Gets the optimal panning config for current beat frequency.
+  PanningConfig get _optimalPanningConfig {
+    if (_useAdaptivePanning) {
+      return PanningConfig.forBeatFrequency(_beatFrequency);
+    }
+    return PanningConfig(cycleSeconds: _manualPanningSpeed, depth: 0.35);
+  }
 
   /// Brainwave category based on beat frequency.
   String get _brainwaveCategory {
@@ -483,7 +497,7 @@ class _BinauralEditorScreenState extends ConsumerState<BinauralEditorScreen> {
         await playWithPanning(
           preset,
           enablePanning: true,
-          config: PanningConfig.research,
+          config: _optimalPanningConfig,
         );
 
         // Start listening to pan position updates
@@ -592,32 +606,91 @@ class _BinauralEditorScreenState extends ConsumerState<BinauralEditorScreen> {
 
   /// Builds the panning toggle switch.
   Widget _buildPanningToggle(ThemeData theme, ColorScheme colorScheme) {
-    return Card(
-      color: _panningEnabled
-          ? colorScheme.primaryContainer.withOpacity(0.3)
-          : null,
-      child: SwitchListTile(
-        title: const Text('L↔R Panning Modulation'),
-        subtitle: Text(
-          _panningEnabled
-              ? 'Enhanced brain sync (15s cycle, 35% depth)'
-              : 'Enable for advanced brain hemisphere synchronization',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: colorScheme.onSurfaceVariant,
+    final optimalConfig = _optimalPanningConfig;
+
+    return Column(
+      children: [
+        Card(
+          color: _panningEnabled
+              ? colorScheme.primaryContainer.withOpacity(0.3)
+              : null,
+          child: SwitchListTile(
+            title: const Text('L↔R Panning Modulation'),
+            subtitle: Text(
+              _panningEnabled
+                  ? 'Cycle: ${optimalConfig.cycleSeconds.toInt()}s, '
+                      'Depth: ${(optimalConfig.depth * 100).toInt()}%'
+                  : 'Enable for advanced brain hemisphere synchronization',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+            secondary: Icon(
+              Icons.surround_sound,
+              color: _panningEnabled ? colorScheme.primary : null,
+            ),
+            value: _panningEnabled,
+            onChanged: (value) {
+              HapticFeedback.selectionClick();
+              setState(() {
+                _panningEnabled = value;
+              });
+            },
           ),
         ),
-        secondary: Icon(
-          Icons.surround_sound,
-          color: _panningEnabled ? colorScheme.primary : null,
-        ),
-        value: _panningEnabled,
-        onChanged: (value) {
-          HapticFeedback.selectionClick();
-          setState(() {
-            _panningEnabled = value;
-          });
-        },
-      ),
+
+        // Advanced panning controls
+        if (_panningEnabled) ...[
+          const SizedBox(height: 8),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SwitchListTile(
+                    title: const Text('Adaptive Speed'),
+                    subtitle: Text(
+                      _useAdaptivePanning
+                          ? 'Auto-optimized for $_brainwaveCategory waves'
+                          : 'Manual speed control',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                    value: _useAdaptivePanning,
+                    onChanged: (value) {
+                      HapticFeedback.selectionClick();
+                      setState(() {
+                        _useAdaptivePanning = value;
+                      });
+                    },
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  if (!_useAdaptivePanning) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Panning Speed: '
+                      '${_manualPanningSpeed.toInt()} seconds',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                    Slider(
+                      value: _manualPanningSpeed,
+                      min: 5,
+                      max: 40,
+                      divisions: 7,
+                      label: '${_manualPanningSpeed.toInt()}s',
+                      onChanged: (value) {
+                        setState(() {
+                          _manualPanningSpeed = value;
+                        });
+                      },
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 

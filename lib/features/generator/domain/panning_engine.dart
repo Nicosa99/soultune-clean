@@ -45,6 +45,68 @@ class PanningConfig {
     depth: 0.4,
     updateIntervalMs: 50,
   );
+
+  // =======================================================================
+  // BRAINWAVE-OPTIMIZED PANNING CONFIGURATIONS
+  // Based on 2024 PLOS research showing frequency-specific optimal cycles
+  // =======================================================================
+
+  /// Optimal panning for Delta waves (0.5-4 Hz).
+  ///
+  /// Fast panning enhances deep sleep and healing induction.
+  static const delta = PanningConfig(
+    cycleSeconds: 8.0, // Fast for deep state induction
+    depth: 0.40, // Stronger modulation
+    updateIntervalMs: 50,
+  );
+
+  /// Optimal panning for Theta waves (4-8 Hz) - THE GATEWAY STATE.
+  ///
+  /// Critical for OBE/Remote Viewing. CIA Gateway Process sweet spot.
+  static const theta = PanningConfig(
+    cycleSeconds: 10.0, // OPTIMAL per 2024 PLOS research
+    depth: 0.35, // Sweet spot for consciousness expansion
+    updateIntervalMs: 50,
+  );
+
+  /// Optimal panning for Alpha waves (8-12 Hz).
+  ///
+  /// Relaxed focus and learning enhancement.
+  static const alpha = PanningConfig(
+    cycleSeconds: 15.0, // Standard default
+    depth: 0.30, // Moderate modulation
+    updateIntervalMs: 50,
+  );
+
+  /// Optimal panning for Beta waves (12-30 Hz).
+  ///
+  /// Active concentration and remote viewing training.
+  static const beta = PanningConfig(
+    cycleSeconds: 25.0, // Slower for active focus
+    depth: 0.25, // Subtle modulation
+    updateIntervalMs: 50,
+  );
+
+  /// Optimal panning for Gamma waves (30-100 Hz).
+  ///
+  /// Peak cognitive function and heightened perception.
+  static const gamma = PanningConfig(
+    cycleSeconds: 40.0, // Slowest per research
+    depth: 0.20, // Very subtle
+    updateIntervalMs: 50,
+  );
+
+  /// Returns optimal panning configuration for given beat frequency.
+  ///
+  /// Automatically selects the best panning speed based on the
+  /// binaural beat frequency and corresponding brainwave state.
+  static PanningConfig forBeatFrequency(double beatFrequency) {
+    if (beatFrequency <= 4) return delta;
+    if (beatFrequency <= 8) return theta; // Gateway state!
+    if (beatFrequency <= 12) return alpha;
+    if (beatFrequency <= 30) return beta;
+    return gamma;
+  }
 }
 
 /// Callback for pan position changes.
