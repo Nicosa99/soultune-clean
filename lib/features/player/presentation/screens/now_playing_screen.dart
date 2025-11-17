@@ -226,7 +226,7 @@ class NowPlayingScreen extends ConsumerWidget {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
           child: currentFile?.albumArt != null &&
-                 File(currentFile.albumArt!).existsSync()
+                 File(currentFile!.albumArt!).existsSync()
               ? Image.file(
                   File(currentFile.albumArt!),
                   fit: BoxFit.cover,
