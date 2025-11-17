@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soultune/features/generator/data/models/frequency_preset.dart';
 import 'package:soultune/features/generator/data/models/predefined_presets.dart';
 import 'package:soultune/features/generator/data/models/preset_category.dart';
+import 'package:soultune/features/generator/presentation/providers/generator_providers.dart';
 
 /// Generator screen for frequency presets.
 ///
@@ -229,7 +230,7 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen>
   }
 
   /// Plays a frequency preset.
-  void _playPreset(FrequencyPreset preset) {
+  Future<void> _playPreset(FrequencyPreset preset) async {
     HapticFeedback.mediumImpact();
 
     setState(() {
@@ -237,35 +238,69 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen>
       _isPlaying = true;
     });
 
-    // TODO: Connect to actual FrequencyGeneratorService
-    // For now, just show UI state
+    try {
+      final playPreset = ref.read(playFrequencyPresetProvider);
+      await playPreset(preset);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Playing ${preset.name}'),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Playing ${preset.name}'),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isPlaying = false;
+          _playingPreset = null;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to play: $e'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
   }
 
   /// Stops the current preset.
-  void _stopPreset() {
+  Future<void> _stopPreset() async {
     HapticFeedback.lightImpact();
 
     setState(() {
       _isPlaying = false;
     });
 
-    // TODO: Stop actual frequency generation
+    try {
+      final stopGeneration = ref.read(stopFrequencyGenerationProvider);
+      await stopGeneration();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Stopped frequency generation'),
-        behavior: SnackBarBehavior.floating,
-        duration: Duration(seconds: 1),
-      ),
-    );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Stopped frequency generation'),
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error stopping: $e'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
   }
 
   /// Toggles favorite status for a preset.
