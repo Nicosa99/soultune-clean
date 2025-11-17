@@ -11,6 +11,9 @@ import 'package:soultune/features/generator/data/models/frequency_preset.dart';
 import 'package:soultune/features/generator/data/models/predefined_presets.dart';
 import 'package:soultune/features/generator/data/models/preset_category.dart';
 import 'package:soultune/features/generator/presentation/providers/generator_providers.dart';
+import 'package:soultune/features/generator/presentation/screens/binaural_editor_screen.dart';
+import 'package:soultune/features/generator/presentation/screens/custom_generator_screen.dart';
+import 'package:soultune/features/generator/presentation/widgets/preset_detail_sheet.dart';
 
 /// Generator screen for frequency presets.
 ///
@@ -98,6 +101,44 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen>
           if (_playingPreset != null) _buildNowPlayingBar(colorScheme),
         ],
       ),
+      floatingActionButton: _buildFAB(colorScheme),
+    );
+  }
+
+  /// Builds the floating action button with menu.
+  Widget _buildFAB(ColorScheme colorScheme) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Binaural Editor button
+        FloatingActionButton.small(
+          heroTag: 'binaural',
+          onPressed: () {
+            HapticFeedback.lightImpact();
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (context) => const BinauralEditorScreen(),
+              ),
+            );
+          },
+          backgroundColor: colorScheme.secondaryContainer,
+          child: const Icon(Icons.headphones),
+        ),
+        const SizedBox(height: 8),
+        // Custom Generator button
+        FloatingActionButton(
+          heroTag: 'custom',
+          onPressed: () {
+            HapticFeedback.mediumImpact();
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (context) => const CustomGeneratorScreen(),
+              ),
+            );
+          },
+          child: const Icon(Icons.tune),
+        ),
+      ],
     );
   }
 
@@ -135,8 +176,32 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen>
           onPlay: () => _playPreset(preset),
           onStop: _stopPreset,
           onFavorite: () => _toggleFavorite(preset),
+          onTap: () => _showPresetDetails(preset),
         );
       },
+    );
+  }
+
+  /// Shows the preset detail bottom sheet.
+  void _showPresetDetails(FrequencyPreset preset) {
+    HapticFeedback.selectionClick();
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => PresetDetailSheet(
+        preset: preset,
+        isPlaying: _playingPreset?.id == preset.id && _isPlaying,
+        onPlay: () {
+          Navigator.of(context).pop();
+          _playPreset(preset);
+        },
+        onStop: () {
+          Navigator.of(context).pop();
+          _stopPreset();
+        },
+        onFavorite: () => _toggleFavorite(preset),
+      ),
     );
   }
 
@@ -337,6 +402,7 @@ class _PresetCard extends StatelessWidget {
     required this.onPlay,
     required this.onStop,
     required this.onFavorite,
+    required this.onTap,
   });
 
   final FrequencyPreset preset;
@@ -344,6 +410,7 @@ class _PresetCard extends StatelessWidget {
   final VoidCallback onPlay;
   final VoidCallback onStop;
   final VoidCallback onFavorite;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -357,7 +424,7 @@ class _PresetCard extends StatelessWidget {
           ? colorScheme.primaryContainer.withOpacity(0.3)
           : colorScheme.surfaceContainerLow,
       child: InkWell(
-        onTap: isPlaying ? onStop : onPlay,
+        onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -457,19 +524,29 @@ class _PresetCard extends StatelessWidget {
 
   /// Builds the play/stop button.
   Widget _buildPlayButton(ColorScheme colorScheme) {
-    return Container(
-      width: 56,
-      height: 56,
-      decoration: BoxDecoration(
-        color: isPlaying ? colorScheme.primary : colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Icon(
-        isPlaying ? Icons.stop_rounded : Icons.play_arrow_rounded,
-        size: 32,
-        color: isPlaying
-            ? colorScheme.onPrimary
-            : colorScheme.onPrimaryContainer,
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.mediumImpact();
+        if (isPlaying) {
+          onStop();
+        } else {
+          onPlay();
+        }
+      },
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          color: isPlaying ? colorScheme.primary : colorScheme.primaryContainer,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Icon(
+          isPlaying ? Icons.stop_rounded : Icons.play_arrow_rounded,
+          size: 32,
+          color: isPlaying
+              ? colorScheme.onPrimary
+              : colorScheme.onPrimaryContainer,
+        ),
       ),
     );
   }
