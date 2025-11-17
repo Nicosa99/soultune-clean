@@ -135,7 +135,7 @@ class _CustomGeneratorScreenState
                 fontWeight: FontWeight.w600,
               ),
             ),
-            if (_layers.length < kMaxFrequencyLayers)
+            if (_layers.length < kMaxLayers)
               TextButton.icon(
                 onPressed: _addLayer,
                 icon: const Icon(Icons.add),
@@ -404,7 +404,7 @@ class _CustomGeneratorScreenState
 
   /// Adds a new layer.
   void _addLayer() {
-    if (_layers.length >= kMaxFrequencyLayers) return;
+    if (_layers.length >= kMaxLayers) return;
 
     HapticFeedback.lightImpact();
     setState(() {
