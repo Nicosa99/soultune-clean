@@ -20,6 +20,18 @@ enum PresetCategory {
   /// Energy and motivation presets.
   energy('Energy', '🔥', 'Vitality & motivation'),
 
+  /// CIA Gateway Process presets (declassified).
+  cia('CIA Gateway', '🔓', 'Declassified consciousness tech'),
+
+  /// Out-of-body experience presets.
+  oobe('Out-of-Body', '👁️', 'OBE & astral projection'),
+
+  /// Remote viewing training presets.
+  remoteViewing('Remote Viewing', '🔭', 'Enhanced perception & RV'),
+
+  /// Advanced consciousness expansion.
+  consciousness('Consciousness', '🌌', 'Expanded awareness states'),
+
   /// Custom user-created presets.
   custom('Custom', '⭐', 'Your personal presets');
 

@@ -44,7 +44,7 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 9, vsync: this);
     _presets = getPredefinedPresets();
   }
 
@@ -78,6 +78,10 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen>
             _buildTab(PresetCategory.focus),
             _buildTab(PresetCategory.healing),
             _buildTab(PresetCategory.energy),
+            _buildTab(PresetCategory.cia),
+            _buildTab(PresetCategory.oobe),
+            _buildTab(PresetCategory.remoteViewing),
+            _buildTab(PresetCategory.consciousness),
           ],
         ),
       ),
@@ -93,6 +97,10 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen>
                 _buildPresetList(PresetCategory.focus),
                 _buildPresetList(PresetCategory.healing),
                 _buildPresetList(PresetCategory.energy),
+                _buildPresetList(PresetCategory.cia),
+                _buildPresetList(PresetCategory.oobe),
+                _buildPresetList(PresetCategory.remoteViewing),
+                _buildPresetList(PresetCategory.consciousness),
               ],
             ),
           ),

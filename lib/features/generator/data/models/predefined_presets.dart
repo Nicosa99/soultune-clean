@@ -465,5 +465,206 @@ List<FrequencyPreset> getPredefinedPresets() {
       tags: ['passion', 'motivation', 'drive', 'energy'],
       createdAt: now,
     ),
+
+    // =========================================================================
+    // CIA GATEWAY PROCESS (Declassified 1983, Public 2003)
+    // =========================================================================
+
+    FrequencyPreset(
+      id: 'preset_cia_focus10',
+      name: 'Focus 10 (Gateway)',
+      category: PresetCategory.cia,
+      description: 'CIA Gateway Level 1: "Mind Awake, Body Asleep". '
+          'The foundational state from declassified 1983 Army Intelligence '
+          'report. Entry point for consciousness expansion training.',
+      layers: const [],
+      binauralConfig: const BinauralConfig(
+        leftFrequency: 200,
+        rightFrequency: 210,
+      ),
+      durationMinutes: 30,
+      tags: ['cia', 'gateway', 'focus10', 'alpha', 'foundation'],
+      createdAt: now,
+    ),
+
+    FrequencyPreset(
+      id: 'preset_cia_focus12',
+      name: 'Focus 12 (Expanded)',
+      category: PresetCategory.cia,
+      description: 'CIA Gateway Level 2: Expanded awareness beyond normal '
+          'consciousness. "The bridge to Focus 15 and beyond." '
+          'First OBE-like sensations typically occur here.',
+      layers: const [],
+      binauralConfig: const BinauralConfig(
+        leftFrequency: 200,
+        rightFrequency: 212,
+      ),
+      durationMinutes: 35,
+      tags: ['cia', 'gateway', 'focus12', 'expanded', 'awareness'],
+      createdAt: now,
+    ),
+
+    FrequencyPreset(
+      id: 'preset_cia_focus15',
+      name: 'Focus 15 (No-Time)',
+      category: PresetCategory.cia,
+      description: 'CIA Gateway Level 3: "No-Time" state. Vibrational '
+          'sensations and energy field awareness begin. Preparation for '
+          'Focus 21 breakthrough. Use panning for enhanced effect.',
+      layers: const [],
+      binauralConfig: const BinauralConfig(
+        leftFrequency: 200,
+        rightFrequency: 215,
+      ),
+      durationMinutes: 40,
+      tags: ['cia', 'gateway', 'focus15', 'no-time', 'vibrations'],
+      createdAt: now,
+    ),
+
+    FrequencyPreset(
+      id: 'preset_cia_focus21',
+      name: 'Focus 21 (THE GATEWAY)',
+      category: PresetCategory.cia,
+      description: '⚠️ ADVANCED: The breakthrough state. CIA: "Expanded '
+          'consciousness beyond spacetime. OBE, remote viewing accessible." '
+          'Requires 4+ weeks Focus 10-15 practice. ENABLE PANNING!',
+      layers: const [],
+      binauralConfig: const BinauralConfig(
+        leftFrequency: 200,
+        rightFrequency: 206,
+      ),
+      durationMinutes: 60,
+      tags: ['cia', 'gateway', 'focus21', 'theta', 'breakthrough', 'advanced'],
+      createdAt: now,
+    ),
+
+    // =========================================================================
+    // OUT-OF-BODY EXPERIENCE
+    // =========================================================================
+
+    FrequencyPreset(
+      id: 'preset_oobe_initiation',
+      name: 'OBE Initiation',
+      category: PresetCategory.oobe,
+      description: 'Schumann Resonance (7.83Hz) for OBE induction. '
+          'Best at 3-6 AM when melatonin peaks. May cause sleep paralysis. '
+          'Enable panning for maximum effect.',
+      layers: const [],
+      binauralConfig: const BinauralConfig(
+        leftFrequency: 200,
+        rightFrequency: 207.83,
+      ),
+      durationMinutes: 90,
+      tags: ['oobe', 'astral', 'schumann', 'theta', 'advanced'],
+      createdAt: now,
+    ),
+
+    FrequencyPreset(
+      id: 'preset_astral_projection',
+      name: 'Astral Projection',
+      category: PresetCategory.oobe,
+      description: '4Hz Delta with 528Hz healing overlay. Highest reported '
+          'OBE success rate. Extended duration for deep exploration. '
+          'Advanced practitioners only.',
+      layers: [
+        const FrequencyLayer(
+          frequency: 4.0,
+          waveform: Waveform.sine,
+          volume: 0.6,
+          label: 'Delta Base',
+        ),
+        const FrequencyLayer(
+          frequency: kSolfeggio528Hz,
+          waveform: Waveform.sine,
+          volume: 0.4,
+          label: 'Love Frequency',
+        ),
+      ],
+      binauralConfig: const BinauralConfig(
+        leftFrequency: 200,
+        rightFrequency: 204,
+      ),
+      durationMinutes: 120,
+      tags: ['oobe', 'astral', 'delta', 'advanced', 'extended'],
+      createdAt: now,
+    ),
+
+    // =========================================================================
+    // REMOTE VIEWING (Project Stargate)
+    // =========================================================================
+
+    FrequencyPreset(
+      id: 'preset_remote_viewing',
+      name: 'RV Training',
+      category: PresetCategory.remoteViewing,
+      description: 'Used by CIA Project Stargate (1978-1995). '
+          'Joseph McMoneagle achieved 450+ successful missions. '
+          'Beta waves for focused remote perception.',
+      layers: const [],
+      binauralConfig: const BinauralConfig(
+        leftFrequency: 220,
+        rightFrequency: 238,
+      ),
+      durationMinutes: 45,
+      tags: ['rv', 'remote-viewing', 'stargate', 'beta', 'perception'],
+      createdAt: now,
+    ),
+
+    FrequencyPreset(
+      id: 'preset_enhanced_perception',
+      name: 'Enhanced Perception',
+      category: PresetCategory.remoteViewing,
+      description: '40Hz Gamma for peak cognitive function. Research shows '
+          'Gamma correlates with "Aha!" moments and heightened intuition. '
+          'ESP and precognition development.',
+      layers: const [],
+      binauralConfig: const BinauralConfig(
+        leftFrequency: 300,
+        rightFrequency: 340,
+      ),
+      durationMinutes: 30,
+      tags: ['gamma', 'esp', 'intuition', 'perception', 'peak'],
+      createdAt: now,
+    ),
+
+    // =========================================================================
+    // CONSCIOUSNESS EXPANSION
+    // =========================================================================
+
+    FrequencyPreset(
+      id: 'preset_dimensional_awareness',
+      name: 'Dimensional Awareness',
+      category: PresetCategory.consciousness,
+      description: 'Multi-layered stack: 963Hz Crown Chakra + 432Hz '
+          'natural harmony + 6Hz Theta base. Advanced consciousness '
+          'exploration and expanded dimensional perception.',
+      layers: [
+        const FrequencyLayer(
+          frequency: 6.0,
+          waveform: Waveform.sine,
+          volume: 0.5,
+          label: 'Theta Base',
+        ),
+        const FrequencyLayer(
+          frequency: kSolfeggio963Hz,
+          waveform: Waveform.sine,
+          volume: 0.3,
+          label: 'Crown Chakra',
+        ),
+        const FrequencyLayer(
+          frequency: 432.0,
+          waveform: Waveform.sine,
+          volume: 0.2,
+          label: 'Natural Harmony',
+        ),
+      ],
+      binauralConfig: const BinauralConfig(
+        leftFrequency: 200,
+        rightFrequency: 206,
+      ),
+      durationMinutes: 60,
+      tags: ['consciousness', 'dimensions', 'advanced', 'expansion'],
+      createdAt: now,
+    ),
   ];
 }
