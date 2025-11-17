@@ -410,7 +410,7 @@ class _CustomGeneratorScreenState
     setState(() {
       _layers.add(
         _LayerConfig(
-          frequency: kSolfeggio432Hz,
+          frequency: 432.0, // Universal tuning frequency
           waveform: Waveform.sine,
           volume: 0.5,
         ),
