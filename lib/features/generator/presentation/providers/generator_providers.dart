@@ -43,13 +43,42 @@ Stream<FrequencyPreset?> currentGeneratorPreset(
 }
 
 /// Action to play a frequency preset.
+///
+/// Automatically enables panning if the preset has it configured.
 @riverpod
 Future<void> Function(FrequencyPreset) playFrequencyPreset(
   PlayFrequencyPresetRef ref,
 ) {
   return (FrequencyPreset preset) async {
     final service = ref.read(frequencyGeneratorServiceProvider);
-    await service.playPreset(preset);
+
+    // Check if preset has panning enabled
+    if (preset.panningEnabled) {
+      // Use preset's custom cycle time or auto-detect from binaural config
+      PanningConfig panningConfig;
+      if (preset.panningCycleSeconds != null) {
+        panningConfig = PanningConfig(
+          cycleSeconds: preset.panningCycleSeconds!,
+          depth: 0.35, // Default depth
+          updateIntervalMs: preset.panningCycleSeconds! <= 0.5 ? 10 : 25,
+        );
+      } else if (preset.binauralConfig != null) {
+        // Auto-detect from binaural beat frequency
+        panningConfig = PanningConfig.forBeatFrequency(
+          preset.binauralConfig!.beatFrequency,
+        );
+      } else {
+        panningConfig = PanningConfig.research;
+      }
+
+      await service.playPresetWithPanning(
+        preset,
+        enablePanning: true,
+        panningConfig: panningConfig,
+      );
+    } else {
+      await service.playPreset(preset);
+    }
   };
 }
 

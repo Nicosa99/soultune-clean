@@ -115,38 +115,44 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen>
 
   /// Builds the floating action button with menu.
   Widget _buildFAB(ColorScheme colorScheme) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Binaural Editor button
-        FloatingActionButton.small(
-          heroTag: 'binaural',
-          onPressed: () {
-            HapticFeedback.lightImpact();
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (context) => const BinauralEditorScreen(),
-              ),
-            );
-          },
-          backgroundColor: colorScheme.secondaryContainer,
-          child: const Icon(Icons.headphones),
-        ),
-        const SizedBox(height: 8),
-        // Custom Generator button
-        FloatingActionButton(
-          heroTag: 'custom',
-          onPressed: () {
-            HapticFeedback.mediumImpact();
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (context) => const CustomGeneratorScreen(),
-              ),
-            );
-          },
-          child: const Icon(Icons.tune),
-        ),
-      ],
+    return Padding(
+      // Add bottom padding when now playing bar is visible to avoid overlap
+      padding: EdgeInsets.only(
+        bottom: _playingPreset != null ? 80 : 0,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Binaural Editor button
+          FloatingActionButton.small(
+            heroTag: 'binaural',
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (context) => const BinauralEditorScreen(),
+                ),
+              );
+            },
+            backgroundColor: colorScheme.secondaryContainer,
+            child: const Icon(Icons.headphones),
+          ),
+          const SizedBox(height: 8),
+          // Custom Generator button
+          FloatingActionButton(
+            heroTag: 'custom',
+            onPressed: () {
+              HapticFeedback.mediumImpact();
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (context) => const CustomGeneratorScreen(),
+                ),
+              );
+            },
+            child: const Icon(Icons.tune),
+          ),
+        ],
+      ),
     );
   }
 
