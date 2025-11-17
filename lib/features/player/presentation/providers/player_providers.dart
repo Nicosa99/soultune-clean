@@ -123,9 +123,16 @@ Future<PlayerRepository> playerRepository(PlayerRepositoryRef ref) async {
 /// }
 /// ```
 @riverpod
-AudioFile? currentAudioFile(CurrentAudioFileRef ref) {
-  final repository = ref.watch(playerRepositoryProvider).value;
-  return repository?.currentAudioFile;
+Stream<AudioFile?> currentAudioFile(CurrentAudioFileRef ref) async* {
+  final repository = await ref.watch(playerRepositoryProvider.future);
+
+  // Emit initial state
+  yield repository.currentAudioFile;
+
+  // Listen to playing stream to detect track changes
+  await for (final _ in repository.playingStream) {
+    yield repository.currentAudioFile;
+  }
 }
 
 /// Provides the current playing state.

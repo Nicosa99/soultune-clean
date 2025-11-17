@@ -46,9 +46,11 @@ class MiniPlayer extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentFile = ref.watch(currentAudioFileProvider);
+    final currentFileAsync = ref.watch(currentAudioFileProvider);
     final isPlayingAsync = ref.watch(isPlayingProvider);
     final pitchShift = ref.watch(currentPitchShiftProvider);
+
+    final currentFile = currentFileAsync.valueOrNull;
 
     // Don't show if no audio playing
     if (currentFile == null) {

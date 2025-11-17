@@ -30,8 +30,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soultune/app/constants/frequencies.dart';
 import 'package:soultune/features/player/presentation/providers/player_providers.dart';
+import 'package:soultune/features/playlist/presentation/providers/playlist_providers.dart';
 import 'package:soultune/features/playlist/presentation/widgets/add_to_playlist_dialog.dart';
+import 'package:soultune/features/playlist/presentation/widgets/create_playlist_dialog.dart';
 import 'package:soultune/shared/models/audio_file.dart';
+import 'package:soultune/shared/models/playlist.dart';
 
 /// Library screen displaying all audio files.
 ///
@@ -71,7 +74,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
   }
 
   @override
@@ -112,7 +115,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
         ],
         bottom: TabBar(
           controller: _tabController,
-          isScrollable: true, // Allow scrolling for 4 tabs
+          isScrollable: true, // Allow scrolling for 5 tabs
           tabs: const [
             Tab(
               icon: Icon(Icons.music_note),
@@ -125,6 +128,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
             Tab(
               icon: Icon(Icons.person),
               text: 'Artists',
+            ),
+            Tab(
+              icon: Icon(Icons.queue_music),
+              text: 'Playlists',
             ),
             Tab(
               icon: Icon(Icons.favorite),
@@ -144,6 +151,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
 
           // Artists Tab
           _buildArtistsTab(),
+
+          // Playlists Tab
+          _buildPlaylistsTab(),
 
           // Favorites Tab
           _buildFavoritesTab(),
@@ -520,6 +530,160 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
         child: Text('Error: $error'),
       ),
     );
+  }
+
+  /// Builds the Playlists tab content.
+  Widget _buildPlaylistsTab() {
+    final playlistsAsync = ref.watch(playlistsStreamProvider);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return playlistsAsync.when(
+      data: (playlists) {
+        if (playlists.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.queue_music_outlined,
+                    size: 80,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No Playlists Yet',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Create a playlist to organize your music',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  FilledButton.icon(
+                    onPressed: _showCreatePlaylistDialog,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Create Playlist'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return Stack(
+          children: [
+            ListView.builder(
+              itemCount: playlists.length,
+              padding: const EdgeInsets.only(bottom: 152),
+              itemBuilder: (context, index) {
+                final playlist = playlists[index];
+                return _PlaylistTile(
+                  playlist: playlist,
+                  onTap: () => _showPlaylistDetail(playlist),
+                  onDelete: () => _deletePlaylist(playlist),
+                );
+              },
+            ),
+            // Floating action button
+            Positioned(
+              right: 16,
+              bottom: 160,
+              child: FloatingActionButton(
+                onPressed: _showCreatePlaylistDialog,
+                child: const Icon(Icons.add),
+              ),
+            ),
+          ],
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(
+        child: Text('Error: $error'),
+      ),
+    );
+  }
+
+  /// Shows create playlist dialog.
+  void _showCreatePlaylistDialog() {
+    showDialog<void>(
+      context: context,
+      builder: (context) => const CreatePlaylistDialog(),
+    );
+  }
+
+  /// Shows playlist detail (tracks in playlist).
+  void _showPlaylistDetail(Playlist playlist) {
+    // Show a bottom sheet with playlist tracks
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (context, scrollController) => _PlaylistDetailSheet(
+          playlist: playlist,
+          scrollController: scrollController,
+          onPlayTrack: _playAudioFile,
+        ),
+      ),
+    );
+  }
+
+  /// Deletes a playlist.
+  Future<void> _deletePlaylist(Playlist playlist) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Playlist?'),
+        content: Text('Are you sure you want to delete "${playlist.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        await ref.read(deletePlaylistProvider)(playlistId: playlist.id);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Deleted "${playlist.name}"'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to delete: $e'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    }
   }
 
   /// Gets the folder path from a file path.
@@ -945,6 +1109,202 @@ class _AudioFileTile extends StatelessWidget {
       Icons.music_note,
       size: 32,
       color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+    );
+  }
+}
+
+/// Playlist list tile.
+class _PlaylistTile extends StatelessWidget {
+  const _PlaylistTile({
+    required this.playlist,
+    required this.onTap,
+    required this.onDelete,
+  });
+
+  final Playlist playlist;
+  final VoidCallback onTap;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return ListTile(
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 8,
+      ),
+      leading: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          color: colorScheme.primaryContainer,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          Icons.queue_music,
+          size: 28,
+          color: colorScheme.onPrimaryContainer,
+        ),
+      ),
+      title: Text(
+        playlist.name,
+        style: theme.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      subtitle: Text(
+        '${playlist.trackIds.length} '
+        '${playlist.trackIds.length == 1 ? 'song' : 'songs'}',
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: colorScheme.onSurfaceVariant,
+        ),
+      ),
+      trailing: IconButton(
+        onPressed: onDelete,
+        icon: Icon(
+          Icons.delete_outline,
+          color: colorScheme.error,
+        ),
+        tooltip: 'Delete playlist',
+      ),
+    );
+  }
+}
+
+/// Playlist detail bottom sheet.
+class _PlaylistDetailSheet extends ConsumerWidget {
+  const _PlaylistDetailSheet({
+    required this.playlist,
+    required this.scrollController,
+    required this.onPlayTrack,
+  });
+
+  final Playlist playlist;
+  final ScrollController scrollController;
+  final Future<void> Function(AudioFile) onPlayTrack;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final libraryAsync = ref.watch(audioLibraryProvider);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      child: Column(
+        children: [
+          // Handle bar
+          Container(
+            margin: const EdgeInsets.only(top: 12),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: colorScheme.onSurfaceVariant.withOpacity(0.4),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+
+          // Header
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.queue_music,
+                    color: colorScheme.onPrimaryContainer,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        playlist.name,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        '${playlist.trackIds.length} songs',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const Divider(),
+
+          // Track list
+          Expanded(
+            child: libraryAsync.when(
+              data: (allFiles) {
+                if (playlist.trackIds.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'No songs in this playlist',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  );
+                }
+
+                // Get tracks in playlist order
+                final tracks = <AudioFile>[];
+                for (final trackId in playlist.trackIds) {
+                  final track = allFiles.firstWhere(
+                    (f) => f.id == trackId,
+                    orElse: () => allFiles.first,
+                  );
+                  if (allFiles.any((f) => f.id == trackId)) {
+                    tracks.add(track);
+                  }
+                }
+
+                return ListView.builder(
+                  controller: scrollController,
+                  itemCount: tracks.length,
+                  itemBuilder: (context, index) {
+                    final track = tracks[index];
+                    return _AudioFileTile(
+                      audioFile: track,
+                      onTap: () {
+                        Navigator.pop(context);
+                        onPlayTrack(track);
+                      },
+                    );
+                  },
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) => Center(
+                child: Text('Error: $error'),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

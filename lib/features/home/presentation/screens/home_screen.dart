@@ -25,7 +25,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soultune/features/library/presentation/screens/library_screen.dart';
 import 'package:soultune/features/player/presentation/providers/player_providers.dart';
 import 'package:soultune/features/player/presentation/screens/now_playing_screen.dart';
-import 'package:soultune/features/playlist/presentation/screens/playlists_screen.dart';
 import 'package:soultune/shared/widgets/mini_player.dart';
 
 /// Home screen with bottom navigation.
@@ -55,11 +54,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentFile = ref.watch(currentAudioFileProvider);
-    final hasAudio = currentFile != null;
+    final currentFileAsync = ref.watch(currentAudioFileProvider);
+    final hasAudio = currentFileAsync.valueOrNull != null;
 
-    // Show mini player only on Library and Playlists tabs
-    final showMiniPlayer = hasAudio && _selectedIndex != 2;
+    // Show mini player only on Library tab (index 0)
+    final showMiniPlayer = hasAudio && _selectedIndex != 1;
 
     return Scaffold(
       body: PageView(
@@ -72,11 +71,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         children: [
           // Library tab
           LibraryScreen(
-            onNavigateToPlayer: _showNowPlayingModal,
-          ),
-
-          // Playlists tab
-          PlaylistsScreen(
             onNavigateToPlayer: _showNowPlayingModal,
           ),
 
@@ -131,13 +125,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   icon: Icon(Icons.library_music_outlined),
                   selectedIcon: Icon(Icons.library_music),
                   label: 'Library',
-                ),
-
-                // Playlists destination
-                const NavigationDestination(
-                  icon: Icon(Icons.queue_music_outlined),
-                  selectedIcon: Icon(Icons.queue_music),
-                  label: 'Playlists',
                 ),
 
                 // Now Playing destination
