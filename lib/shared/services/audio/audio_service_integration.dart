@@ -79,8 +79,8 @@ class AudioServiceIntegration {
     _logger.d('playAudioFile: ${audioFile.title} (pitch: $pitchShift)');
 
     try {
-      // Play on internal service
-      await audioPlayerService.play(audioFile, pitchShift: pitchShift);
+      // Play on internal service (positional parameters)
+      await audioPlayerService.play(audioFile, pitchShift);
 
       // Update notification if initialized
       if (NotificationService.isInitialized) {
@@ -231,8 +231,8 @@ class AudioServiceIntegration {
     _logger.d('resume()');
 
     try {
-      // Resume internal service
-      await audioPlayerService.resume();
+      // Resume internal service (play() without args = resume)
+      await audioPlayerService.play();
 
       // Resume notification if initialized
       if (NotificationService.isInitialized) {

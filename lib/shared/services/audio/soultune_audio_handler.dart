@@ -215,16 +215,15 @@ class SoulTuneAudioHandler extends BaseAudioHandler
   }
 
   /// Updates pitch shift for current track.
+  ///
+  /// Note: This only updates the notification metadata.
+  /// Actual pitch is set via AudioPlayerService.
   Future<void> updatePitchShift(double semitones) async {
     _logger.i('updatePitchShift: $semitones');
 
     _currentPitchShift = semitones;
 
-    // Apply pitch shift
-    final pitchValue = 1.0 + (semitones / 12.0);
-    await _player.setPitch(pitchValue);
-
-    // Update notification with new frequency
+    // Update notification with new frequency label
     if (mediaItem.value != null) {
       final updatedItem = mediaItem.value!.copyWith(
         extras: {
