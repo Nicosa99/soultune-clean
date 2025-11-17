@@ -61,6 +61,24 @@ class SoulTuneAudioHandler extends BaseAudioHandler
   /// Current pitch shift (for display in notification).
   double _currentPitchShift = 0.0;
 
+  /// Callback for play action from system.
+  void Function()? onPlay;
+
+  /// Callback for pause action from system.
+  void Function()? onPause;
+
+  /// Callback for skip to next action from system.
+  void Function()? onSkipToNext;
+
+  /// Callback for skip to previous action from system.
+  void Function()? onSkipToPrevious;
+
+  /// Callback for seek action from system.
+  void Function(Duration position)? onSeek;
+
+  /// Callback for stop action from system.
+  void Function()? onStop;
+
   /// Initializes the audio handler.
   Future<void> _init() async {
     _logger.i('Initializing SoulTuneAudioHandler...');
@@ -94,20 +112,24 @@ class SoulTuneAudioHandler extends BaseAudioHandler
   @override
   Future<void> play() async {
     _logger.d('play() called from system');
-    // Update notification state only (actual playback via AudioPlayerService)
+    // Call the actual player via callback
+    onPlay?.call();
     _broadcastPlayingState(true);
   }
 
   @override
   Future<void> pause() async {
     _logger.d('pause() called from system');
-    // Update notification state only (actual playback via AudioPlayerService)
+    // Call the actual player via callback
+    onPause?.call();
     _broadcastPlayingState(false);
   }
 
   @override
   Future<void> stop() async {
     _logger.d('stop() called from system');
+    // Call the actual player via callback
+    onStop?.call();
     _broadcastPlayingState(false);
     await super.stop();
   }
@@ -115,8 +137,8 @@ class SoulTuneAudioHandler extends BaseAudioHandler
   @override
   Future<void> seek(Duration position) async {
     _logger.d('seek($position) called from system');
-    // Seek functionality would need integration with AudioPlayerService
-    // For now, just update the position in the notification
+    // Call the actual player via callback
+    onSeek?.call(position);
     playbackState.add(
       playbackState.value.copyWith(
         updatePosition: position,
@@ -127,17 +149,15 @@ class SoulTuneAudioHandler extends BaseAudioHandler
   @override
   Future<void> skipToNext() async {
     _logger.d('skipToNext() called from system');
-    if (_currentIndex < _queue.length - 1) {
-      await skipToQueueItem(_currentIndex + 1);
-    }
+    // Call the actual player via callback
+    onSkipToNext?.call();
   }
 
   @override
   Future<void> skipToPrevious() async {
     _logger.d('skipToPrevious() called from system');
-    if (_currentIndex > 0) {
-      await skipToQueueItem(_currentIndex - 1);
-    }
+    // Call the actual player via callback
+    onSkipToPrevious?.call();
   }
 
   @override

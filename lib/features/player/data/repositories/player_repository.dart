@@ -65,6 +65,7 @@ import 'package:soultune/shared/models/audio_file.dart';
 import 'package:soultune/shared/models/loop_mode.dart';
 import 'package:soultune/shared/services/audio/audio_player_service.dart';
 import 'package:soultune/shared/services/audio/audio_service_integration.dart';
+import 'package:soultune/shared/services/audio/notification_service.dart';
 import 'package:soultune/shared/services/file/file_system_service.dart';
 
 /// Repository for player feature business logic.
@@ -161,6 +162,9 @@ class PlayerRepository {
           _audioPlayerService.trackCompletedStream.listen((_) {
         _handleTrackCompletion();
       });
+
+      // Connect notification service callbacks if initialized
+      _setupNotificationCallbacks();
 
       _isInitialized = true;
 
@@ -903,6 +907,19 @@ class PlayerRepository {
 
     if (success) {
       _logger.i('Playing next track');
+
+      // Update notification with new track info
+      final currentFile = _audioPlayerService.currentAudioFile;
+      if (currentFile != null && NotificationService.isInitialized) {
+        try {
+          await NotificationService.audioHandler.playAudioFile(
+            currentFile,
+            pitchShift: _currentPitchShift,
+          );
+        } catch (e) {
+          _logger.w('Failed to update notification for next track: $e');
+        }
+      }
     }
 
     return success;
@@ -920,6 +937,19 @@ class PlayerRepository {
 
     if (success) {
       _logger.i('Playing previous track');
+
+      // Update notification with new track info
+      final currentFile = _audioPlayerService.currentAudioFile;
+      if (currentFile != null && NotificationService.isInitialized) {
+        try {
+          await NotificationService.audioHandler.playAudioFile(
+            currentFile,
+            pitchShift: _currentPitchShift,
+          );
+        } catch (e) {
+          _logger.w('Failed to update notification for previous track: $e');
+        }
+      }
     }
 
     return success;
@@ -971,6 +1001,76 @@ class PlayerRepository {
       throw const StorageException(
         'PlayerRepository not initialized. Call init() first.',
       );
+    }
+  }
+
+  /// Sets up callbacks for notification service to control actual playback.
+  ///
+  /// This connects the system media controls (notification buttons, lock screen,
+  /// Bluetooth controls) to the actual AudioPlayerService.
+  void _setupNotificationCallbacks() {
+    if (!NotificationService.isInitialized) {
+      _logger.w(
+        'NotificationService not initialized - '
+        'system controls will not work',
+      );
+      return;
+    }
+
+    try {
+      final handler = NotificationService.audioHandler;
+
+      // Play button pressed in notification
+      handler.onPlay = () {
+        _logger.d('System play button pressed');
+        _audioPlayerService.play().catchError((Object e) {
+          _logger.e('Failed to play from system control', error: e);
+        });
+      };
+
+      // Pause button pressed in notification
+      handler.onPause = () {
+        _logger.d('System pause button pressed');
+        _audioPlayerService.pause().catchError((Object e) {
+          _logger.e('Failed to pause from system control', error: e);
+        });
+      };
+
+      // Skip to next button pressed in notification
+      handler.onSkipToNext = () {
+        _logger.d('System skip next button pressed');
+        playNext().catchError((Object e) {
+          _logger.e('Failed to skip next from system control', error: e);
+        });
+      };
+
+      // Skip to previous button pressed in notification
+      handler.onSkipToPrevious = () {
+        _logger.d('System skip previous button pressed');
+        playPrevious().catchError((Object e) {
+          _logger.e('Failed to skip previous from system control', error: e);
+        });
+      };
+
+      // Seek requested from notification (e.g., seekbar or fast forward)
+      handler.onSeek = (Duration position) {
+        _logger.d('System seek to $position');
+        _audioPlayerService.seek(position).catchError((Object e) {
+          _logger.e('Failed to seek from system control', error: e);
+        });
+      };
+
+      // Stop button pressed in notification
+      handler.onStop = () {
+        _logger.d('System stop button pressed');
+        _audioPlayerService.stop().catchError((Object e) {
+          _logger.e('Failed to stop from system control', error: e);
+        });
+      };
+
+      _logger.i('✓ Notification callbacks connected');
+    } catch (e) {
+      _logger.e('Failed to setup notification callbacks', error: e);
     }
   }
 
