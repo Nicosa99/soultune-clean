@@ -510,13 +510,15 @@ List<FrequencyPreset> getPredefinedPresets() {
       category: PresetCategory.cia,
       description: 'CIA Gateway Level 3: "No-Time" state. Vibrational '
           'sensations and energy field awareness begin. Preparation for '
-          'Focus 21 breakthrough. Use panning for enhanced effect.',
+          'Focus 21 breakthrough. Panning ENABLED for enhanced effect.',
       layers: const [],
       binauralConfig: const BinauralConfig(
         leftFrequency: 200,
         rightFrequency: 215,
       ),
       durationMinutes: 40,
+      panningEnabled: true,
+      panningCycleSeconds: 2.0, // 15Hz Alpha - fast 2s cycle
       tags: ['cia', 'gateway', 'focus15', 'no-time', 'vibrations'],
       createdAt: now,
     ),
@@ -527,13 +529,15 @@ List<FrequencyPreset> getPredefinedPresets() {
       category: PresetCategory.cia,
       description: '⚠️ ADVANCED: The breakthrough state. CIA: "Expanded '
           'consciousness beyond spacetime. OBE, remote viewing accessible." '
-          'Requires 4+ weeks Focus 10-15 practice. ENABLE PANNING!',
+          'Requires 4+ weeks Focus 10-15 practice. PANNING ENABLED!',
       layers: const [],
       binauralConfig: const BinauralConfig(
         leftFrequency: 200,
         rightFrequency: 206,
       ),
       durationMinutes: 60,
+      panningEnabled: true,
+      panningCycleSeconds: 4.0, // 6Hz Theta - slower 4s cycle
       tags: ['cia', 'gateway', 'focus21', 'theta', 'breakthrough', 'advanced'],
       createdAt: now,
     ),
@@ -548,13 +552,15 @@ List<FrequencyPreset> getPredefinedPresets() {
       category: PresetCategory.oobe,
       description: 'Schumann Resonance (7.83Hz) for OBE induction. '
           'Best at 3-6 AM when melatonin peaks. May cause sleep paralysis. '
-          'Enable panning for maximum effect.',
+          'Panning ENABLED for maximum effect!',
       layers: const [],
       binauralConfig: const BinauralConfig(
         leftFrequency: 200,
         rightFrequency: 207.83,
       ),
       durationMinutes: 90,
+      panningEnabled: true,
+      panningCycleSeconds: 3.0, // 7.83Hz Theta - 3s cycle
       tags: ['oobe', 'astral', 'schumann', 'theta', 'advanced'],
       createdAt: now,
     ),
@@ -565,7 +571,7 @@ List<FrequencyPreset> getPredefinedPresets() {
       category: PresetCategory.oobe,
       description: '4Hz Delta with 528Hz healing overlay. Highest reported '
           'OBE success rate. Extended duration for deep exploration. '
-          'Advanced practitioners only.',
+          'Panning ENABLED. Advanced practitioners only.',
       layers: [
         const FrequencyLayer(
           frequency: 4.0,
@@ -585,6 +591,8 @@ List<FrequencyPreset> getPredefinedPresets() {
         rightFrequency: 204,
       ),
       durationMinutes: 120,
+      panningEnabled: true,
+      panningCycleSeconds: 4.0, // 4Hz Delta - 4s cycle
       tags: ['oobe', 'astral', 'delta', 'advanced', 'extended'],
       createdAt: now,
     ),
@@ -599,13 +607,15 @@ List<FrequencyPreset> getPredefinedPresets() {
       category: PresetCategory.remoteViewing,
       description: 'Used by CIA Project Stargate (1978-1995). '
           'Joseph McMoneagle achieved 450+ successful missions. '
-          'Beta waves for focused remote perception.',
+          'Beta waves with RAPID panning for focused perception.',
       layers: const [],
       binauralConfig: const BinauralConfig(
         leftFrequency: 220,
         rightFrequency: 238,
       ),
       durationMinutes: 45,
+      panningEnabled: true,
+      panningCycleSeconds: 1.0, // 18Hz Beta - fast 1s cycle
       tags: ['rv', 'remote-viewing', 'stargate', 'beta', 'perception'],
       createdAt: now,
     ),
@@ -616,13 +626,15 @@ List<FrequencyPreset> getPredefinedPresets() {
       category: PresetCategory.remoteViewing,
       description: '40Hz Gamma for peak cognitive function. Research shows '
           'Gamma correlates with "Aha!" moments and heightened intuition. '
-          'ESP and precognition development.',
+          'ULTRA-FAST 0.5s panning for maximum neural entrainment.',
       layers: const [],
       binauralConfig: const BinauralConfig(
         leftFrequency: 300,
         rightFrequency: 340,
       ),
       durationMinutes: 30,
+      panningEnabled: true,
+      panningCycleSeconds: 0.5, // 40Hz Gamma - ultra-fast 0.5s cycle
       tags: ['gamma', 'esp', 'intuition', 'perception', 'peak'],
       createdAt: now,
     ),
@@ -636,8 +648,8 @@ List<FrequencyPreset> getPredefinedPresets() {
       name: 'Dimensional Awareness',
       category: PresetCategory.consciousness,
       description: 'Multi-layered stack: 963Hz Crown Chakra + 432Hz '
-          'natural harmony + 6Hz Theta base. Advanced consciousness '
-          'exploration and expanded dimensional perception.',
+          'natural harmony + 6Hz Theta base. Panning ENABLED for '
+          'expanded dimensional perception and consciousness exploration.',
       layers: [
         const FrequencyLayer(
           frequency: 6.0,
@@ -663,6 +675,8 @@ List<FrequencyPreset> getPredefinedPresets() {
         rightFrequency: 206,
       ),
       durationMinutes: 60,
+      panningEnabled: true,
+      panningCycleSeconds: 3.0, // 6Hz Theta - 3s cycle for balance
       tags: ['consciousness', 'dimensions', 'advanced', 'expansion'],
       createdAt: now,
     ),

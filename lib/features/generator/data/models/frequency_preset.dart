@@ -55,6 +55,15 @@ class FrequencyPreset with _$FrequencyPreset {
     /// Whether this is a user-created preset.
     @Default(false) bool isCustom,
 
+    /// Whether L→R→L panning modulation is enabled.
+    @Default(false) bool panningEnabled,
+
+    /// Optional panning cycle time in seconds (null = auto-detect).
+    ///
+    /// If null, cycle time is automatically determined from binaural
+    /// beat frequency. Values: 0.1s - 10s recommended.
+    double? panningCycleSeconds,
+
     /// Creation timestamp.
     @DateTimeConverter() required DateTime createdAt,
 
