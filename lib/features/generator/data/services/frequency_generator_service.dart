@@ -14,6 +14,7 @@ import 'package:soultune/features/generator/data/models/binaural_config.dart';
 import 'package:soultune/features/generator/data/models/frequency_layer.dart';
 import 'package:soultune/features/generator/data/models/frequency_preset.dart';
 import 'package:soultune/features/generator/data/models/waveform.dart';
+import 'package:soultune/features/generator/domain/panning_engine.dart';
 import 'package:soultune/shared/exceptions/app_exceptions.dart';
 
 /// Service for generating and playing frequency tones.
@@ -22,6 +23,7 @@ import 'package:soultune/shared/exceptions/app_exceptions.dart';
 /// - Multi-layer frequency mixing
 /// - Different waveform types (sine, square, triangle, sawtooth)
 /// - Binaural beats (stereo separation)
+/// - L→R→L panning modulation for enhanced brain sync
 /// - Real-time volume control
 class FrequencyGeneratorService {
   /// Creates a [FrequencyGeneratorService].
@@ -31,6 +33,9 @@ class FrequencyGeneratorService {
 
   /// SoLoud audio engine instance.
   SoLoud? _soLoud;
+
+  /// Panning modulation engine.
+  final PanningEngine _panningEngine = PanningEngine();
 
   /// Currently active sound handles.
   final List<SoundHandle> _activeHandles = [];
@@ -47,6 +52,9 @@ class FrequencyGeneratorService {
   /// Whether audio is currently playing.
   bool _isPlaying = false;
 
+  /// Whether panning is enabled.
+  bool _panningEnabled = false;
+
   /// Stream controller for playing state.
   final _playingController = StreamController<bool>.broadcast();
 
@@ -59,11 +67,20 @@ class FrequencyGeneratorService {
   /// Stream of current preset changes.
   Stream<FrequencyPreset?> get presetStream => _presetController.stream;
 
+  /// Stream of pan position changes.
+  Stream<double> get panPositionStream => _panningEngine.panPositionStream;
+
   /// Whether audio is currently playing.
   bool get isPlaying => _isPlaying;
 
   /// Currently playing preset.
   FrequencyPreset? get currentPreset => _currentPreset;
+
+  /// Whether panning is currently active.
+  bool get isPanningActive => _panningEngine.isActive;
+
+  /// Current pan position (-1.0 to 1.0).
+  double get currentPanPosition => _panningEngine.currentPanPosition;
 
   /// Initializes the SoLoud audio engine.
   ///
@@ -115,6 +132,82 @@ class FrequencyGeneratorService {
       _logger.e('Failed to play preset: ${preset.name}', error: e);
       await stop();
       throw AudioException('Failed to play frequency preset', e);
+    }
+  }
+
+  /// Plays a frequency preset with optional panning modulation.
+  ///
+  /// When [enablePanning] is true, applies L→R→L stereo panning
+  /// for enhanced brain hemisphere synchronization.
+  Future<void> playPresetWithPanning(
+    FrequencyPreset preset, {
+    bool enablePanning = false,
+    PanningConfig panningConfig = const PanningConfig(),
+  }) async {
+    // First play the preset normally
+    await playPreset(preset);
+
+    // Then enable panning if requested
+    if (enablePanning) {
+      _panningEnabled = true;
+      _panningEngine.startPanning(
+        config: panningConfig,
+        onPanChange: _applyPanning,
+      );
+      _logger.i(
+        'Panning enabled: ${panningConfig.cycleSeconds}s cycle, '
+        '${(panningConfig.depth * 100).toInt()}% depth',
+      );
+    }
+  }
+
+  /// Applies panning volumes to all active handles.
+  void _applyPanning(double leftVolume, double rightVolume) {
+    if (!_isInitialized || _soLoud == null) return;
+
+    // For binaural beats, we adjust the volume of left/right channels
+    // For mono layers, we adjust the overall volume based on position
+    for (var i = 0; i < _activeHandles.length; i++) {
+      final handle = _activeHandles[i];
+      final baseVolume = _currentPreset?.volume ?? 0.7;
+
+      // If we have stereo binaural (2 handles = left/right)
+      if (_activeHandles.length == 2) {
+        if (i == 0) {
+          // Left channel
+          _soLoud!.setVolume(handle, baseVolume * leftVolume);
+        } else {
+          // Right channel
+          _soLoud!.setVolume(handle, baseVolume * rightVolume);
+        }
+      } else {
+        // Mono layers - apply average modulation
+        final avgVolume = (leftVolume + rightVolume) / 2;
+        _soLoud!.setVolume(handle, baseVolume * avgVolume);
+      }
+    }
+  }
+
+  /// Enables or disables panning on currently playing preset.
+  void setPanningEnabled(bool enabled, {PanningConfig? config}) {
+    if (!_isPlaying) return;
+
+    if (enabled && !_panningEnabled) {
+      _panningEnabled = true;
+      _panningEngine.startPanning(
+        config: config ?? PanningConfig.research,
+        onPanChange: _applyPanning,
+      );
+      _logger.i('Panning enabled');
+    } else if (!enabled && _panningEnabled) {
+      _panningEnabled = false;
+      _panningEngine.stopPanning();
+      // Reset volumes to base
+      final baseVolume = _currentPreset?.volume ?? 0.7;
+      for (final handle in _activeHandles) {
+        _soLoud!.setVolume(handle, baseVolume);
+      }
+      _logger.i('Panning disabled');
     }
   }
 
@@ -302,6 +395,12 @@ class FrequencyGeneratorService {
     if (!_isInitialized || !_isPlaying) return;
 
     try {
+      // Stop panning first
+      if (_panningEnabled) {
+        _panningEngine.stopPanning();
+        _panningEnabled = false;
+      }
+
       // Stop all handles
       for (final handle in _activeHandles) {
         _soLoud!.stop(handle);
@@ -340,6 +439,9 @@ class FrequencyGeneratorService {
   Future<void> dispose() async {
     await stop();
 
+    // Dispose panning engine
+    _panningEngine.dispose();
+
     if (_isInitialized && _soLoud != null) {
       _soLoud!.deinit();
       _isInitialized = false;
@@ -351,3 +453,4 @@ class FrequencyGeneratorService {
     _logger.i('FrequencyGeneratorService disposed');
   }
 }
+

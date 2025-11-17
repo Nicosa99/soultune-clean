@@ -13,7 +13,10 @@ import 'package:soultune/features/generator/data/models/binaural_config.dart';
 import 'package:soultune/features/generator/data/models/frequency_constants.dart';
 import 'package:soultune/features/generator/data/models/frequency_preset.dart';
 import 'package:soultune/features/generator/data/models/preset_category.dart';
+import 'package:soultune/features/generator/domain/panning_engine.dart';
 import 'package:soultune/features/generator/presentation/providers/generator_providers.dart';
+import 'package:soultune/features/generator/presentation/widgets/panning_indicator.dart';
+import 'package:soultune/features/generator/presentation/widgets/waveform_visualizer.dart';
 import 'package:uuid/uuid.dart';
 
 /// Screen for creating and playing binaural beats.
@@ -47,6 +50,12 @@ class _BinauralEditorScreenState extends ConsumerState<BinauralEditorScreen> {
 
   /// Remaining session time.
   Duration _remainingTime = Duration.zero;
+
+  /// Whether panning modulation is enabled.
+  bool _panningEnabled = false;
+
+  /// Current pan position for visualization.
+  double _panPosition = 0.0;
 
   /// Beat frequency (auto-calculated).
   double get _beatFrequency => (_rightFrequency - _leftFrequency).abs();
@@ -168,6 +177,15 @@ class _BinauralEditorScreenState extends ConsumerState<BinauralEditorScreen> {
 
             // Volume Control
             _buildVolumeControl(theme, colorScheme),
+
+            const SizedBox(height: 24),
+
+            // Panning Toggle
+            _buildPanningToggle(theme, colorScheme),
+
+            // Panning Indicator (when playing with panning)
+            if (_isPlaying && _panningEnabled)
+              _buildPanningVisualization(theme, colorScheme),
 
             const SizedBox(height: 32),
 
@@ -460,8 +478,20 @@ class _BinauralEditorScreenState extends ConsumerState<BinauralEditorScreen> {
     );
 
     try {
-      final playPreset = ref.read(playFrequencyPresetProvider);
-      await playPreset(preset);
+      if (_panningEnabled) {
+        final playWithPanning = ref.read(playPresetWithPanningProvider);
+        await playWithPanning(
+          preset,
+          enablePanning: true,
+          config: PanningConfig.research,
+        );
+
+        // Start listening to pan position updates
+        _listenToPanPosition();
+      } else {
+        final playPreset = ref.read(playFrequencyPresetProvider);
+        await playPreset(preset);
+      }
 
       setState(() {
         _isPlaying = true;
@@ -472,11 +502,12 @@ class _BinauralEditorScreenState extends ConsumerState<BinauralEditorScreen> {
       });
 
       if (mounted) {
+        final panningInfo = _panningEnabled ? ' (L↔R Panning)' : '';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               'Playing ${_beatFrequency.toStringAsFixed(1)}Hz '
-              '$_brainwaveCategory beat',
+              '$_brainwaveCategory beat$panningInfo',
             ),
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 2),
@@ -546,4 +577,81 @@ class _BinauralEditorScreenState extends ConsumerState<BinauralEditorScreen> {
       });
     });
   }
+
+  /// Listens to pan position stream for visualization.
+  void _listenToPanPosition() {
+    final service = ref.read(frequencyGeneratorServiceProvider);
+    service.panPositionStream.listen((position) {
+      if (mounted && _isPlaying) {
+        setState(() {
+          _panPosition = position;
+        });
+      }
+    });
+  }
+
+  /// Builds the panning toggle switch.
+  Widget _buildPanningToggle(ThemeData theme, ColorScheme colorScheme) {
+    return Card(
+      color: _panningEnabled
+          ? colorScheme.primaryContainer.withOpacity(0.3)
+          : null,
+      child: SwitchListTile(
+        title: const Text('L↔R Panning Modulation'),
+        subtitle: Text(
+          _panningEnabled
+              ? 'Enhanced brain sync (15s cycle, 35% depth)'
+              : 'Enable for advanced brain hemisphere synchronization',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
+        ),
+        secondary: Icon(
+          Icons.surround_sound,
+          color: _panningEnabled ? colorScheme.primary : null,
+        ),
+        value: _panningEnabled,
+        onChanged: (value) {
+          HapticFeedback.selectionClick();
+          setState(() {
+            _panningEnabled = value;
+          });
+        },
+      ),
+    );
+  }
+
+  /// Builds panning visualization when active.
+  Widget _buildPanningVisualization(
+    ThemeData theme,
+    ColorScheme colorScheme,
+  ) {
+    return Column(
+      children: [
+        const SizedBox(height: 16),
+        // Panning indicator
+        PanningIndicator(
+          panPosition: _panPosition,
+          isActive: _panningEnabled && _isPlaying,
+        ),
+        const SizedBox(height: 16),
+        // Waveform visualization
+        SizedBox(
+          height: 120,
+          child: Card(
+            color: colorScheme.surfaceContainerHighest,
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: WaveformVisualizer(
+                frequency: _beatFrequency * 10, // Visualize beat frequency
+                isPlaying: _isPlaying,
+                color: _getBrainwaveColor(colorScheme),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
+

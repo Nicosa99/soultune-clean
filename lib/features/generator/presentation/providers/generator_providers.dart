@@ -6,6 +6,7 @@ library;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:soultune/features/generator/data/models/frequency_preset.dart';
 import 'package:soultune/features/generator/data/services/frequency_generator_service.dart';
+import 'package:soultune/features/generator/domain/panning_engine.dart';
 
 part 'generator_providers.g.dart';
 
@@ -69,5 +70,49 @@ void Function(double) setGeneratorVolume(SetGeneratorVolumeRef ref) {
   return (double volume) {
     final service = ref.read(frequencyGeneratorServiceProvider);
     service.setVolume(volume);
+  };
+}
+
+/// Stream of current pan position (-1.0 to 1.0).
+@riverpod
+Stream<double> panPosition(PanPositionRef ref) async* {
+  final service = ref.watch(frequencyGeneratorServiceProvider);
+  yield service.currentPanPosition;
+  yield* service.panPositionStream;
+}
+
+/// Whether panning is currently active.
+@riverpod
+bool isPanningActive(IsPanningActiveRef ref) {
+  final service = ref.watch(frequencyGeneratorServiceProvider);
+  return service.isPanningActive;
+}
+
+/// Action to play preset with panning.
+@riverpod
+Future<void> Function(FrequencyPreset, {bool enablePanning, PanningConfig? config})
+    playPresetWithPanning(PlayPresetWithPanningRef ref) {
+  return (
+    FrequencyPreset preset, {
+    bool enablePanning = false,
+    PanningConfig? config,
+  }) async {
+    final service = ref.read(frequencyGeneratorServiceProvider);
+    await service.playPresetWithPanning(
+      preset,
+      enablePanning: enablePanning,
+      panningConfig: config ?? PanningConfig.research,
+    );
+  };
+}
+
+/// Action to toggle panning on/off.
+@riverpod
+void Function(bool, {PanningConfig? config}) setPanningEnabled(
+  SetPanningEnabledRef ref,
+) {
+  return (bool enabled, {PanningConfig? config}) {
+    final service = ref.read(frequencyGeneratorServiceProvider);
+    service.setPanningEnabled(enabled, config: config);
   };
 }
