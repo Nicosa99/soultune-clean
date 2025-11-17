@@ -29,6 +29,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soultune/features/player/presentation/providers/player_providers.dart';
+import 'package:soultune/shared/models/audio_file.dart';
 
 /// Mini player widget for persistent playback control.
 ///
@@ -201,8 +202,8 @@ class MiniPlayer extends ConsumerWidget {
   }
 
   /// Builds album art thumbnail.
-  Widget _buildAlbumArt(BuildContext context, currentFile) {
-    final colorScheme = Theme.of(context).colorScheme;
+  Widget _buildAlbumArt(BuildContext context, AudioFile currentFile) {
+    final theme = Theme.of(context);
 
     if (currentFile.albumArt != null &&
         File(currentFile.albumArt!).existsSync()) {

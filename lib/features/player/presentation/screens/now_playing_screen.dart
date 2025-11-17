@@ -33,6 +33,7 @@ import 'package:soultune/features/player/presentation/widgets/frequency_selector
 import 'package:soultune/features/player/presentation/widgets/player_controls.dart';
 import 'package:soultune/features/player/presentation/widgets/seek_bar.dart';
 import 'package:soultune/features/playlist/presentation/widgets/add_to_playlist_dialog.dart';
+import 'package:soultune/shared/models/audio_file.dart';
 
 /// Now Playing screen - main playback interface.
 ///
@@ -196,7 +197,7 @@ class NowPlayingScreen extends ConsumerWidget {
   /// Builds the album artwork section.
   Widget _buildAlbumArt(
     BuildContext context,
-    currentFile,
+    AudioFile? currentFile,
   ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -307,7 +308,7 @@ class NowPlayingScreen extends ConsumerWidget {
   }
 
   /// Shows add to playlist dialog.
-  void _showAddToPlaylistDialog(BuildContext context, currentFile) {
+  void _showAddToPlaylistDialog(BuildContext context, AudioFile currentFile) {
     showDialog<void>(
       context: context,
       builder: (context) => AddToPlaylistDialog(track: currentFile),
