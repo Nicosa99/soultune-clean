@@ -127,7 +127,7 @@ class FrequencyGeneratorService {
       sampleRate: 44100,
     );
 
-    final source = _soLoud!.loadMem(
+    final source = await _soLoud!.loadMem(
       'layer_${layer.frequency}',
       waveData,
     );
@@ -167,7 +167,10 @@ class FrequencyGeneratorService {
     );
 
     // Load and play left channel (panned left)
-    final leftSource = _soLoud!.loadMem('binaural_left', leftWaveData);
+    final leftSource = await _soLoud!.loadMem(
+      'binaural_left',
+      leftWaveData,
+    );
     _activeSources.add(leftSource);
 
     final leftHandle = await _soLoud!.play(
@@ -179,7 +182,10 @@ class FrequencyGeneratorService {
     _activeHandles.add(leftHandle);
 
     // Load and play right channel (panned right)
-    final rightSource = _soLoud!.loadMem('binaural_right', rightWaveData);
+    final rightSource = await _soLoud!.loadMem(
+      'binaural_right',
+      rightWaveData,
+    );
     _activeSources.add(rightSource);
 
     final rightHandle = await _soLoud!.play(
