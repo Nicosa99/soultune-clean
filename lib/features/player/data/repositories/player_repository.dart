@@ -55,10 +55,13 @@
 /// ```
 library;
 
+import 'dart:async';
+
 import 'package:logger/logger.dart';
 import 'package:soultune/features/player/data/datasources/hive_audio_datasource.dart';
 import 'package:soultune/shared/exceptions/app_exceptions.dart';
 import 'package:soultune/shared/models/audio_file.dart';
+import 'package:soultune/shared/models/loop_mode.dart';
 import 'package:soultune/shared/services/audio/audio_player_service.dart';
 import 'package:soultune/shared/services/file/file_system_service.dart';
 
@@ -107,6 +110,15 @@ class PlayerRepository {
   /// Whether the repository has been initialized.
   bool _isInitialized = false;
 
+  /// Current loop mode for playback.
+  LoopMode _loopMode = LoopMode.off;
+
+  /// Current pitch shift for new tracks.
+  double _currentPitchShift = 0.0;
+
+  /// Subscription to track completion events.
+  StreamSubscription<void>? _completionSubscription;
+
   // ---------------------------------------------------------------------------
   // Initialization
   // ---------------------------------------------------------------------------
@@ -141,6 +153,12 @@ class PlayerRepository {
 
       // Initialize audio player
       await _audioPlayerService.init();
+
+      // Listen to track completion for auto-play
+      _completionSubscription =
+          _audioPlayerService.trackCompletedStream.listen((_) {
+        _handleTrackCompletion();
+      });
 
       _isInitialized = true;
 
@@ -537,6 +555,14 @@ class PlayerRepository {
     _ensureInitialized();
 
     try {
+      // Save current pitch shift for auto-play
+      _currentPitchShift = pitchShift;
+
+      // Set playlist (all library files) for auto-play
+      final allFiles = await getAllAudioFiles();
+      final currentIndex = allFiles.indexWhere((f) => f.id == audioFile.id);
+      _audioPlayerService.setPlaylist(allFiles, startIndex: currentIndex);
+
       await _audioPlayerService.play(audioFile, pitchShift, startPosition);
 
       _logger.i(
@@ -793,6 +819,113 @@ class PlayerRepository {
   /// Stream of library changes.
   Stream<List<AudioFile>> get libraryStream => _dataSource.watchLibrary();
 
+  /// Current loop mode.
+  LoopMode get loopMode => _loopMode;
+
+  // ---------------------------------------------------------------------------
+  // Loop & Auto-Play Methods
+  // ---------------------------------------------------------------------------
+
+  /// Sets the loop mode for playback.
+  ///
+  /// ## Example
+  ///
+  /// ```dart
+  /// repository.setLoopMode(LoopMode.all);
+  /// ```
+  void setLoopMode(LoopMode mode) {
+    _loopMode = mode;
+    _logger.i('Loop mode set to: ${mode.displayName}');
+  }
+
+  /// Sets the current playlist for playback.
+  ///
+  /// ## Parameters
+  ///
+  /// - [playlist]: List of audio files to play
+  /// - [startIndex]: Index of track to start from (default: 0)
+  ///
+  /// ## Example
+  ///
+  /// ```dart
+  /// repository.setPlaylist(playlistTracks, startIndex: 2);
+  /// ```
+  void setPlaylist(List<AudioFile> playlist, {int startIndex = 0}) {
+    _ensureInitialized();
+    _audioPlayerService.setPlaylist(playlist, startIndex: startIndex);
+    _logger.i('Playlist set: ${playlist.length} tracks, starting at $startIndex');
+  }
+
+  /// Plays the next track in the playlist.
+  ///
+  /// Returns `true` if successful, `false` if at end of playlist.
+  Future<bool> playNext() async {
+    _ensureInitialized();
+
+    final success = await _audioPlayerService.playNext(
+      pitchShift: _currentPitchShift,
+    );
+
+    if (success) {
+      _logger.i('Playing next track');
+    }
+
+    return success;
+  }
+
+  /// Plays the previous track in the playlist.
+  ///
+  /// Returns `true` if successful, `false` if at start of playlist.
+  Future<bool> playPrevious() async {
+    _ensureInitialized();
+
+    final success = await _audioPlayerService.playPrevious(
+      pitchShift: _currentPitchShift,
+    );
+
+    if (success) {
+      _logger.i('Playing previous track');
+    }
+
+    return success;
+  }
+
+  /// Handles track completion based on current loop mode.
+  void _handleTrackCompletion() {
+    _logger.d('Track completed, loop mode: ${_loopMode.displayName}');
+
+    switch (_loopMode) {
+      case LoopMode.off:
+        // Play next track, but stop at end of playlist (no loop)
+        _logger.d('Loop mode OFF - playing next track');
+        playNext().then((success) {
+          if (!success) {
+            // Reached end of playlist - stop
+            _logger.i('End of playlist reached - stopping');
+          }
+        });
+        break;
+
+      case LoopMode.one:
+        // Repeat current track
+        _logger.i('Loop ONE - repeating track');
+        seek(Duration.zero).then((_) => resume());
+        break;
+
+      case LoopMode.all:
+        // Play next track, or restart playlist if at end
+        _logger.i('Loop ALL - playing next track');
+        playNext().then((success) {
+          if (!success) {
+            // Reached end, restart playlist
+            _logger.i('End of playlist - restarting from beginning');
+            _audioPlayerService.restartPlaylist(pitchShift: _currentPitchShift);
+          }
+        });
+        break;
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Helper Methods
   // ---------------------------------------------------------------------------
@@ -830,6 +963,10 @@ class PlayerRepository {
 
     try {
       _logger.i('Disposing PlayerRepository...');
+
+      // Cancel completion subscription
+      await _completionSubscription?.cancel();
+      _completionSubscription = null;
 
       await _audioPlayerService.dispose();
       await _dataSource.dispose();

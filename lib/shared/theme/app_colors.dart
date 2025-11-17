@@ -156,25 +156,40 @@ class AppColors {
   static const Color info = Color(0xFF3B82F6); // Blue-500
 
   // ---------------------------------------------------------------------------
-  // Frequency-Specific Colors
+  // Frequency-Specific Colors (Solfeggio & Healing Frequencies)
   // ---------------------------------------------------------------------------
 
-  /// Color for 432 Hz frequency indicator.
-  ///
-  /// Deep indigo representing the natural healing frequency.
+  /// 174 Hz - Pain Relief & Grounding (Deep Brown/Earth).
+  static const Color frequency174 = Color(0xFF78350F); // Brown-900
+
+  /// 285 Hz - Cellular Healing (Warm Orange).
+  static const Color frequency285 = Color(0xFFF97316); // Orange-500
+
+  /// 396 Hz - Liberation from Fear (Deep Red).
+  static const Color frequency396 = Color(0xFFDC2626); // Red-600
+
+  /// 417 Hz - Trauma Healing (Rose/Pink).
+  static const Color frequency417 = Color(0xFFEC4899); // Pink-500
+
+  /// 432 Hz - Deep Peace (Deep Indigo).
   static const Color frequency432 = Color(0xFF6366F1); // Indigo-500
 
-  /// Color for 528 Hz frequency indicator.
-  ///
-  /// Cyan representing the love frequency.
+  /// 528 Hz - Love Frequency (Cyan/Turquoise).
   static const Color frequency528 = Color(0xFF06B6D4); // Cyan-500
 
-  /// Color for 639 Hz frequency indicator.
-  ///
-  /// Emerald representing connection and harmony.
+  /// 639 Hz - Harmony & Connection (Emerald Green).
   static const Color frequency639 = Color(0xFF10B981); // Green-500
 
-  /// Color for standard 440 Hz tuning.
+  /// 741 Hz - Detoxification (Blue).
+  static const Color frequency741 = Color(0xFF3B82F6); // Blue-500
+
+  /// 852 Hz - Positive Thinking (Purple/Violet).
+  static const Color frequency852 = Color(0xFF8B5CF6); // Purple-500
+
+  /// 963 Hz - Pineal Activation (Gold/Divine).
+  static const Color frequency963 = Color(0xFFFBBF24); // Amber-400
+
+  /// Standard 440 Hz tuning (Neutral Gray).
   static const Color frequencyStandard = Color(0xFF9CA3AF); // Gray-400
 
   // ---------------------------------------------------------------------------

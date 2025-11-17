@@ -101,6 +101,12 @@ class AudioPlayerService {
   /// Currently playing audio file.
   AudioFile? _currentAudioFile;
 
+  /// Current playlist (for auto-play next track).
+  List<AudioFile> _currentPlaylist = [];
+
+  /// Current track index in playlist.
+  int _currentIndex = 0;
+
   /// Current pitch shift in semitones.
   double _currentPitchShift = 0.0;
 
@@ -176,6 +182,13 @@ class AudioPlayerService {
   /// Provides comprehensive playback information in a single stream.
   Stream<PlaybackEvent> get playbackEventStream => _player.playbackEventStream;
 
+  /// Stream that emits when a track completes.
+  ///
+  /// Useful for implementing auto-play next track functionality.
+  Stream<void> get trackCompletedStream => _player.playerStateStream
+      .where((state) => state.processingState == ProcessingState.completed)
+      .map((_) => null);
+
   // ---------------------------------------------------------------------------
   // Initialization
   // ---------------------------------------------------------------------------
@@ -227,6 +240,9 @@ class AudioPlayerService {
       await session.configure(
         const AudioSessionConfiguration.music(),
       );
+
+      // Explicitly activate the session for background playback
+      await session.setActive(true);
 
       _logger.d('Audio session configured: ${session.configuration}');
 
@@ -600,6 +616,104 @@ class AudioPlayerService {
         'AudioPlayerService has been disposed. Create a new instance.',
       );
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Playlist Management
+  // ---------------------------------------------------------------------------
+
+  /// Sets the current playlist for auto-play functionality.
+  ///
+  /// ## Parameters
+  ///
+  /// - [playlist]: List of audio files to play
+  /// - [startIndex]: Index of track to start playing (default: 0)
+  ///
+  /// ## Example
+  ///
+  /// ```dart
+  /// await audioPlayer.setPlaylist(allTracks, startIndex: 5);
+  /// ```
+  void setPlaylist(List<AudioFile> playlist, {int startIndex = 0}) {
+    _currentPlaylist = playlist;
+    _currentIndex = startIndex.clamp(0, playlist.length - 1);
+    _logger.d('Playlist set: ${playlist.length} tracks, starting at $startIndex');
+  }
+
+  /// Plays the next track in the playlist.
+  ///
+  /// Returns `true` if there is a next track, `false` otherwise.
+  ///
+  /// ## Example
+  ///
+  /// ```dart
+  /// if (await audioPlayer.playNext()) {
+  ///   print('Playing next track');
+  /// }
+  /// ```
+  Future<bool> playNext({double pitchShift = 0.0}) async {
+    _ensureInitialized();
+
+    if (_currentPlaylist.isEmpty) {
+      _logger.w('Cannot play next: Playlist is empty');
+      return false;
+    }
+
+    final nextIndex = _currentIndex + 1;
+    if (nextIndex >= _currentPlaylist.length) {
+      _logger.d('Reached end of playlist');
+      return false;
+    }
+
+    _currentIndex = nextIndex;
+    await play(_currentPlaylist[_currentIndex], pitchShift);
+    return true;
+  }
+
+  /// Plays the previous track in the playlist.
+  ///
+  /// Returns `true` if there is a previous track, `false` otherwise.
+  ///
+  /// ## Example
+  ///
+  /// ```dart
+  /// if (await audioPlayer.playPrevious()) {
+  ///   print('Playing previous track');
+  /// }
+  /// ```
+  Future<bool> playPrevious({double pitchShift = 0.0}) async {
+    _ensureInitialized();
+
+    if (_currentPlaylist.isEmpty) {
+      _logger.w('Cannot play previous: Playlist is empty');
+      return false;
+    }
+
+    final previousIndex = _currentIndex - 1;
+    if (previousIndex < 0) {
+      _logger.d('Already at start of playlist');
+      return false;
+    }
+
+    _currentIndex = previousIndex;
+    await play(_currentPlaylist[_currentIndex], pitchShift);
+    return true;
+  }
+
+  /// Restarts the playlist from the beginning.
+  ///
+  /// Returns `true` if successful.
+  Future<bool> restartPlaylist({double pitchShift = 0.0}) async {
+    _ensureInitialized();
+
+    if (_currentPlaylist.isEmpty) {
+      _logger.w('Cannot restart: Playlist is empty');
+      return false;
+    }
+
+    _currentIndex = 0;
+    await play(_currentPlaylist[0], pitchShift);
+    return true;
   }
 
   // ---------------------------------------------------------------------------

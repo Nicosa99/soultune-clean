@@ -30,7 +30,8 @@
 library;
 
 import 'package:logger/logger.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:permission_handler/permission_handler.dart'
+    as permission_handler;
 import 'package:soultune/shared/exceptions/app_exceptions.dart';
 
 /// Service for managing runtime permissions on Android/iOS.
@@ -87,14 +88,19 @@ class PermissionService {
     try {
       _logger.d('Checking storage permission status...');
 
-      // Android 13+ uses granular media permissions
-      final Permission permission = _getStoragePermission();
+      // Check both permissions to handle all Android versions
+      final audioStatus = await permission_handler.Permission.audio.status;
+      final storageStatus = await permission_handler.Permission.storage.status;
 
-      final status = await permission.status;
-      final granted = status.isGranted;
+      // On Android 13+, audio permission is required
+      // On Android <13, storage permission is required
+      // We check both to cover all cases
+      final granted = audioStatus.isGranted || storageStatus.isGranted;
 
       _logger.i(
-        'Storage permission status: ${status.name} (granted: $granted)',
+        'Storage permission status: '
+        'audio=${audioStatus.name} storage=${storageStatus.name} '
+        '(granted: $granted)',
       );
 
       return granted;
@@ -152,16 +158,18 @@ class PermissionService {
     try {
       _logger.i('Requesting storage permission...');
 
-      final Permission permission = _getStoragePermission();
+      // Check both permissions first
+      final audioStatus = await permission_handler.Permission.audio.status;
+      final storageStatus = await permission_handler.Permission.storage.status;
 
-      // Check if already granted
-      if (await permission.isGranted) {
+      // If either is already granted, we're good
+      if (audioStatus.isGranted || storageStatus.isGranted) {
         _logger.d('Permission already granted');
         return true;
       }
 
       // Check if permanently denied
-      if (await permission.isPermanentlyDenied) {
+      if (audioStatus.isPermanentlyDenied || storageStatus.isPermanentlyDenied) {
         _logger.w('Permission permanently denied');
         throw const PermissionException.permanentlyDenied(
           'Storage permission is permanently denied. '
@@ -169,14 +177,28 @@ class PermissionService {
         );
       }
 
-      // Request permission
-      final status = await permission.request();
+      // Request both permissions to cover all Android versions
+      // On Android 13+, audio permission will be requested
+      // On Android <13, storage permission will be requested
+      final Map<permission_handler.Permission, permission_handler.PermissionStatus> statuses = await [
+        permission_handler.Permission.storage,
+        permission_handler.Permission.audio,
+      ].request();
 
-      final granted = status.isGranted;
-      _logger.i('Permission request result: ${status.name} (granted: $granted)');
+      final audioGranted = statuses[permission_handler.Permission.audio]?.isGranted ?? false;
+      final storageGranted = statuses[permission_handler.Permission.storage]?.isGranted ?? false;
+      final granted = audioGranted || storageGranted;
+
+      _logger.i(
+        'Permission request result: '
+        'audio=${statuses[permission_handler.Permission.audio]?.name} '
+        'storage=${statuses[permission_handler.Permission.storage]?.name} '
+        '(granted: $granted)',
+      );
 
       // Check if user permanently denied this time
-      if (status.isPermanentlyDenied) {
+      if (statuses[permission_handler.Permission.audio]?.isPermanentlyDenied == true ||
+          statuses[permission_handler.Permission.storage]?.isPermanentlyDenied == true) {
         _logger.w('User permanently denied permission');
         throw const PermissionException.permanentlyDenied(
           'Storage permission is required to access your music library. '
@@ -252,7 +274,8 @@ class PermissionService {
     try {
       _logger.i('Opening app settings...');
 
-      final opened = await openAppSettings();
+      // Use permission_handler's openAppSettings
+      final opened = await permission_handler.openAppSettings();
 
       if (opened) {
         _logger.i('App settings opened successfully');
@@ -280,11 +303,10 @@ class PermissionService {
   ///
   /// - Android 13+ (API 33+): Returns `Permission.audio`
   /// - Android 6-12 (API 23-32): Returns `Permission.storage`
-  Permission _getStoragePermission() {
-    // permission_handler automatically handles API level differences
-    // Permission.audio is used for Android 13+
-    // Permission.storage is used for older versions
-    return Permission.audio;
+  permission_handler.Permission _getStoragePermission() {
+    // We check both permissions in other methods
+    // This method returns audio as default but both are checked
+    return permission_handler.Permission.audio;
   }
 
   /// Checks if the app should show permission rationale.
@@ -323,11 +345,12 @@ class PermissionService {
   /// ```
   Future<bool> shouldShowRationale() async {
     try {
-      final permission = _getStoragePermission();
-      final status = await permission.status;
+      final audioStatus = await permission_handler.Permission.audio.status;
+      final storageStatus = await permission_handler.Permission.storage.status;
 
-      // Should show rationale if denied but not permanently
-      final shouldShow = status.isDenied && !status.isPermanentlyDenied;
+      // Should show rationale if either is denied but not permanently
+      final shouldShow = (audioStatus.isDenied && !audioStatus.isPermanentlyDenied) ||
+          (storageStatus.isDenied && !storageStatus.isPermanentlyDenied);
 
       _logger.d('Should show permission rationale: $shouldShow');
 
@@ -360,11 +383,13 @@ class PermissionService {
       final summary = <String, String>{};
 
       // Check audio permission (Android 13+) or storage (older)
-      final audioStatus = await Permission.audio.status;
-      summary['Audio/Storage'] = audioStatus.name;
+      final audioStatus = await permission_handler.Permission.audio.status;
+      final storageStatus = await permission_handler.Permission.storage.status;
+      summary['Audio'] = audioStatus.name;
+      summary['Storage'] = storageStatus.name;
 
       // Check other potentially useful permissions
-      final notificationStatus = await Permission.notification.status;
+      final notificationStatus = await permission_handler.Permission.notification.status;
       summary['Notifications'] = notificationStatus.name;
 
       _logger.d('Permission summary: $summary');

@@ -73,6 +73,7 @@ library;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:soultune/features/player/data/repositories/player_repository.dart';
 import 'package:soultune/shared/models/audio_file.dart';
+import 'package:soultune/shared/models/loop_mode.dart';
 
 part 'player_providers.g.dart';
 
@@ -142,9 +143,14 @@ AudioFile? currentAudioFile(CurrentAudioFileRef ref) {
 /// );
 /// ```
 @riverpod
-bool isPlaying(IsPlayingRef ref) {
-  final repository = ref.watch(playerRepositoryProvider).value;
-  return repository?.isPlaying ?? false;
+Stream<bool> isPlaying(IsPlayingRef ref) async* {
+  final repository = await ref.watch(playerRepositoryProvider.future);
+
+  // Emit initial state
+  yield repository.isPlaying;
+
+  // Listen to playing state stream from audio service
+  yield* repository.playingStream;
 }
 
 /// Provides a stream of playback positions.
@@ -380,9 +386,8 @@ class PlayAudio extends _$PlayAudio {
       startPosition: startPosition,
     );
 
-    // Invalidate current audio file to refresh UI
+    // Force state refresh (streams update automatically)
     ref.invalidate(currentAudioFileProvider);
-    ref.invalidate(isPlayingProvider);
   }
 }
 
@@ -409,8 +414,7 @@ Future<void> Function() togglePlayPause(TogglePlayPauseRef ref) {
       await repository.resume();
     }
 
-    // Refresh playing state
-    ref.invalidate(isPlayingProvider);
+    // No need to invalidate - playingStream automatically updates
   };
 }
 
@@ -426,7 +430,7 @@ Future<void> Function() pausePlayback(PausePlaybackRef ref) {
   return () async {
     final repository = await ref.read(playerRepositoryProvider.future);
     await repository.pause();
-    ref.invalidate(isPlayingProvider);
+    // No need to invalidate - playingStream automatically updates
   };
 }
 
@@ -442,7 +446,7 @@ Future<void> Function() resumePlayback(ResumePlaybackRef ref) {
   return () async {
     final repository = await ref.read(playerRepositoryProvider.future);
     await repository.resume();
-    ref.invalidate(isPlayingProvider);
+    // No need to invalidate - playingStream automatically updates
   };
 }
 
@@ -458,7 +462,7 @@ Future<void> Function() stopPlayback(StopPlaybackRef ref) {
   return () async {
     final repository = await ref.read(playerRepositoryProvider.future);
     await repository.stop();
-    ref.invalidate(isPlayingProvider);
+    // playingStream automatically updates, but we need to refresh currentFile
     ref.invalidate(currentAudioFileProvider);
   };
 }
@@ -727,5 +731,138 @@ Future<void> Function(String id) removeFromLibraryAction(
 
     // Refresh library
     ref.invalidate(audioLibraryProvider);
+  };
+}
+
+// =============================================================================
+// Loop & Auto-Play Providers
+// =============================================================================
+
+/// Provides the current loop mode.
+///
+/// ## Example
+///
+/// ```dart
+/// final loopMode = ref.watch(loopModeProvider);
+/// ```
+@riverpod
+LoopMode loopMode(LoopModeRef ref) {
+  final repository = ref.watch(playerRepositoryProvider).value;
+  return repository?.loopMode ?? LoopMode.off;
+}
+
+/// Action: Toggle loop mode.
+///
+/// Cycles through: Off → All → One → Off
+///
+/// ## Example
+///
+/// ```dart
+/// IconButton(
+///   icon: Icon(Icons.repeat),
+///   onPressed: () => ref.read(toggleLoopModeProvider)(),
+/// );
+/// ```
+@riverpod
+Future<void> Function() toggleLoopMode(ToggleLoopModeRef ref) {
+  return () async {
+    final repository = await ref.read(playerRepositoryProvider.future);
+    final currentMode = repository.loopMode;
+    final nextMode = currentMode.next;
+    
+    repository.setLoopMode(nextMode);
+    
+    // Refresh loop mode provider
+    ref.invalidate(loopModeProvider);
+  };
+}
+
+/// Action: Play next track in playlist.
+///
+/// ## Example
+///
+/// ```dart
+/// IconButton(
+///   icon: Icon(Icons.skip_next),
+///   onPressed: () => ref.read(playNextTrackProvider)(),
+/// );
+/// ```
+@riverpod
+Future<void> Function() playNextTrack(PlayNextTrackRef ref) {
+  return () async {
+    final repository = await ref.read(playerRepositoryProvider.future);
+    await repository.playNext();
+
+    // Refresh state providers (streams update automatically)
+    ref.invalidate(currentAudioFileProvider);
+    ref.invalidate(playbackDurationProvider);
+    ref.invalidate(playbackPositionProvider);
+  };
+}
+
+/// Action: Play previous track in playlist.
+///
+/// ## Example
+///
+/// ```dart
+/// IconButton(
+///   icon: Icon(Icons.skip_previous),
+///   onPressed: () => ref.read(playPreviousTrackProvider)(),
+/// );
+/// ```
+@riverpod
+Future<void> Function() playPreviousTrack(PlayPreviousTrackRef ref) {
+  return () async {
+    final repository = await ref.read(playerRepositoryProvider.future);
+    await repository.playPrevious();
+
+    // Refresh state providers (streams update automatically)
+    ref.invalidate(currentAudioFileProvider);
+    ref.invalidate(playbackDurationProvider);
+    ref.invalidate(playbackPositionProvider);
+  };
+}
+
+/// Action: Play a track from a playlist.
+///
+/// Sets the playlist and starts playing from the specified index.
+///
+/// ## Parameters
+///
+/// - [playlist]: List of tracks to play
+/// - [startIndex]: Index of track to start playing (default: 0)
+/// - [pitchShift]: Optional frequency transformation (default: 0.0)
+///
+/// ## Example
+///
+/// ```dart
+/// // Play all tracks in playlist from beginning
+/// await ref.read(playWithPlaylistProvider)(playlistTracks, 0);
+///
+/// // Play from specific track
+/// await ref.read(playWithPlaylistProvider)(playlistTracks, 5);
+/// ```
+@riverpod
+Future<void> Function(List<AudioFile> playlist, int startIndex, {double pitchShift}) playWithPlaylist(
+  PlayWithPlaylistRef ref,
+) {
+  return (List<AudioFile> playlist, int startIndex, {double pitchShift = 0.0}) async {
+    if (playlist.isEmpty) {
+      throw Exception('Cannot play empty playlist');
+    }
+
+    final repository = await ref.read(playerRepositoryProvider.future);
+
+    // Set the playlist in the audio service
+    repository.setPlaylist(playlist, startIndex: startIndex);
+
+    // Play the track at startIndex
+    await repository.playAudioFile(
+      playlist[startIndex],
+      pitchShift: pitchShift,
+    );
+
+    // Refresh state (streams update automatically)
+    ref.invalidate(currentAudioFileProvider);
   };
 }

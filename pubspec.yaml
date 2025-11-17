@@ -30,6 +30,7 @@ dependencies:
   # Audio Processing
   just_audio: ^0.9.40
   audio_session: ^0.1.21
+  audio_service: ^0.18.15
 
   # File Management & Permissions
   file_picker: ^8.1.4
