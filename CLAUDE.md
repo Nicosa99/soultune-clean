@@ -34,28 +34,43 @@ Feature-first clean architecture with Riverpod state management:
 
 ```
 lib/
-├── main.dart                           # Entry: Hive init, NotificationService init
+├── main.dart                           # Entry: Hive init, NotificationService init, HomeScreen launch
 ├── app/constants/frequencies.dart      # Frequency preset definitions (kPitch432Hz, etc.)
 ├── features/
+│   ├── home/                           # Main screen with bottom navigation
+│   │   └── presentation/screens/home_screen.dart   # Entry point (Library, Playlists, Now Playing tabs)
 │   ├── player/
-│   │   ├── data/repositories/player_repository.dart  # Business logic layer
+│   │   ├── data/
+│   │   │   ├── datasources/hive_audio_datasource.dart   # Hive CRUD for audio files
+│   │   │   └── repositories/player_repository.dart      # Business logic layer
 │   │   └── presentation/
-│   │       ├── providers/player_providers.dart       # Riverpod state (@riverpod)
+│   │       ├── providers/player_providers.dart          # Riverpod state (@riverpod)
 │   │       ├── screens/now_playing_screen.dart
-│   │       └── widgets/                              # player_controls, seek_bar, frequency_selector
-│   ├── library/presentation/screens/library_screen.dart
-│   └── playlist/                                     # Playlist management feature
+│   │       └── widgets/                                 # player_controls, seek_bar, frequency_selector
+│   ├── library/presentation/screens/library_screen.dart # Songs & Playlists tabs
+│   ├── playlist/                                        # Playlist management feature
+│   │   ├── data/datasources/hive_playlist_datasource.dart
+│   │   └── presentation/                                # playlist screens, providers, widgets
+│   ├── equalizer/                                       # Audio equalizer feature (future)
+│   └── settings/                                        # App settings feature (future)
 └── shared/
     ├── models/                         # Freezed data models + Hive adapters
     │   ├── audio_file.dart             # Core audio file model
-    │   └── hive_adapters.dart          # Hive type adapters
+    │   ├── playlist.dart               # Playlist model
+    │   ├── frequency_setting.dart      # Frequency configuration
+    │   ├── loop_mode.dart              # Playback loop mode enum
+    │   └── hive_adapters.dart          # Hive type adapters registration
     ├── services/
     │   ├── audio/
-    │   │   ├── audio_player_service.dart    # just_audio wrapper with pitch shift
-    │   │   ├── notification_service.dart    # System media controls (audio_service)
-    │   │   └── metadata_service.dart        # ID3 tag extraction
-    │   ├── storage/hive_service.dart        # Local database
-    │   └── file/                            # File system & permissions
+    │   │   ├── audio_player_service.dart        # just_audio wrapper with pitch shift
+    │   │   ├── notification_service.dart        # System media controls (audio_service)
+    │   │   ├── metadata_service.dart            # ID3 tag extraction
+    │   │   ├── soultune_audio_handler.dart      # audio_service handler implementation
+    │   │   └── audio_service_integration.dart   # Integrates audio_service with player
+    │   ├── storage/hive_service.dart            # Local database initialization
+    │   └── file/                                # File system & permissions
+    ├── widgets/                        # Shared UI components (mini_player, etc.)
+    ├── utils/                          # Formatters and utilities
     ├── theme/                          # Material 3 dark theme
     └── exceptions/app_exceptions.dart  # AudioException, FileException, etc.
 ```
@@ -65,12 +80,16 @@ lib/
 ```
 UI Widgets (ConsumerWidget)
     ↓ watch/read
-Providers (player_providers.dart - @riverpod generated)
+Providers (player_providers.dart, playlist_providers.dart - @riverpod generated)
     ↓
-PlayerRepository (business logic)
+Repositories (business logic & domain rules)
     ↓
-Services (AudioPlayerService, HiveService, etc.)
+Datasources (HiveAudioDataSource, HivePlaylistDataSource - data access)
+    ↓
+Services (AudioPlayerService, HiveService, FileSystemService, etc.)
 ```
+
+**Note**: Not all features have the full data/domain/presentation split yet. The player and playlist features follow clean architecture; other features may have simplified structures.
 
 ## Critical: Frequency Transformation
 
@@ -164,6 +183,20 @@ try {
 }
 ```
 
+## Testing
+
+Testing infrastructure is configured but tests are not yet implemented:
+
+- **Unit tests**: Use `flutter test` (mockito configured in pubspec.yaml)
+- **Integration tests**: Use `flutter test integration_test/` (integration_test package available)
+- **Test location**: Create test files as `test/**/*_test.dart` or `integration_test/**/*_test.dart`
+- **Mocking**: Use mockito for mocking services and repositories
+
+When writing tests:
+- Mock external dependencies (file system, audio player, Hive)
+- Test Riverpod providers using ProviderContainer
+- Use `flutter test --coverage` to generate coverage reports
+
 ## Important Constraints
 
 ### Strict Analysis Rules
@@ -194,8 +227,12 @@ The project enforces strict linting (`analysis_options.yaml`):
 - `NOTIFICATION_SETUP.md` - Android media notification configuration
 - `PERMISSIONS_SETUP.md` - Storage permission setup
 - `PLAN.md` - Feature roadmap and implementation phases
+- `ANDROID_V2_FIX.md` - Android v2 embedding migration fixes
 - `lib/app/constants/frequencies.dart` - Frequency constants and presets
-- `lib/features/player/presentation/providers/player_providers.dart` - All state management
+- `lib/features/player/presentation/providers/player_providers.dart` - Player state management
+- `lib/features/playlist/presentation/providers/playlist_providers.dart` - Playlist state management
+- `lib/features/home/presentation/screens/home_screen.dart` - Main app entry with bottom navigation
+- `lib/shared/widgets/mini_player.dart` - Persistent mini player UI (shown on Library/Playlists tabs)
 
 ## Git Commit Convention
 
