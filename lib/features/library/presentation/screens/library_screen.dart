@@ -724,12 +724,15 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
   /// Plays an audio file and navigates to Now Playing screen.
   Future<void> _playAudioFile(AudioFile audioFile) async {
     try {
-      // Get all files from library
-      final libraryAsync = ref.read(audioLibraryProvider);
-      final allFiles = libraryAsync.value ?? [];
+      // Ensure PlayerRepository is initialized first
+      // This prevents the "first click does nothing" bug
+      final repository = await ref.read(playerRepositoryProvider.future);
 
       // Get current pitch shift (frequency setting)
       final currentPitch = ref.read(currentPitchShiftProvider);
+
+      // Get all files directly from repository (more reliable than StreamProvider)
+      final allFiles = await repository.getAllAudioFiles();
 
       // Find the index of the clicked file
       final index = allFiles.indexWhere((file) => file.id == audioFile.id);
