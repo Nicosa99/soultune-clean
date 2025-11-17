@@ -5,7 +5,7 @@
 ///
 /// ## Features
 ///
-/// - Bottom navigation bar (Library, Playlists, Now Playing)
+/// - Bottom navigation bar (Library, Generator, Now Playing)
 /// - Smooth page transitions
 /// - Persistent state between tabs
 /// - Material 3 navigation bar
@@ -22,6 +22,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:soultune/features/generator/presentation/screens/generator_screen.dart';
 import 'package:soultune/features/library/presentation/screens/library_screen.dart';
 import 'package:soultune/features/player/presentation/providers/player_providers.dart';
 import 'package:soultune/features/player/presentation/screens/now_playing_screen.dart';
@@ -30,7 +31,7 @@ import 'package:soultune/shared/widgets/mini_player.dart';
 /// Home screen with bottom navigation.
 ///
 /// Main entry point of the app, providing navigation between
-/// Library, Playlists, and Now Playing screens.
+/// Library, Generator, and Now Playing screens.
 class HomeScreen extends ConsumerStatefulWidget {
   /// Creates a [HomeScreen].
   const HomeScreen({super.key});
@@ -57,8 +58,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final currentFileAsync = ref.watch(currentAudioFileProvider);
     final hasAudio = currentFileAsync.valueOrNull != null;
 
-    // Show mini player only on Library tab (index 0)
-    final showMiniPlayer = hasAudio && _selectedIndex != 1;
+    // Show mini player on Library and Generator tabs (not Now Playing)
+    final showMiniPlayer = hasAudio && _selectedIndex != 2;
 
     return Scaffold(
       body: PageView(
@@ -73,6 +74,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           LibraryScreen(
             onNavigateToPlayer: _showNowPlayingModal,
           ),
+
+          // Generator tab
+          const GeneratorScreen(),
 
           // Now Playing tab
           NowPlayingScreen(
@@ -125,6 +129,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   icon: Icon(Icons.library_music_outlined),
                   selectedIcon: Icon(Icons.library_music),
                   label: 'Library',
+                ),
+
+                // Generator destination
+                const NavigationDestination(
+                  icon: Icon(Icons.waves_outlined),
+                  selectedIcon: Icon(Icons.waves),
+                  label: 'Generator',
                 ),
 
                 // Now Playing destination

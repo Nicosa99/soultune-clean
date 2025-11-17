@@ -9,6 +9,7 @@
 /// - 0: FrequencySetting
 /// - 1: AudioFile
 /// - 2: Playlist
+/// - 3: FrequencyPreset
 ///
 /// ## Usage
 ///
@@ -22,6 +23,7 @@
 ///   Hive.registerAdapter(FrequencySettingAdapter());
 ///   Hive.registerAdapter(AudioFileAdapter());
 ///   Hive.registerAdapter(PlaylistAdapter());
+///   Hive.registerAdapter(FrequencyPresetAdapter());
 ///
 ///   runApp(MyApp());
 /// }
@@ -29,6 +31,7 @@
 library;
 
 import 'package:hive/hive.dart';
+import 'package:soultune/features/generator/data/models/frequency_preset.dart';
 import 'package:soultune/shared/models/audio_file.dart';
 import 'package:soultune/shared/models/frequency_setting.dart';
 import 'package:soultune/shared/models/playlist.dart';
@@ -101,6 +104,30 @@ class PlaylistAdapter extends TypeAdapter<Playlist> {
 
   @override
   void write(BinaryWriter writer, Playlist obj) {
+    writer.writeMap(obj.toJson());
+  }
+}
+
+// -----------------------------------------------------------------------------
+// FrequencyPreset TypeAdapter (TypeId: 3)
+// -----------------------------------------------------------------------------
+
+/// Hive TypeAdapter for [FrequencyPreset].
+///
+/// Serializes FrequencyPreset objects to/from JSON for Hive storage.
+/// Uses the auto-generated toJson/fromJson methods from Freezed.
+class FrequencyPresetAdapter extends TypeAdapter<FrequencyPreset> {
+  @override
+  final int typeId = 3;
+
+  @override
+  FrequencyPreset read(BinaryReader reader) {
+    final json = reader.readMap().cast<String, dynamic>();
+    return FrequencyPreset.fromJson(json);
+  }
+
+  @override
+  void write(BinaryWriter writer, FrequencyPreset obj) {
     writer.writeMap(obj.toJson());
   }
 }
