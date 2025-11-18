@@ -11,11 +11,15 @@
 /// - Standard browser navigation
 library;
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
+import 'package:path/path.dart' as path;
 import 'package:soultune/shared/services/file/download_scanner_service.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -239,11 +243,80 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
     return _adDomains.any((adDomain) => host.contains(adDomain));
   }
 
+  /// Handles file downloads from WebView.
+  Future<void> _handleDownload(String url, String? suggestedFilename) async {
+    try {
+      _logger.i('Download started: $url');
+
+      // Show download starting notification
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('⬇️ Downloading ${suggestedFilename ?? 'file'}...'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
+      // Download file
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode != 200) {
+        throw Exception('Download failed: ${response.statusCode}');
+      }
+
+      // Get Downloads directory
+      final downloadsDir = Directory('/storage/emulated/0/Download');
+      if (!await downloadsDir.exists()) {
+        await downloadsDir.create(recursive: true);
+      }
+
+      // Generate filename
+      final filename = suggestedFilename ??
+          path.basename(Uri.parse(url).path) ??
+          'download_${DateTime.now().millisecondsSinceEpoch}';
+
+      final filePath = path.join(downloadsDir.path, filename);
+
+      // Save file
+      final file = File(filePath);
+      await file.writeAsBytes(response.bodyBytes);
+
+      _logger.i('Download completed: $filePath');
+
+      // Show success notification
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('✅ Download complete: $filename'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 3),
+          action: SnackBarAction(
+            label: 'Scan',
+            textColor: Colors.white,
+            onPressed: () => _scanAndImportDownloads(),
+          ),
+        ),
+      );
+    } catch (e) {
+      _logger.e('Download failed: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('❌ Download failed: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   /// Initializes the WebView controller.
   void _initializeWebView() {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(Colors.black)
+      ..setOnDownloadStartRequest((request) async {
+        await _handleDownload(request.url, request.suggestedFilename);
+      })
       ..addJavaScriptChannel(
         'UrlChangeHandler',
         onMessageReceived: (message) {
