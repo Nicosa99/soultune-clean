@@ -22,6 +22,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:soultune/features/discovery/presentation/screens/discovery_screen.dart';
 import 'package:soultune/features/generator/presentation/screens/generator_screen.dart';
 import 'package:soultune/features/library/presentation/screens/library_screen.dart';
 import 'package:soultune/features/player/presentation/providers/player_providers.dart';
@@ -58,8 +59,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final currentFileAsync = ref.watch(currentAudioFileProvider);
     final hasAudio = currentFileAsync.valueOrNull != null;
 
-    // Show mini player on Library and Generator tabs (not Now Playing)
-    final showMiniPlayer = hasAudio && _selectedIndex != 2;
+    // Show mini player on Library, Generator and Discovery tabs (not Now Playing)
+    final showMiniPlayer = hasAudio && _selectedIndex != 3;
 
     return Scaffold(
       body: PageView(
@@ -77,6 +78,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
           // Generator tab
           const GeneratorScreen(),
+
+          // Discovery tab
+          const DiscoveryScreen(),
 
           // Now Playing tab
           NowPlayingScreen(
@@ -136,6 +140,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   icon: Icon(Icons.waves_outlined),
                   selectedIcon: Icon(Icons.waves),
                   label: 'Generator',
+                ),
+
+                // Discovery destination
+                const NavigationDestination(
+                  icon: Icon(Icons.science_outlined),
+                  selectedIcon: Icon(Icons.science),
+                  label: 'Discovery',
                 ),
 
                 // Now Playing destination

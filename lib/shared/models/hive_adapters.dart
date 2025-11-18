@@ -10,6 +10,9 @@
 /// - 1: AudioFile
 /// - 2: Playlist
 /// - 3: FrequencyPreset
+/// - 10: UserStats
+/// - 11: GatewayProgress
+/// - 12: JournalEntry
 ///
 /// ## Usage
 ///
@@ -34,7 +37,10 @@ import 'package:hive/hive.dart';
 import 'package:soultune/features/generator/data/models/frequency_preset.dart';
 import 'package:soultune/shared/models/audio_file.dart';
 import 'package:soultune/shared/models/frequency_setting.dart';
+import 'package:soultune/shared/models/gateway_progress.dart';
+import 'package:soultune/shared/models/journal_entry.dart';
 import 'package:soultune/shared/models/playlist.dart';
+import 'package:soultune/shared/models/user_stats.dart';
 
 // -----------------------------------------------------------------------------
 // FrequencySetting TypeAdapter (TypeId: 0)
@@ -128,6 +134,78 @@ class FrequencyPresetAdapter extends TypeAdapter<FrequencyPreset> {
 
   @override
   void write(BinaryWriter writer, FrequencyPreset obj) {
+    writer.writeMap(obj.toJson());
+  }
+}
+
+// -----------------------------------------------------------------------------
+// UserStats TypeAdapter (TypeId: 10)
+// -----------------------------------------------------------------------------
+
+/// Hive TypeAdapter for [UserStats].
+///
+/// Serializes UserStats objects to/from JSON for Hive storage.
+/// Uses the auto-generated toJson/fromJson methods from Freezed.
+class UserStatsAdapter extends TypeAdapter<UserStats> {
+  @override
+  final int typeId = 10;
+
+  @override
+  UserStats read(BinaryReader reader) {
+    final json = reader.readMap().cast<String, dynamic>();
+    return UserStats.fromJson(json);
+  }
+
+  @override
+  void write(BinaryWriter writer, UserStats obj) {
+    writer.writeMap(obj.toJson());
+  }
+}
+
+// -----------------------------------------------------------------------------
+// GatewayProgress TypeAdapter (TypeId: 11)
+// -----------------------------------------------------------------------------
+
+/// Hive TypeAdapter for [GatewayProgress].
+///
+/// Serializes GatewayProgress objects to/from JSON for Hive storage.
+/// Uses the auto-generated toJson/fromJson methods from Freezed.
+class GatewayProgressAdapter extends TypeAdapter<GatewayProgress> {
+  @override
+  final int typeId = 11;
+
+  @override
+  GatewayProgress read(BinaryReader reader) {
+    final json = reader.readMap().cast<String, dynamic>();
+    return GatewayProgress.fromJson(json);
+  }
+
+  @override
+  void write(BinaryWriter writer, GatewayProgress obj) {
+    writer.writeMap(obj.toJson());
+  }
+}
+
+// -----------------------------------------------------------------------------
+// JournalEntry TypeAdapter (TypeId: 12)
+// -----------------------------------------------------------------------------
+
+/// Hive TypeAdapter for [JournalEntry].
+///
+/// Serializes JournalEntry objects to/from JSON for Hive storage.
+/// Uses the auto-generated toJson/fromJson methods from Freezed.
+class JournalEntryAdapter extends TypeAdapter<JournalEntry> {
+  @override
+  final int typeId = 12;
+
+  @override
+  JournalEntry read(BinaryReader reader) {
+    final json = reader.readMap().cast<String, dynamic>();
+    return JournalEntry.fromJson(json);
+  }
+
+  @override
+  void write(BinaryWriter writer, JournalEntry obj) {
     writer.writeMap(obj.toJson());
   }
 }
