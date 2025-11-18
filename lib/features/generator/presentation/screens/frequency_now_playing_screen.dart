@@ -91,26 +91,25 @@ class _FrequencyNowPlayingScreenState
         }
 
         final isPlaying = isPlayingAsync.value ?? false;
-        final frequencyColor = _getColorForFrequency(
-          preset.primaryFrequency ?? 432.0,
-        );
+        final displayFrequency = _getDisplayFrequency(preset);
+        final frequencyColor = _getColorForFrequency(displayFrequency);
+        final brainwaveCategory = _getBrainwaveCategory(displayFrequency);
 
         return Scaffold(
           backgroundColor: Colors.black,
           body: SafeArea(
-            child: Column(
+            child: SingleChildScrollView(
+              child: Column(
               children: [
                 // Top Bar (minimalist - back button only)
                 _buildTopBar(context, frequencyColor),
 
                 // MAIN: Waveform Visualization (60% height)
-                Expanded(
-                  flex: 6,
-                  child: _buildWaveformSection(
-                    preset,
-                    isPlaying,
-                    frequencyColor,
-                  ),
+                _buildWaveformSection(
+                  displayFrequency,
+                  brainwaveCategory,
+                  frequencyColor,
+                  isPlaying,
                 ),
 
                 // Preset Description (scrollable)
@@ -130,8 +129,9 @@ class _FrequencyNowPlayingScreenState
                 // Volume Controls
                 _buildVolumeControls(),
 
-                const SizedBox(height: 4),
+                const SizedBox(height: 40),
               ],
+            ),
             ),
           ),
         );
@@ -185,21 +185,33 @@ class _FrequencyNowPlayingScreenState
     );
   }
 
+  /// Gets the display frequency (binaural beat if available, otherwise primary).
+  double _getDisplayFrequency(FrequencyPreset preset) {
+    if (preset.binauralConfig != null) {
+      // Show binaural beat frequency (difference between L and R)
+      return (preset.binauralConfig!.rightFrequency -
+              preset.binauralConfig!.leftFrequency)
+          .abs();
+    }
+    return preset.primaryFrequency ?? 432.0;
+  }
+
   /// Builds waveform visualization section (60% of screen).
   Widget _buildWaveformSection(
-    FrequencyPreset preset,
-    bool isPlaying,
+    double displayFrequency,
+    String brainwaveCategory,
     Color frequencyColor,
+    bool isPlaying,
   ) {
-    final primaryFreq = preset.primaryFrequency ?? 432.0;
-    final waveform = preset.primaryWaveform ?? Waveform.sine;
-    final brainwaveCategory = _getBrainwaveCategory(primaryFreq);
+
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return Container(
+      height: screenHeight * 0.6, // 60% of screen!
       decoration: BoxDecoration(
         gradient: RadialGradient(
           colors: [
-            frequencyColor.withOpacity(0.3),
+            frequencyColor.withOpacity(0.4),
             Colors.black,
           ],
           center: Alignment.center,
@@ -224,11 +236,11 @@ class _FrequencyNowPlayingScreenState
             ),
           ),
 
-          // Main: Real-time Waveform
+          // Main: Real-time Waveform (full size!)
           Positioned.fill(
             child: WaveformVisualizer(
-              frequency: primaryFreq,
-              waveformType: waveform,
+              frequency: displayFrequency,
+              waveformType: Waveform.sine,
               isPlaying: isPlaying,
               color: frequencyColor,
             ),
@@ -239,16 +251,20 @@ class _FrequencyNowPlayingScreenState
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Primary Frequency (BIG)
+                // Display Frequency (HUGE - binaural beat!)
                 Text(
-                  '${primaryFreq.toStringAsFixed(1)} Hz',
-                  style: const TextStyle(
-                    fontSize: 72,
-                    fontWeight: FontWeight.w200,
+                  '${displayFrequency.toStringAsFixed(1)} Hz',
+                  style: TextStyle(
+                    fontSize: 80,
+                    fontWeight: FontWeight.w100,
                     color: Colors.white,
                     letterSpacing: 4,
                     shadows: [
                       Shadow(
+                        color: frequencyColor,
+                        blurRadius: 30,
+                      ),
+                      const Shadow(
                         color: Colors.black,
                         blurRadius: 20,
                       ),
@@ -259,40 +275,25 @@ class _FrequencyNowPlayingScreenState
                 const SizedBox(height: 8),
 
                 // Brainwave Category
+                const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
+                    horizontal: 20,
+                    vertical: 10,
                   ),
                   decoration: BoxDecoration(
                     color: frequencyColor.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: frequencyColor),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: frequencyColor, width: 2),
                   ),
                   child: Text(
                     brainwaveCategory.toUpperCase(),
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: frequencyColor,
                       letterSpacing: 2,
                     ),
-                  ),
-                ),
-
-                // Preset Name
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
-                  child: Text(
-                    preset.name,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      color: Colors.white70,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -465,14 +466,26 @@ class _FrequencyNowPlayingScreenState
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       child: Column(
         children: [
-          // Progress Bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: _elapsedSeconds / totalSeconds,
-              backgroundColor: Colors.white10,
-              color: frequencyColor,
-              minHeight: 6,
+          // Progress Bar (thick with glow)
+          Container(
+            height: 8,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(4),
+              boxShadow: [
+                BoxShadow(
+                  color: frequencyColor.withOpacity(0.5),
+                  blurRadius: 10,
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: _elapsedSeconds / totalSeconds,
+                backgroundColor: Colors.white10,
+                color: frequencyColor,
+                minHeight: 8,
+              ),
             ),
           ),
 
@@ -491,22 +504,12 @@ class _FrequencyNowPlayingScreenState
               ),
 
               // Remaining Time (Highlighted)
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: frequencyColor.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  'Remaining: ${_formatDuration(Duration(seconds: remainingSeconds))}',
-                  style: TextStyle(
-                    color: frequencyColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
+              Text(
+                '${_formatDuration(Duration(seconds: remainingSeconds))} left',
+                style: TextStyle(
+                  color: frequencyColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
                 ),
               ),
 
