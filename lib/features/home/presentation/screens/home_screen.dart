@@ -60,8 +60,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final currentFileAsync = ref.watch(currentAudioFileProvider);
     final hasAudio = currentFileAsync.valueOrNull != null;
 
-    // Show mini player on Library, Generator, Browser, Discovery (not Now Playing)
-    final showMiniPlayer = hasAudio && _selectedIndex != 4;
+    // Show mini player on all tabs when audio is playing
+    final showMiniPlayer = hasAudio;
 
     return Scaffold(
       body: PageView(
@@ -85,21 +85,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
           // Discovery tab
           const DiscoveryScreen(),
-
-          // Now Playing tab
-          NowPlayingScreen(
-            onNavigateBack: () {
-              // Navigate back to Library tab
-              setState(() {
-                _selectedIndex = 0;
-              });
-              _pageController.animateToPage(
-                0,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-              );
-            },
-          ),
         ],
       ),
       bottomNavigationBar: SafeArea(
@@ -158,19 +143,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   icon: Icon(Icons.science_outlined),
                   selectedIcon: Icon(Icons.science),
                   label: 'Discovery',
-                ),
-
-                // Now Playing destination
-                NavigationDestination(
-                  icon: Badge(
-                    isLabelVisible: hasAudio,
-                    child: const Icon(Icons.music_note_outlined),
-                  ),
-                  selectedIcon: Badge(
-                    isLabelVisible: hasAudio,
-                    child: const Icon(Icons.music_note),
-                  ),
-                  label: 'Now Playing',
                 ),
               ],
             ),

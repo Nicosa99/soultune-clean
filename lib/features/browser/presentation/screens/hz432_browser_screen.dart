@@ -55,6 +55,9 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
   /// Loading progress (0.0 to 1.0).
   double _loadingProgress = 0.0;
 
+  /// Whether control bar is expanded.
+  bool _isControlBarExpanded = true;
+
   @override
   void initState() {
     super.initState();
@@ -235,6 +238,21 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
           ],
         ),
         actions: [
+          // Collapse/Expand Controls (when enabled)
+          if (_isHz432Enabled)
+            IconButton(
+              icon: Icon(
+                _isControlBarExpanded
+                    ? Icons.keyboard_arrow_up
+                    : Icons.keyboard_arrow_down,
+              ),
+              onPressed: () {
+                HapticFeedback.selectionClick();
+                setState(() => _isControlBarExpanded = !_isControlBarExpanded);
+              },
+              tooltip: _isControlBarExpanded ? 'Hide Controls' : 'Show Controls',
+            ),
+
           // Frequency Toggle
           Padding(
             padding: const EdgeInsets.only(right: 8),
@@ -270,21 +288,30 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
               minHeight: 2,
             ),
 
-          // Control Bar (when enabled)
-          if (_isHz432Enabled) _buildControlBar(theme, colorScheme),
+          // Control Bar (when enabled and expanded)
+          if (_isHz432Enabled && _isControlBarExpanded)
+            _buildControlBar(theme, colorScheme),
 
           // Quick Sites
           _buildQuickSites(theme, colorScheme),
 
-          // WebView
+          // WebView with swipe-back gesture
           Expanded(
-            child: WebViewWidget(controller: _controller),
+            child: GestureDetector(
+              onHorizontalDragEnd: (details) async {
+                // Swipe right to go back
+                if (details.primaryVelocity! > 1000) {
+                  if (await _controller.canGoBack()) {
+                    HapticFeedback.selectionClick();
+                    await _controller.goBack();
+                  }
+                }
+              },
+              child: WebViewWidget(controller: _controller),
+            ),
           ),
         ],
       ),
-
-      // Navigation Bar
-      bottomNavigationBar: _buildNavigationBar(colorScheme),
     );
   }
 
@@ -435,53 +462,6 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
           HapticFeedback.selectionClick();
           _controller.loadRequest(Uri.parse(url));
         },
-      ),
-    );
-  }
-
-  /// Builds the bottom navigation bar.
-  Widget _buildNavigationBar(ColorScheme colorScheme) {
-    return BottomAppBar(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () async {
-              HapticFeedback.selectionClick();
-              if (await _controller.canGoBack()) {
-                await _controller.goBack();
-              }
-            },
-            tooltip: 'Back',
-          ),
-          IconButton(
-            icon: const Icon(Icons.arrow_forward),
-            onPressed: () async {
-              HapticFeedback.selectionClick();
-              if (await _controller.canGoForward()) {
-                await _controller.goForward();
-              }
-            },
-            tooltip: 'Forward',
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              HapticFeedback.mediumImpact();
-              _controller.reload();
-            },
-            tooltip: 'Reload',
-          ),
-          IconButton(
-            icon: const Icon(Icons.home),
-            onPressed: () {
-              HapticFeedback.mediumImpact();
-              _controller.loadRequest(Uri.parse('https://www.youtube.com'));
-            },
-            tooltip: 'Home',
-          ),
-        ],
       ),
     );
   }

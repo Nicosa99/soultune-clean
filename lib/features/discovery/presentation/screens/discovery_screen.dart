@@ -7,7 +7,6 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:soultune/features/gateway/presentation/screens/gateway_protocol_screen.dart';
 import 'package:soultune/features/generator/data/models/predefined_presets.dart';
 import 'package:soultune/features/generator/presentation/providers/generator_providers.dart';
 
@@ -48,105 +47,11 @@ class DiscoveryScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.only(bottom: 24),
         children: [
-          _buildGatewayProtocolBanner(context),
           _buildCIASection(context, ref),
           _buildOBESection(context, ref),
           _buildRemoteViewingSection(context, ref),
           _buildScienceSection(context),
         ],
-      ),
-    );
-  }
-
-  /// Gateway Protocol Banner - Prominent call to action.
-  Widget _buildGatewayProtocolBanner(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Container(
-      margin: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            colorScheme.primaryContainer,
-            colorScheme.secondaryContainer,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            HapticFeedback.mediumImpact();
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (context) => const GatewayProtocolScreen(),
-              ),
-            );
-          },
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.explore,
-                        color: colorScheme.onPrimary,
-                        size: 32,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '8-Week Gateway Protocol',
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.onPrimaryContainer,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Guided CIA Program',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSecondaryContainer,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      color: colorScheme.onPrimaryContainer,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Follow the declassified CIA protocol to develop advanced '
-                  'consciousness techniques. Progress through Focus 10, 12, 15, '
-                  'and 21 states over 8 weeks.',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSecondaryContainer,
-                    height: 1.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }
