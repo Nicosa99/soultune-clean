@@ -51,6 +51,11 @@ dependencies:
   # Image Caching
   cached_network_image: ^3.4.1
 
+  # WebView for 432 Hz Browser
+  webview_flutter: ^4.4.2
+  webview_flutter_android: ^3.12.0
+  webview_flutter_wkwebview: ^3.9.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

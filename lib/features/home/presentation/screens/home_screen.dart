@@ -22,6 +22,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:soultune/features/browser/presentation/screens/hz432_browser_screen.dart';
 import 'package:soultune/features/discovery/presentation/screens/discovery_screen.dart';
 import 'package:soultune/features/generator/presentation/screens/generator_screen.dart';
 import 'package:soultune/features/library/presentation/screens/library_screen.dart';
@@ -59,8 +60,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final currentFileAsync = ref.watch(currentAudioFileProvider);
     final hasAudio = currentFileAsync.valueOrNull != null;
 
-    // Show mini player on Library, Generator and Discovery tabs (not Now Playing)
-    final showMiniPlayer = hasAudio && _selectedIndex != 3;
+    // Show mini player on Library, Generator, Browser, Discovery (not Now Playing)
+    final showMiniPlayer = hasAudio && _selectedIndex != 4;
 
     return Scaffold(
       body: PageView(
@@ -78,6 +79,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
           // Generator tab
           const GeneratorScreen(),
+
+          // 432 Hz Browser tab
+          const Hz432BrowserScreen(),
 
           // Discovery tab
           const DiscoveryScreen(),
@@ -140,6 +144,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   icon: Icon(Icons.waves_outlined),
                   selectedIcon: Icon(Icons.waves),
                   label: 'Generator',
+                ),
+
+                // 432 Hz Browser destination
+                const NavigationDestination(
+                  icon: Icon(Icons.language_outlined),
+                  selectedIcon: Icon(Icons.language),
+                  label: 'Browser',
                 ),
 
                 // Discovery destination
