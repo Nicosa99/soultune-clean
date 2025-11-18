@@ -93,6 +93,9 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
   /// Current site being viewed (for showing scan button).
   QuickSite? _currentSite;
 
+  /// URL text editing controller.
+  final _urlController = TextEditingController();
+
   /// All available quick sites.
   static const List<QuickSite> _quickSites = [
     // Streaming Services
@@ -141,6 +144,7 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
   @override
   void initState() {
     super.initState();
+    _urlController.text = _currentUrl;
     _loadBrowserState();
     _initializeWebView();
   }
@@ -156,6 +160,7 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
 
       if (savedUrl != null) {
         _currentUrl = savedUrl;
+        _urlController.text = savedUrl;
       }
       if (savedFrequency != null) {
         _selectedFrequency = savedFrequency;
@@ -222,9 +227,31 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
       ..setBackgroundColor(Colors.black)
       ..setNavigationDelegate(
         NavigationDelegate(
+          onNavigationRequest: (request) {
+            final uri = Uri.parse(request.url);
+
+            // Block non-http(s) URLs (intent://, blob://, etc.)
+            if (uri.scheme != 'http' && uri.scheme != 'https') {
+              _logger.w('Blocked non-http(s) URL: ${uri.scheme}://${uri.host}');
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    '⚠️ Download ready! Check your Downloads folder, '
+                    'then tap "Scan Downloads"',
+                  ),
+                  backgroundColor: Colors.orange,
+                  duration: const Duration(seconds: 3),
+                ),
+              );
+              return NavigationDecision.prevent;
+            }
+
+            return NavigationDecision.navigate;
+          },
           onPageStarted: (url) {
             setState(() {
               _currentUrl = url;
+              _urlController.text = url;
               _isLoading = true;
               _loadingProgress = 0.0;
             });
@@ -252,6 +279,11 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
             }
           },
           onWebResourceError: (error) {
+            // Ignore ERR_UNKNOWN_URL_SCHEME (downloads)
+            if (error.description?.contains('ERR_UNKNOWN_URL_SCHEME') ?? false) {
+              _logger.i('Download URL detected (ignored)');
+              return;
+            }
             _logger.e('WebView error: ${error.description}');
           },
         ),
@@ -387,67 +419,85 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
         ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              '432 Hz Browser',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+            // Editable URL field
+            Container(
+              height: 36,
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(8),
               ),
-            ),
-            // URL field with copy button
-            GestureDetector(
-              onTap: () async {
-                await Clipboard.setData(ClipboardData(text: _currentUrl));
-                HapticFeedback.lightImpact();
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('📋 URL copied to clipboard'),
-                    duration: Duration(seconds: 1),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              },
-              child: Container(
-                margin: const EdgeInsets.only(top: 2),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 2,
-                ),
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        _currentUrl,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontSize: 10,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _urlController,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: 12,
                       ),
+                      decoration: InputDecoration(
+                        hintText: 'Enter URL...',
+                        hintStyle: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: 12,
+                          color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                      ),
+                      textInputAction: TextInputAction.go,
+                      keyboardType: TextInputType.url,
+                      onSubmitted: (url) {
+                        if (url.isEmpty) return;
+
+                        // Add https:// if no scheme
+                        var finalUrl = url;
+                        if (!url.startsWith('http://') &&
+                            !url.startsWith('https://')) {
+                          finalUrl = 'https://$url';
+                        }
+
+                        _controller.loadRequest(Uri.parse(finalUrl));
+                        HapticFeedback.lightImpact();
+                      },
                     ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.copy,
-                      size: 12,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ],
-                ),
+                  ),
+                  // Copy button
+                  IconButton(
+                    icon: const Icon(Icons.copy, size: 16),
+                    padding: const EdgeInsets.all(8),
+                    constraints: const BoxConstraints(),
+                    onPressed: () async {
+                      await Clipboard.setData(
+                        ClipboardData(text: _urlController.text),
+                      );
+                      HapticFeedback.lightImpact();
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('📋 URL copied to clipboard'),
+                          duration: Duration(seconds: 1),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
+            // Frequency status
             if (_isHz432Enabled)
-              Text(
-                '${_selectedFrequency.toInt()} Hz Active',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: Colors.green,
-                  fontSize: 11,
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  '${_selectedFrequency.toInt()} Hz Active',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.green,
+                    fontSize: 10,
+                  ),
                 ),
               ),
           ],
@@ -829,6 +879,7 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
     if (_isHz432Enabled) {
       _stopFrequency();
     }
+    _urlController.dispose();
     super.dispose();
   }
 }
