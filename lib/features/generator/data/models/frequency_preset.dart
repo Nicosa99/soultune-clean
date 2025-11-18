@@ -8,6 +8,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:soultune/features/generator/data/models/binaural_config.dart';
 import 'package:soultune/features/generator/data/models/frequency_layer.dart';
 import 'package:soultune/features/generator/data/models/preset_category.dart';
+import 'package:soultune/features/generator/data/models/waveform.dart';
 import 'package:soultune/shared/models/json_converters.dart';
 
 part 'frequency_preset.freezed.dart';
@@ -81,6 +82,10 @@ class FrequencyPreset with _$FrequencyPreset {
   /// Primary frequency (first layer).
   double? get primaryFrequency =>
       layers.isNotEmpty ? layers.first.frequency : null;
+
+  /// Primary waveform (first layer).
+  Waveform? get primaryWaveform =>
+      layers.isNotEmpty ? layers.first.waveform : null;
 
   /// Formatted duration string (e.g., "15 min" or "1h 30min").
   String get formattedDuration {

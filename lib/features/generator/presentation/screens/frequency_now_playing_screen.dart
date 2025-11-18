@@ -79,7 +79,7 @@ class _FrequencyNowPlayingScreenState
 
         final isPlaying = isPlayingAsync.value ?? false;
         final frequencyColor = _getColorForFrequency(
-          preset.getPrimaryFrequency(),
+          preset.primaryFrequency ?? 432.0,
         );
 
         return Scaffold(
@@ -178,8 +178,8 @@ class _FrequencyNowPlayingScreenState
     bool isPlaying,
     Color frequencyColor,
   ) {
-    final primaryFreq = preset.getPrimaryFrequency();
-    final waveform = preset.getPrimaryWaveform();
+    final primaryFreq = preset.primaryFrequency ?? 432.0;
+    final waveform = preset.primaryWaveform ?? Waveform.sine;
     final brainwaveCategory = _getBrainwaveCategory(primaryFreq);
 
     return Container(
