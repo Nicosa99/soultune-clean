@@ -414,7 +414,7 @@ class SoulTuneAudioHandler extends BaseAudioHandler
       title: preset.name,
       artist: '${preset.category.emoji} ${preset.category.displayName}',
       album: 'Frequency Generator',
-      duration: preset.duration > Duration.zero ? preset.duration : null,
+      duration: Duration(minutes: preset.durationMinutes),
       extras: {
         'type': 'frequency',
         'category': preset.category.displayName,
