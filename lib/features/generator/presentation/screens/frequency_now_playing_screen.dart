@@ -113,7 +113,7 @@ class _FrequencyNowPlayingScreenState
                 // Volume Controls
                 _buildVolumeControls(),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 4),
               ],
             ),
           ),
@@ -491,68 +491,45 @@ class _FrequencyNowPlayingScreenState
   /// Builds big playback controls.
   Widget _buildPlaybackControls(bool isPlaying, Color frequencyColor) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 24),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          // Previous Preset (if multiple)
-          IconButton(
-            iconSize: 40,
-            icon: const Icon(Icons.skip_previous_rounded),
-            color: Colors.white60,
-            onPressed: () {
-              // TODO: Play previous preset in category
-            },
-          ),
-
-          // Play/Pause (BIG CENTERED)
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.mediumImpact();
-              if (isPlaying) {
-                ref.read(stopFrequencyGenerationProvider)();
-              } else {
-                // TODO: Resume playback
-                // For now, this would restart the preset
-              }
-            },
-            child: Container(
-              width: 90,
-              height: 90,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    frequencyColor,
-                    frequencyColor.withOpacity(0.6),
-                  ],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: frequencyColor.withOpacity(0.6),
-                    blurRadius: 40,
-                    spreadRadius: 10,
-                  ),
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Center(
+        // Play/Pause (BIG CENTERED)
+        child: GestureDetector(
+          onTap: () {
+            HapticFeedback.mediumImpact();
+            if (isPlaying) {
+              ref.read(stopFrequencyGenerationProvider)();
+            } else {
+              // TODO: Resume playback
+              // For now, this would restart the preset
+            }
+          },
+          child: Container(
+            width: 90,
+            height: 90,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  frequencyColor,
+                  frequencyColor.withOpacity(0.6),
                 ],
               ),
-              child: Icon(
-                isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                size: 50,
-                color: Colors.white,
-              ),
+              boxShadow: [
+                BoxShadow(
+                  color: frequencyColor.withOpacity(0.6),
+                  blurRadius: 40,
+                  spreadRadius: 10,
+                ),
+              ],
+            ),
+            child: Icon(
+              isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+              size: 50,
+              color: Colors.white,
             ),
           ),
-
-          // Next Preset
-          IconButton(
-            iconSize: 40,
-            icon: const Icon(Icons.skip_next_rounded),
-            color: Colors.white60,
-            onPressed: () {
-              // TODO: Play next preset in category
-            },
-          ),
-        ],
+        ),
       ),
     );
   }

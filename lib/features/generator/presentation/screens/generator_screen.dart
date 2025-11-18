@@ -272,8 +272,9 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen>
       },
 
       // Swipe up to open fullscreen
-      onVerticalDragUpdate: (details) {
-        if (details.primaryDelta! < -5) {
+      onVerticalDragEnd: (details) {
+        // Check if swipe was upward (negative velocity)
+        if (details.primaryVelocity != null && details.primaryVelocity! < -500) {
           HapticFeedback.lightImpact();
           Navigator.of(context).push(
             MaterialPageRoute<void>(
