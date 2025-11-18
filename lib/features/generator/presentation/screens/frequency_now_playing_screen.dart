@@ -5,6 +5,7 @@
 /// layer controls, and session progress tracking.
 library;
 
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -40,6 +41,8 @@ class _FrequencyNowPlayingScreenState
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   double _masterVolume = 0.7;
+  int _elapsedSeconds = 0;
+  Timer? _sessionTimer;
 
   @override
   void initState() {
@@ -50,11 +53,21 @@ class _FrequencyNowPlayingScreenState
       vsync: this,
       duration: const Duration(milliseconds: 2000),
     )..repeat();
+
+    // Start session timer
+    _sessionTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          _elapsedSeconds++;
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
     _pulseController.dispose();
+    _sessionTimer?.cancel();
     super.dispose();
   }
 
@@ -100,12 +113,16 @@ class _FrequencyNowPlayingScreenState
                   ),
                 ),
 
+                // Preset Description (scrollable)
+                if (preset.description.isNotEmpty)
+                  _buildDescription(preset, frequencyColor),
+
                 // Panning Indicator (when active)
                 if (isPanningActive)
                   _buildPanningIndicator(panPosition, frequencyColor),
 
                 // Session Progress
-                _buildSessionProgress(frequencyColor),
+                _buildSessionProgress(preset, frequencyColor),
 
                 // Playback Controls (BIG)
                 _buildPlaybackControls(isPlaying, frequencyColor),
@@ -286,6 +303,25 @@ class _FrequencyNowPlayingScreenState
     );
   }
 
+  /// Builds preset description section (scrollable).
+  Widget _buildDescription(FrequencyPreset preset, Color frequencyColor) {
+    return Container(
+      constraints: const BoxConstraints(maxHeight: 100),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      child: SingleChildScrollView(
+        child: Text(
+          preset.description,
+          style: TextStyle(
+            fontSize: 13,
+            color: Colors.white.withOpacity(0.7),
+            height: 1.5,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+
   /// Builds panning indicator showing L→R→L motion.
   ///
   /// Smooth, meditative visualization without harsh colors.
@@ -294,8 +330,8 @@ class _FrequencyNowPlayingScreenState
     final normalizedPosition = (panPosition + 1) / 2; // -1..1 → 0..1
 
     return Container(
-      height: 90,
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+      height: 80,
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
       color: Colors.black,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -311,7 +347,7 @@ class _FrequencyNowPlayingScreenState
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
 
           // Panning Track (Smooth flowing visualization)
           SizedBox(
@@ -418,12 +454,12 @@ class _FrequencyNowPlayingScreenState
   }
 
   /// Builds session progress with timer and progress bar.
-  Widget _buildSessionProgress(Color frequencyColor) {
-    // TODO: Add session timer providers
-    // For now, using placeholder values
-    final elapsedSeconds = 0;
-    final totalSeconds = 600; // 10 minutes default
-    final remainingSeconds = totalSeconds - elapsedSeconds;
+  Widget _buildSessionProgress(
+    FrequencyPreset preset,
+    Color frequencyColor,
+  ) {
+    final totalSeconds = preset.durationMinutes * 60;
+    final remainingSeconds = (totalSeconds - _elapsedSeconds).clamp(0, totalSeconds);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -433,7 +469,7 @@ class _FrequencyNowPlayingScreenState
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
-              value: elapsedSeconds / totalSeconds,
+              value: _elapsedSeconds / totalSeconds,
               backgroundColor: Colors.white10,
               color: frequencyColor,
               minHeight: 6,
@@ -447,7 +483,7 @@ class _FrequencyNowPlayingScreenState
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                _formatDuration(Duration(seconds: elapsedSeconds)),
+                _formatDuration(Duration(seconds: _elapsedSeconds)),
                 style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 12,
