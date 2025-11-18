@@ -13,6 +13,7 @@ import 'package:soultune/features/generator/data/models/preset_category.dart';
 import 'package:soultune/features/generator/presentation/providers/generator_providers.dart';
 import 'package:soultune/features/generator/presentation/screens/binaural_editor_screen.dart';
 import 'package:soultune/features/generator/presentation/screens/custom_generator_screen.dart';
+import 'package:soultune/features/generator/presentation/screens/frequency_now_playing_screen.dart';
 import 'package:soultune/features/generator/presentation/widgets/preset_detail_sheet.dart';
 
 /// Generator screen for frequency presets.
@@ -259,50 +260,74 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen>
     final theme = Theme.of(context);
     final preset = _playingPreset!;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHigh,
-        border: Border(
-          top: BorderSide(
-            color: colorScheme.outlineVariant,
+    return GestureDetector(
+      // Tap to open fullscreen
+      onTap: () {
+        HapticFeedback.mediumImpact();
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (context) => const FrequencyNowPlayingScreen(),
+          ),
+        );
+      },
+
+      // Swipe up to open fullscreen
+      onVerticalDragUpdate: (details) {
+        if (details.primaryDelta! < -5) {
+          HapticFeedback.lightImpact();
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (context) => const FrequencyNowPlayingScreen(),
+            ),
+          );
+        }
+      },
+
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHigh,
+          border: Border(
+            top: BorderSide(
+              color: colorScheme.outlineVariant,
+            ),
           ),
         ),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          children: [
-            // Preset info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '${preset.category.emoji} ${preset.name}',
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
+        child: SafeArea(
+          top: false,
+          child: Row(
+            children: [
+              // Preset info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${preset.category.emoji} ${preset.name}',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    preset.frequencySummary,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
+                    const SizedBox(height: 4),
+                    Text(
+                      preset.frequencySummary,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
-            // Play/Stop button
-            IconButton.filled(
-              onPressed: _isPlaying ? _stopPreset : () => _playPreset(preset),
-              icon: Icon(_isPlaying ? Icons.stop : Icons.play_arrow),
-              iconSize: 32,
-            ),
-          ],
+              // Play/Stop button
+              IconButton.filled(
+                onPressed: _isPlaying ? _stopPreset : () => _playPreset(preset),
+                icon: Icon(_isPlaying ? Icons.stop : Icons.play_arrow),
+                iconSize: 32,
+              ),
+            ],
+          ),
         ),
       ),
     );
