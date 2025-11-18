@@ -257,7 +257,24 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
         ),
       );
 
-      // Download file
+      // Check if it's a blob URL (can't download directly)
+      if (url.startsWith('blob:')) {
+        _logger.w('Blob URL detected - cannot download directly');
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              '⚠️ Blob download detected. The file should be in your Downloads folder. '
+              'Tap "Scan Downloads" to import.',
+            ),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 4),
+          ),
+        );
+        return;
+      }
+
+      // Download file via HTTP
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode != 200) {
@@ -450,31 +467,60 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
 
   // === Download Interceptor ===
 
-  // Intercept clicks on download links
+  // Intercept ALL clicks for debugging and download detection
   document.addEventListener('click', function(e) {
-    const target = e.target.closest('a');
-    if (target && target.href) {
-      const url = target.href;
-      const filename = target.download || url.split('/').pop() || 'download';
+    const target = e.target.closest('a, button, [role="button"]');
 
-      // Check if it's a downloadable file
-      const downloadExtensions = ['.mp3', '.m4a', '.flac', '.wav', '.aac', '.ogg', '.opus', '.wma'];
-      const isDownloadLink = downloadExtensions.some(ext => url.toLowerCase().includes(ext));
+    // Debug logging
+    console.log('🔍 Click:', {
+      tag: target?.tagName,
+      href: target?.href,
+      download: target?.download,
+      text: target?.textContent?.trim().substring(0, 30)
+    });
 
-      if (isDownloadLink || target.download) {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('📥 Download detected:', url);
-        DownloadHandler.postMessage(url + '|' + filename);
-        return false;
+    if (target) {
+      // Check if it's an <a> link
+      if (target.href) {
+        const url = target.href;
+        const filename = target.download || url.split('/').pop() || 'download';
+
+        // Check if it's a downloadable file
+        const downloadExtensions = ['.mp3', '.m4a', '.flac', '.wav', '.aac', '.ogg', '.opus', '.wma', '.zip'];
+        const isDownloadLink = downloadExtensions.some(ext => url.toLowerCase().includes(ext));
+        const isBlobUrl = url.startsWith('blob:');
+
+        if (isDownloadLink || target.download || isBlobUrl) {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('📥 Download link:', url);
+          DownloadHandler.postMessage(url + '|' + filename);
+          return false;
+        }
+
+        // Block target="_blank" links (popup blocker)
+        if (target.target === '_blank') {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('🚫 Blocked _blank link:', url);
+          return false;
+        }
       }
 
-      // Block target="_blank" links (popup blocker)
-      if (target.target === '_blank') {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('🚫 Blocked _blank link:', url);
-        return false;
+      // Check if it's a download button
+      const text = target.textContent?.toLowerCase() || '';
+      if (text.includes('download') || text.includes('save')) {
+        console.log('🎯 Download button clicked, monitoring...');
+        // Wait for blob URL creation
+        setTimeout(() => {
+          const links = document.querySelectorAll('a[download], a[href^="blob:"]');
+          links.forEach(link => {
+            if (link.href && link.href.startsWith('blob:')) {
+              console.log('📥 Auto-download blob:', link.href);
+              DownloadHandler.postMessage(link.href + '|' + (link.download || 'download.mp3'));
+            }
+          });
+        }, 500);
       }
     }
   }, true);
