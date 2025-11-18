@@ -14,6 +14,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:logger/logger.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -61,7 +62,49 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
   @override
   void initState() {
     super.initState();
+    _loadBrowserState();
     _initializeWebView();
+  }
+
+  /// Loads saved browser state from Hive.
+  Future<void> _loadBrowserState() async {
+    try {
+      final box = await Hive.openBox<dynamic>('browser_state');
+      final savedUrl = box.get('last_url') as String?;
+      final savedFrequency = box.get('selected_frequency') as double?;
+      final savedVolume = box.get('volume') as double?;
+      final savedEnabled = box.get('enabled') as bool?;
+
+      if (savedUrl != null) {
+        _currentUrl = savedUrl;
+      }
+      if (savedFrequency != null) {
+        _selectedFrequency = savedFrequency;
+      }
+      if (savedVolume != null) {
+        _hz432Volume = savedVolume;
+      }
+      if (savedEnabled != null) {
+        _isHz432Enabled = savedEnabled;
+      }
+
+      _logger.i('Loaded browser state: $_currentUrl');
+    } catch (e) {
+      _logger.e('Failed to load browser state: $e');
+    }
+  }
+
+  /// Saves browser state to Hive.
+  Future<void> _saveBrowserState() async {
+    try {
+      final box = await Hive.openBox<dynamic>('browser_state');
+      await box.put('last_url', _currentUrl);
+      await box.put('selected_frequency', _selectedFrequency);
+      await box.put('volume', _hz432Volume);
+      await box.put('enabled', _isHz432Enabled);
+    } catch (e) {
+      _logger.e('Failed to save browser state: $e');
+    }
   }
 
   /// Initializes the WebView controller.
@@ -88,6 +131,9 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
               _isLoading = false;
               _loadingProgress = 1.0;
             });
+
+            // Save state
+            _saveBrowserState();
 
             // Inject frequency if enabled
             if (_isHz432Enabled) {
@@ -219,6 +265,15 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () async {
+            if (await _controller.canGoBack()) {
+              HapticFeedback.selectionClick();
+              await _controller.goBack();
+            }
+          },
+        ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -238,6 +293,17 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
           ],
         ),
         actions: [
+          // Forward Button
+          IconButton(
+            icon: const Icon(Icons.arrow_forward),
+            onPressed: () async {
+              if (await _controller.canGoForward()) {
+                HapticFeedback.selectionClick();
+                await _controller.goForward();
+              }
+            },
+          ),
+
           // Collapse/Expand Controls (when enabled)
           if (_isHz432Enabled)
             IconButton(
@@ -272,6 +338,7 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
                     } else {
                       await _stopFrequency();
                     }
+                    await _saveBrowserState();
                   },
                 ),
               ],
@@ -295,20 +362,9 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
           // Quick Sites
           _buildQuickSites(theme, colorScheme),
 
-          // WebView with swipe-back gesture
+          // WebView
           Expanded(
-            child: GestureDetector(
-              onHorizontalDragEnd: (details) async {
-                // Swipe right to go back
-                if (details.primaryVelocity! > 1000) {
-                  if (await _controller.canGoBack()) {
-                    HapticFeedback.selectionClick();
-                    await _controller.goBack();
-                  }
-                }
-              },
-              child: WebViewWidget(controller: _controller),
-            ),
+            child: WebViewWidget(controller: _controller),
           ),
         ],
       ),
@@ -383,6 +439,7 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
                     setState(() => _selectedFrequency = freq);
                     await _stopFrequency();
                     await _injectFrequency();
+                    await _saveBrowserState();
                   },
                 ),
               ),
@@ -407,6 +464,9 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
                   onChanged: (value) {
                     setState(() => _hz432Volume = value);
                     _updateVolume(value);
+                  },
+                  onChangeEnd: (value) {
+                    _saveBrowserState();
                   },
                 ),
               ),
