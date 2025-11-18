@@ -104,10 +104,6 @@ class _FrequencyNowPlayingScreenState
                 if (isPanningActive)
                   _buildPanningIndicator(panPosition, frequencyColor),
 
-                // Active Layers Display
-                if (preset.layers.isNotEmpty)
-                  _buildLayerControls(preset),
-
                 // Session Progress
                 _buildSessionProgress(frequencyColor),
 
@@ -291,193 +287,131 @@ class _FrequencyNowPlayingScreenState
   }
 
   /// Builds panning indicator showing L→R→L motion.
+  ///
+  /// Smooth, meditative visualization without harsh colors.
   Widget _buildPanningIndicator(double panPosition, Color frequencyColor) {
+    // Normalize pan position to 0-1 for horizontal position
+    final normalizedPosition = (panPosition + 1) / 2; // -1..1 → 0..1
+
     return Container(
-      height: 100,
+      height: 90,
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
       color: Colors.black,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           // Title
-          const Text(
-            'L ↔ R PANNING MODULATION',
+          Text(
+            'SPATIAL AUDIO',
             style: TextStyle(
-              fontSize: 11,
-              color: Colors.white60,
-              letterSpacing: 2,
+              fontSize: 10,
+              color: frequencyColor.withOpacity(0.6),
+              letterSpacing: 2.5,
               fontWeight: FontWeight.w300,
             ),
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
 
-          // Panning Visualization
-          Row(
-            children: [
-              // Left Indicator
-              Expanded(
-                child: Container(
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(
-                      panPosition < 0 ? -panPosition * 0.8 : 0.1,
+          // Panning Track (Smooth flowing visualization)
+          SizedBox(
+            height: 40,
+            child: Stack(
+              children: [
+                // Background track
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      color: Colors.white.withOpacity(0.05),
                     ),
-                    borderRadius: BorderRadius.circular(25),
                   ),
-                  child: const Center(
+                ),
+
+                // L & R labels (subtle)
+                Positioned(
+                  left: 16,
+                  top: 0,
+                  bottom: 0,
+                  child: Center(
                     child: Text(
                       'L',
                       style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.3),
+                        fontWeight: FontWeight.w300,
                       ),
                     ),
                   ),
                 ),
-              ),
-
-              const SizedBox(width: 20),
-
-              // Moving Dot (smooth)
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 50),
-                width: 20,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: frequencyColor,
-                      blurRadius: 25,
-                      spreadRadius: 8,
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(width: 20),
-
-              // Right Indicator
-              Expanded(
-                child: Container(
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(
-                      panPosition > 0 ? panPosition * 0.8 : 0.1,
-                    ),
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                  child: const Center(
+                Positioned(
+                  right: 16,
+                  top: 0,
+                  bottom: 0,
+                  child: Center(
                     child: Text(
                       'R',
                       style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.3),
+                        fontWeight: FontWeight.w300,
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
-  /// Builds layer controls with volume sliders.
-  Widget _buildLayerControls(FrequencyPreset preset) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'ACTIVE LAYERS',
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.white60,
-              letterSpacing: 2,
+                // Flowing gradient indicator
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 50),
+                  left: normalizedPosition * (MediaQuery.of(context).size.width - 64 - 80),
+                  top: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 80,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      gradient: LinearGradient(
+                        colors: [
+                          frequencyColor.withOpacity(0.0),
+                          frequencyColor.withOpacity(0.6),
+                          frequencyColor.withOpacity(0.0),
+                        ],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: frequencyColor.withOpacity(0.4),
+                          blurRadius: 20,
+                          spreadRadius: 5,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Center dot (always visible, glows with movement)
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 50),
+                  left: normalizedPosition * (MediaQuery.of(context).size.width - 64) - 6,
+                  top: 14,
+                  child: Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: frequencyColor,
+                          blurRadius: 15,
+                          spreadRadius: 3,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-
-          const SizedBox(height: 8),
-
-          // Layer List
-          ...preset.layers.asMap().entries.map((entry) {
-            final index = entry.key;
-            final layer = entry.value;
-
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                children: [
-                  // Frequency
-                  SizedBox(
-                    width: 80,
-                    child: Text(
-                      '${layer.frequency.toInt()} Hz',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-
-                  // Waveform Icon
-                  Icon(
-                    _getWaveformIcon(layer.waveform),
-                    size: 20,
-                    color: Colors.white70,
-                  ),
-
-                  const SizedBox(width: 12),
-
-                  // Volume Slider
-                  Expanded(
-                    child: SliderTheme(
-                      data: SliderThemeData(
-                        trackHeight: 2,
-                        thumbShape: const RoundSliderThumbShape(
-                          enabledThumbRadius: 6,
-                        ),
-                        overlayShape: const RoundSliderOverlayShape(
-                          overlayRadius: 12,
-                        ),
-                      ),
-                      child: Slider(
-                        value: layer.volume,
-                        min: 0,
-                        max: 1,
-                        activeColor: Colors.white,
-                        inactiveColor: Colors.white30,
-                        onChanged: (value) {
-                          // TODO: Update layer volume
-                          // This would require adding a provider for layer volume updates
-                        },
-                      ),
-                    ),
-                  ),
-
-                  // Volume %
-                  SizedBox(
-                    width: 40,
-                    child: Text(
-                      '${(layer.volume * 100).toInt()}%',
-                      style: const TextStyle(
-                        color: Colors.white60,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
         ],
       ),
     );
