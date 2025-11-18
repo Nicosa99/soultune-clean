@@ -331,8 +331,8 @@ class _FrequencyNowPlayingScreenState
     final normalizedPosition = (panPosition + 1) / 2; // -1..1 → 0..1
 
     return Container(
-      height: 80,
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+      height: 72,
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
       color: Colors.black,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -341,18 +341,18 @@ class _FrequencyNowPlayingScreenState
           Text(
             'SPATIAL AUDIO',
             style: TextStyle(
-              fontSize: 10,
+              fontSize: 9,
               color: frequencyColor.withOpacity(0.6),
               letterSpacing: 2.5,
               fontWeight: FontWeight.w300,
             ),
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
 
           // Panning Track (Smooth flowing visualization)
           SizedBox(
-            height: 40,
+            height: 36,
             child: Stack(
               children: [
                 // Background track
@@ -429,7 +429,7 @@ class _FrequencyNowPlayingScreenState
                 AnimatedPositioned(
                   duration: const Duration(milliseconds: 50),
                   left: normalizedPosition * (MediaQuery.of(context).size.width - 64) - 6,
-                  top: 14,
+                  top: 12,
                   child: Container(
                     width: 12,
                     height: 12,
