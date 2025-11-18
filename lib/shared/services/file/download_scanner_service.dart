@@ -151,8 +151,8 @@ class DownloadScannerService {
   /// Creates AudioFile from File.
   Future<AudioFile> _createAudioFile(File file) async {
     final fileName = path.basenameWithoutExtension(file.path);
-    final fileSize = await file.length();
-    final duration = 0; // TODO: Get actual duration from metadata
+    // TODO: Get actual duration from metadata using audio_metadata package
+    const duration = Duration.zero;
 
     return AudioFile(
       id: _uuid.v4(),
@@ -161,8 +161,7 @@ class DownloadScannerService {
       artist: 'Unknown Artist',
       album: 'Downloads',
       duration: duration,
-      fileSize: fileSize,
-      addedAt: DateTime.now(),
+      dateAdded: DateTime.now(),
     );
   }
 

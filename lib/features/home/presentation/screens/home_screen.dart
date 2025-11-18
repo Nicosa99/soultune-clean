@@ -66,6 +66,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Scaffold(
       body: PageView(
         controller: _pageController,
+        physics: const NeverScrollableScrollPhysics(), // Disable swipe
         onPageChanged: (index) {
           setState(() {
             _selectedIndex = index;
