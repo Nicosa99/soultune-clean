@@ -116,6 +116,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true, // Allow scrolling for 5 tabs
+          tabAlignment: TabAlignment.start, // Align tabs to the left
           tabs: const [
             Tab(
               icon: Icon(Icons.music_note),

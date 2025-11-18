@@ -70,6 +70,11 @@ Future<List<Playlist>> allPlaylists(AllPlaylistsRef ref) async {
 @riverpod
 Stream<List<Playlist>> playlistsStream(PlaylistsStreamRef ref) async* {
   final dataSource = await ref.watch(playlistDataSourceProvider.future);
+
+  // Yield initial value first to avoid loading loop
+  yield await dataSource.getAllPlaylists();
+
+  // Then yield updates as they come
   yield* dataSource.watchPlaylists();
 }
 

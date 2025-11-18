@@ -38,7 +38,7 @@ lib/
 ├── app/constants/frequencies.dart      # Frequency preset definitions (kPitch432Hz, etc.)
 ├── features/
 │   ├── home/                           # Main screen with bottom navigation
-│   │   └── presentation/screens/home_screen.dart   # Entry point (Library, Playlists, Now Playing tabs)
+│   │   └── presentation/screens/home_screen.dart   # Entry point (Library, Playlists, Now Playing, Generator tabs)
 │   ├── player/
 │   │   ├── data/
 │   │   │   ├── datasources/hive_audio_datasource.dart   # Hive CRUD for audio files
@@ -51,6 +51,20 @@ lib/
 │   ├── playlist/                                        # Playlist management feature
 │   │   ├── data/datasources/hive_playlist_datasource.dart
 │   │   └── presentation/                                # playlist screens, providers, widgets
+│   ├── generator/                                       # ⭐ Frequency Generator (NEW)
+│   │   ├── data/
+│   │   │   ├── models/                                  # binaural_config, frequency_preset, waveform
+│   │   │   │   ├── frequency_constants.dart             # Solfeggio (174-963Hz) & brainwave frequencies
+│   │   │   │   ├── predefined_presets.dart              # CIA Gateway, OBE, meditation presets
+│   │   │   │   └── preset_category.dart                 # Focus, Relaxation, Sleep, Astral, etc.
+│   │   │   └── services/frequency_generator_service.dart # SoLoud-based real-time synthesis
+│   │   ├── domain/panning_engine.dart                   # Adaptive L→R→L panning with brainwave sync
+│   │   └── presentation/
+│   │       ├── providers/generator_providers.dart       # Generator state management
+│   │       ├── screens/generator_screen.dart            # Preset browser & player
+│   │       ├── screens/custom_generator_screen.dart     # Custom frequency editor
+│   │       ├── screens/binaural_editor_screen.dart      # Advanced binaural beat editor
+│   │       └── widgets/                                 # waveform_visualizer, panning_indicator, preset_detail
 │   ├── equalizer/                                       # Audio equalizer feature (future)
 │   └── settings/                                        # App settings feature (future)
 └── shared/
@@ -59,6 +73,7 @@ lib/
     │   ├── playlist.dart               # Playlist model
     │   ├── frequency_setting.dart      # Frequency configuration
     │   ├── loop_mode.dart              # Playback loop mode enum
+    │   ├── json_converters.dart        # Custom JSON converters for Freezed
     │   └── hive_adapters.dart          # Hive type adapters registration
     ├── services/
     │   ├── audio/
@@ -80,20 +95,22 @@ lib/
 ```
 UI Widgets (ConsumerWidget)
     ↓ watch/read
-Providers (player_providers.dart, playlist_providers.dart - @riverpod generated)
+Providers (player_providers.dart, playlist_providers.dart, generator_providers.dart - @riverpod generated)
     ↓
 Repositories (business logic & domain rules)
     ↓
 Datasources (HiveAudioDataSource, HivePlaylistDataSource - data access)
     ↓
-Services (AudioPlayerService, HiveService, FileSystemService, etc.)
+Services (AudioPlayerService, FrequencyGeneratorService, HiveService, FileSystemService, etc.)
 ```
 
-**Note**: Not all features have the full data/domain/presentation split yet. The player and playlist features follow clean architecture; other features may have simplified structures.
+**Note**: Not all features have the full data/domain/presentation split yet. The player, playlist, and generator features follow clean architecture; other features may have simplified structures.
 
 ## Critical: Frequency Transformation
 
-Core feature is real-time pitch shifting from 440Hz to healing frequencies:
+### 1. Audio File Pitch Shifting (Player Feature)
+
+Real-time pitch shifting from 440Hz to healing frequencies:
 
 ```dart
 // Mathematical formula: semitones = 12 × log₂(target / 440)
@@ -110,6 +127,41 @@ double _semitoneToRate(double semitones) {
 // Applied via just_audio's native pitch API
 await _player.setPitch(_semitoneToRate(semitones));
 ```
+
+### 2. Frequency Generator (NEW - Real-time Synthesis)
+
+Direct frequency synthesis using SoLoud engine:
+
+```dart
+// Solfeggio Frequencies (lib/features/generator/data/models/frequency_constants.dart)
+const double kSolfeggio174Hz = 174.0;  // Pain Relief & Grounding
+const double kSolfeggio285Hz = 285.0;  // Cellular Healing
+const double kSolfeggio396Hz = 396.0;  // Liberating Guilt & Fear (Root Chakra)
+const double kSolfeggio417Hz = 417.0;  // Facilitating Change (Sacral Chakra)
+const double kSolfeggio528Hz = 528.0;  // DNA Repair (Solar Plexus) - MIRACLE FREQUENCY
+const double kSolfeggio639Hz = 639.0;  // Relationships (Heart Chakra)
+const double kSolfeggio741Hz = 741.0;  // Awakening Intuition (Throat Chakra)
+const double kSolfeggio852Hz = 852.0;  // Spiritual Awareness (Third Eye Chakra)
+const double kSolfeggio963Hz = 963.0;  // Enlightenment (Crown Chakra)
+
+// Brainwave Frequencies
+// Delta (0.5-4 Hz): Deep Sleep, Physical Healing
+// Theta (4-8 Hz): Meditation, Deep Relaxation, Creativity
+// Alpha (8-14 Hz): Relaxed Focus, Learning
+// Beta (14-30 Hz): Active Thinking, Concentration
+// Gamma (30-100 Hz): Peak Performance, Transcendence
+
+// Binaural Beats: Different frequency in each ear creates perceived beat
+// Example: Left 200Hz + Right 207Hz = 7Hz Theta binaural beat
+```
+
+**Frequency Generator Features:**
+- **Real-time synthesis**: SoLoud engine generates pure tones (sine/square/triangle/sawtooth)
+- **Binaural beats**: Different frequencies per channel for brainwave entrainment
+- **Adaptive panning**: L→R→L modulation synchronized with brainwave frequencies
+- **Predefined presets**: CIA Gateway, OBE (Out-of-Body Experience), Focus, Sleep, Meditation
+- **Custom editor**: Create and save custom frequency combinations
+- **Waveform visualization**: Real-time audio waveform display
 
 ## Code Patterns
 
@@ -169,6 +221,32 @@ static void registerAdapters() {
 }
 ```
 
+### Custom JSON Converters (for Freezed with complex types)
+
+When Freezed models have non-primitive types, use custom converters:
+
+```dart
+// lib/shared/models/json_converters.dart
+class WaveformConverter implements JsonConverter<Waveform, String> {
+  const WaveformConverter();
+
+  @override
+  Waveform fromJson(String json) => Waveform.values.byName(json);
+
+  @override
+  String toJson(Waveform object) => object.name;
+}
+
+// Usage in model
+@freezed
+class FrequencyLayer with _$FrequencyLayer {
+  const factory FrequencyLayer({
+    required double frequency,
+    @WaveformConverter() required Waveform waveform,
+  }) = _FrequencyLayer;
+}
+```
+
 ### Error Handling
 
 Use custom exceptions from `lib/shared/exceptions/app_exceptions.dart`:
@@ -193,7 +271,7 @@ Testing infrastructure is configured but tests are not yet implemented:
 - **Mocking**: Use mockito for mocking services and repositories
 
 When writing tests:
-- Mock external dependencies (file system, audio player, Hive)
+- Mock external dependencies (file system, audio player, Hive, SoLoud)
 - Test Riverpod providers using ProviderContainer
 - Use `flutter test --coverage` to generate coverage reports
 
@@ -213,7 +291,7 @@ The project enforces strict linting (`analysis_options.yaml`):
 
 - **Never use setState** - Use Riverpod providers exclusively
 - **Never use print()** - Use Logger package (`_logger.i()`, `_logger.e()`, etc.)
-- **Never ignore disposal** - Dispose StreamSubscriptions, AudioPlayer in `dispose()`
+- **Never ignore disposal** - Dispose StreamSubscriptions, AudioPlayer, SoLoud in `dispose()`
 - **Never block UI** - Use Isolates for metadata parsing, heavy file operations
 
 ### Platform Configuration
@@ -228,9 +306,14 @@ The project enforces strict linting (`analysis_options.yaml`):
 - `PERMISSIONS_SETUP.md` - Storage permission setup
 - `PLAN.md` - Feature roadmap and implementation phases
 - `ANDROID_V2_FIX.md` - Android v2 embedding migration fixes
-- `lib/app/constants/frequencies.dart` - Frequency constants and presets
+- `lib/app/constants/frequencies.dart` - Frequency constants for pitch shifting
 - `lib/features/player/presentation/providers/player_providers.dart` - Player state management
 - `lib/features/playlist/presentation/providers/playlist_providers.dart` - Playlist state management
+- `lib/features/generator/presentation/providers/generator_providers.dart` - Generator state management
+- `lib/features/generator/data/models/frequency_constants.dart` - Solfeggio & brainwave frequencies
+- `lib/features/generator/data/models/predefined_presets.dart` - All preset definitions
+- `lib/features/generator/data/services/frequency_generator_service.dart` - SoLoud synthesis engine
+- `lib/features/generator/domain/panning_engine.dart` - Adaptive panning algorithm
 - `lib/features/home/presentation/screens/home_screen.dart` - Main app entry with bottom navigation
 - `lib/shared/widgets/mini_player.dart` - Persistent mini player UI (shown on Library/Playlists tabs)
 
