@@ -36,12 +36,6 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen>
   /// All available presets.
   late List<FrequencyPreset> _presets;
 
-  /// Currently playing preset (null if none).
-  FrequencyPreset? _playingPreset;
-
-  /// Whether generator is currently playing.
-  bool _isPlaying = false;
-
   @override
   void initState() {
     super.initState();
@@ -59,6 +53,10 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+
+    // Watch generator state from providers
+    final currentPreset = ref.watch(currentGeneratorPresetProvider).valueOrNull;
+    final isPlaying = ref.watch(generatorIsPlayingProvider).valueOrNull ?? false;
 
     return Scaffold(
       appBar: AppBar(
@@ -106,8 +104,8 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen>
             ),
           ),
 
-          // Now playing bar (if playing)
-          if (_playingPreset != null) _buildNowPlayingBar(colorScheme),
+          // Now playing bar (if preset selected, even if paused)
+          if (currentPreset != null) _buildNowPlayingBar(currentPreset, isPlaying, colorScheme),
         ],
       ),
       floatingActionButton: _buildFAB(colorScheme),
@@ -116,10 +114,13 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen>
 
   /// Builds the floating action button with menu.
   Widget _buildFAB(ColorScheme colorScheme) {
+    // Get current preset to check if now playing bar is visible
+    final currentPreset = ref.watch(currentGeneratorPresetProvider).valueOrNull;
+
     return Padding(
       // Add bottom padding when now playing bar is visible to avoid overlap
       padding: EdgeInsets.only(
-        bottom: _playingPreset != null ? 80 : 0,
+        bottom: currentPreset != null ? 80 : 0,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -180,6 +181,10 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen>
       return _buildEmptyState(category);
     }
 
+    // Get current state from providers
+    final currentPreset = ref.watch(currentGeneratorPresetProvider).valueOrNull;
+    final isPlaying = ref.watch(generatorIsPlayingProvider).valueOrNull ?? false;
+
     return ListView.builder(
       itemCount: categoryPresets.length,
       padding: const EdgeInsets.only(top: 8, bottom: 100),
@@ -187,7 +192,7 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen>
         final preset = categoryPresets[index];
         return _PresetCard(
           preset: preset,
-          isPlaying: _playingPreset?.id == preset.id && _isPlaying,
+          isPlaying: currentPreset?.id == preset.id && isPlaying,
           onPlay: () => _playPreset(preset),
           onStop: _stopPreset,
           onFavorite: () => _toggleFavorite(preset),
@@ -200,13 +205,18 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen>
   /// Shows the preset detail bottom sheet.
   void _showPresetDetails(FrequencyPreset preset) {
     HapticFeedback.selectionClick();
+
+    // Get current state
+    final currentPreset = ref.read(currentGeneratorPresetProvider).valueOrNull;
+    final isPlaying = ref.read(generatorIsPlayingProvider).valueOrNull ?? false;
+
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => PresetDetailSheet(
         preset: preset,
-        isPlaying: _playingPreset?.id == preset.id && _isPlaying,
+        isPlaying: currentPreset?.id == preset.id && isPlaying,
         onPlay: () {
           Navigator.of(context).pop();
           _playPreset(preset);
@@ -256,9 +266,12 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen>
   }
 
   /// Builds the now playing bar at the bottom.
-  Widget _buildNowPlayingBar(ColorScheme colorScheme) {
+  Widget _buildNowPlayingBar(
+    FrequencyPreset preset,
+    bool isPlaying,
+    ColorScheme colorScheme,
+  ) {
     final theme = Theme.of(context);
-    final preset = _playingPreset!;
 
     return GestureDetector(
       // Tap to open fullscreen
@@ -323,8 +336,8 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen>
 
               // Play/Stop button
               IconButton.filled(
-                onPressed: _isPlaying ? _stopPreset : () => _playPreset(preset),
-                icon: Icon(_isPlaying ? Icons.stop : Icons.play_arrow),
+                onPressed: isPlaying ? _stopPreset : () => _playPreset(preset),
+                icon: Icon(isPlaying ? Icons.stop : Icons.play_arrow),
                 iconSize: 32,
               ),
             ],
@@ -337,11 +350,6 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen>
   /// Plays a frequency preset.
   Future<void> _playPreset(FrequencyPreset preset) async {
     HapticFeedback.mediumImpact();
-
-    setState(() {
-      _playingPreset = preset;
-      _isPlaying = true;
-    });
 
     try {
       final playPreset = ref.read(playFrequencyPresetProvider);
@@ -358,11 +366,6 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen>
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _isPlaying = false;
-          _playingPreset = null;
-        });
-
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to play: $e'),
@@ -377,10 +380,6 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen>
   /// Stops the current preset.
   Future<void> _stopPreset() async {
     HapticFeedback.lightImpact();
-
-    setState(() {
-      _isPlaying = false;
-    });
 
     try {
       final stopGeneration = ref.read(stopFrequencyGenerationProvider);

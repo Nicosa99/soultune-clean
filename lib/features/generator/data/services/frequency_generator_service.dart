@@ -16,6 +16,7 @@ import 'package:soultune/features/generator/data/models/frequency_preset.dart';
 import 'package:soultune/features/generator/data/models/waveform.dart';
 import 'package:soultune/features/generator/domain/panning_engine.dart';
 import 'package:soultune/shared/exceptions/app_exceptions.dart';
+import 'package:soultune/shared/services/audio/notification_service.dart';
 
 /// Service for generating and playing frequency tones.
 ///
@@ -25,9 +26,12 @@ import 'package:soultune/shared/exceptions/app_exceptions.dart';
 /// - Binaural beats (stereo separation)
 /// - L→R→L panning modulation for enhanced brain sync
 /// - Real-time volume control
+/// - System notification integration
 class FrequencyGeneratorService {
   /// Creates a [FrequencyGeneratorService].
-  FrequencyGeneratorService() : _logger = Logger();
+  FrequencyGeneratorService() : _logger = Logger() {
+    _setupNotificationCallbacks();
+  }
 
   final Logger _logger;
 
@@ -82,6 +86,36 @@ class FrequencyGeneratorService {
   /// Current pan position (-1.0 to 1.0).
   double get currentPanPosition => _panningEngine.currentPanPosition;
 
+  /// Sets up notification callbacks for system media controls.
+  void _setupNotificationCallbacks() {
+    if (!NotificationService.isInitialized) return;
+
+    try {
+      final handler = NotificationService.audioHandler;
+
+      // Resume playback from notification
+      handler.onPlayFrequency = () async {
+        if (_currentPreset != null && !_isPlaying) {
+          await playPreset(_currentPreset!);
+        }
+      };
+
+      // Pause from notification
+      handler.onPauseFrequency = () async {
+        await stop();
+      };
+
+      // Stop from notification
+      handler.onStopFrequency = () async {
+        await stop();
+      };
+
+      _logger.i('Frequency generator notification callbacks registered');
+    } catch (e) {
+      _logger.w('Failed to setup notification callbacks', error: e);
+    }
+  }
+
   /// Initializes the SoLoud audio engine.
   ///
   /// Must be called before playing any frequencies.
@@ -126,6 +160,9 @@ class FrequencyGeneratorService {
 
       _isPlaying = true;
       _playingController.add(true);
+
+      // Update notification
+      _updateNotification(playing: true);
 
       _logger.i('Playing preset: ${preset.name}');
     } catch (e) {
@@ -414,14 +451,35 @@ class FrequencyGeneratorService {
       _activeSources.clear();
 
       _isPlaying = false;
-      _currentPreset = null;
+      // Keep _currentPreset so the Now Playing bar stays visible (paused state)
 
       _playingController.add(false);
-      _presetController.add(null);
+      // Don't emit null to preset stream - keep current preset
 
-      _logger.i('Stopped frequency generation');
+      // Update notification to paused state
+      _updateNotification(playing: false);
+
+      _logger.i('Paused frequency generation');
     } catch (e) {
       _logger.e('Error stopping frequency generation', error: e);
+    }
+  }
+
+  /// Updates the system notification with current playback state.
+  void _updateNotification({required bool playing}) {
+    if (!NotificationService.isInitialized) return;
+
+    try {
+      final handler = NotificationService.audioHandler;
+
+      if (_currentPreset != null) {
+        handler.updateFrequencyPlaybackState(
+          playing: playing,
+          preset: _currentPreset,
+        );
+      }
+    } catch (e) {
+      _logger.w('Failed to update notification', error: e);
     }
   }
 

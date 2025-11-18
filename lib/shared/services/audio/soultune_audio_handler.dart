@@ -25,7 +25,17 @@ library;
 
 import 'package:audio_service/audio_service.dart';
 import 'package:logger/logger.dart';
+import 'package:soultune/features/generator/data/models/frequency_preset.dart';
 import 'package:soultune/shared/models/audio_file.dart';
+
+/// Playback mode for the audio handler.
+enum PlaybackMode {
+  /// Playing audio files with pitch shifting.
+  audioFile,
+
+  /// Playing frequency generator presets.
+  frequencyGenerator,
+}
 
 /// Custom audio handler for SoulTune.
 ///
@@ -61,10 +71,13 @@ class SoulTuneAudioHandler extends BaseAudioHandler
   /// Current pitch shift (for display in notification).
   double _currentPitchShift = 0.0;
 
-  /// Callback for play action from system.
+  /// Current playback mode.
+  PlaybackMode _playbackMode = PlaybackMode.audioFile;
+
+  /// Callback for play action from system (audio file mode).
   void Function()? onPlay;
 
-  /// Callback for pause action from system.
+  /// Callback for pause action from system (audio file mode).
   void Function()? onPause;
 
   /// Callback for skip to next action from system.
@@ -78,6 +91,15 @@ class SoulTuneAudioHandler extends BaseAudioHandler
 
   /// Callback for stop action from system.
   void Function()? onStop;
+
+  /// Callback for play frequency generator action from system.
+  void Function()? onPlayFrequency;
+
+  /// Callback for pause frequency generator action from system.
+  void Function()? onPauseFrequency;
+
+  /// Callback for stop frequency generator action from system.
+  void Function()? onStopFrequency;
 
   /// Initializes the audio handler.
   Future<void> _init() async {
@@ -111,25 +133,43 @@ class SoulTuneAudioHandler extends BaseAudioHandler
 
   @override
   Future<void> play() async {
-    _logger.d('play() called from system');
-    // Call the actual player via callback
-    onPlay?.call();
+    _logger.d('play() called from system (mode: $_playbackMode)');
+
+    // Route to appropriate player based on mode
+    if (_playbackMode == PlaybackMode.frequencyGenerator) {
+      onPlayFrequency?.call();
+    } else {
+      onPlay?.call();
+    }
+
     _broadcastPlayingState(true);
   }
 
   @override
   Future<void> pause() async {
-    _logger.d('pause() called from system');
-    // Call the actual player via callback
-    onPause?.call();
+    _logger.d('pause() called from system (mode: $_playbackMode)');
+
+    // Route to appropriate player based on mode
+    if (_playbackMode == PlaybackMode.frequencyGenerator) {
+      onPauseFrequency?.call();
+    } else {
+      onPause?.call();
+    }
+
     _broadcastPlayingState(false);
   }
 
   @override
   Future<void> stop() async {
-    _logger.d('stop() called from system');
-    // Call the actual player via callback
-    onStop?.call();
+    _logger.d('stop() called from system (mode: $_playbackMode)');
+
+    // Route to appropriate player based on mode
+    if (_playbackMode == PlaybackMode.frequencyGenerator) {
+      onStopFrequency?.call();
+    } else {
+      onStop?.call();
+    }
+
     _broadcastPlayingState(false);
     await super.stop();
   }
@@ -206,22 +246,36 @@ class SoulTuneAudioHandler extends BaseAudioHandler
 
   /// Updates playback state in notification.
   void _broadcastPlayingState(bool playing) {
+    // Different controls based on mode
+    final controls = _playbackMode == PlaybackMode.frequencyGenerator
+        ? [
+            if (playing) MediaControl.pause else MediaControl.play,
+            MediaControl.stop,
+          ]
+        : [
+            MediaControl.skipToPrevious,
+            if (playing) MediaControl.pause else MediaControl.play,
+            MediaControl.skipToNext,
+          ];
+
+    final compactActions = _playbackMode == PlaybackMode.frequencyGenerator
+        ? const [0, 1] // Play/Pause and Stop
+        : const [0, 1, 2]; // Prev, Play/Pause, Next
+
     playbackState.add(
       playbackState.value.copyWith(
-        controls: [
-          MediaControl.skipToPrevious,
-          if (playing) MediaControl.pause else MediaControl.play,
-          MediaControl.skipToNext,
-        ],
-        systemActions: const {
-          MediaAction.seek,
-          MediaAction.seekForward,
-          MediaAction.seekBackward,
-        },
-        androidCompactActionIndices: const [0, 1, 2],
+        controls: controls,
+        systemActions: _playbackMode == PlaybackMode.frequencyGenerator
+            ? const <MediaAction>{} // No seek for frequency generator
+            : const {
+                MediaAction.seek,
+                MediaAction.seekForward,
+                MediaAction.seekBackward,
+              },
+        androidCompactActionIndices: compactActions,
         processingState: AudioProcessingState.ready,
         playing: playing,
-        queueIndex: _currentIndex,
+        queueIndex: _playbackMode == PlaybackMode.frequencyGenerator ? null : _currentIndex,
       ),
     );
   }
@@ -287,6 +341,86 @@ class SoulTuneAudioHandler extends BaseAudioHandler
       return '639Hz';
     }
     return '440Hz';
+  }
+
+  // ---------------------------------------------------------------------------
+  // Frequency Generator Methods
+  // ---------------------------------------------------------------------------
+
+  /// Plays a frequency generator preset with notification.
+  ///
+  /// Updates notification to show frequency preset info.
+  Future<void> playFrequencyPreset(FrequencyPreset preset) async {
+    _logger.i('playFrequencyPreset: ${preset.name}');
+
+    // Switch to frequency generator mode
+    _playbackMode = PlaybackMode.frequencyGenerator;
+
+    // Create MediaItem for frequency preset
+    final mediaItem = _createFrequencyMediaItem(preset);
+
+    // Update current media item (updates notification)
+    this.mediaItem.add(mediaItem);
+
+    // Update playback state to show as playing
+    _broadcastPlayingState(true);
+  }
+
+  /// Updates frequency generator playback state.
+  ///
+  /// Call this when frequency generator starts/stops/pauses.
+  Future<void> updateFrequencyPlaybackState({
+    required bool playing,
+    FrequencyPreset? preset,
+  }) async {
+    _logger.d('updateFrequencyPlaybackState: playing=$playing');
+
+    // Update mode if preset provided
+    if (preset != null) {
+      _playbackMode = PlaybackMode.frequencyGenerator;
+      final mediaItem = _createFrequencyMediaItem(preset);
+      this.mediaItem.add(mediaItem);
+    }
+
+    // Update playback state
+    _broadcastPlayingState(playing);
+  }
+
+  /// Clears frequency generator notification.
+  ///
+  /// Call this when frequency generator is stopped completely.
+  Future<void> clearFrequencyNotification() async {
+    _logger.d('clearFrequencyNotification');
+
+    // Clear media item
+    mediaItem.add(null);
+
+    // Reset to audio file mode
+    _playbackMode = PlaybackMode.audioFile;
+
+    // Update playback state
+    _broadcastPlayingState(false);
+  }
+
+  /// Creates a MediaItem from FrequencyPreset.
+  MediaItem _createFrequencyMediaItem(FrequencyPreset preset) {
+    // Build description based on preset type
+    final description = preset.binauralConfig != null
+        ? '${preset.binauralConfig!.beatFrequency.toStringAsFixed(1)}Hz Binaural Beat'
+        : preset.frequencySummary;
+
+    return MediaItem(
+      id: preset.id,
+      title: preset.name,
+      artist: '${preset.category.emoji} ${preset.category.displayName}',
+      album: 'Frequency Generator',
+      duration: preset.duration > Duration.zero ? preset.duration : null,
+      extras: {
+        'type': 'frequency',
+        'category': preset.category.displayName,
+        'description': description,
+      },
+    );
   }
 
   // ---------------------------------------------------------------------------
