@@ -128,21 +128,9 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
     ),
     // Downloader Services
     QuickSite(
-      name: '⬇️ Y2Mate',
-      url: 'https://y2mate.com/',
-      icon: '⬇️',
-      isDownloader: true,
-    ),
-    QuickSite(
       name: '🎧 Loader.to',
       url: 'https://loader.to/',
       icon: '🎧',
-      isDownloader: true,
-    ),
-    QuickSite(
-      name: '🎶 MP3Juice',
-      url: 'https://mp3juices.cc/',
-      icon: '🎶',
       isDownloader: true,
     ),
   ];
@@ -406,11 +394,60 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
                 fontWeight: FontWeight.w600,
               ),
             ),
+            // URL field with copy button
+            GestureDetector(
+              onTap: () async {
+                await Clipboard.setData(ClipboardData(text: _currentUrl));
+                HapticFeedback.lightImpact();
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('📋 URL copied to clipboard'),
+                    duration: Duration(seconds: 1),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+              child: Container(
+                margin: const EdgeInsets.only(top: 2),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        _currentUrl,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: 10,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.copy,
+                      size: 12,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ],
+                ),
+              ),
+            ),
             if (_isHz432Enabled)
               Text(
                 '${_selectedFrequency.toInt()} Hz Active',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: Colors.green,
+                  fontSize: 11,
                 ),
               ),
           ],
