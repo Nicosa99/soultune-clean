@@ -331,7 +331,7 @@ class _FrequencyNowPlayingScreenState
     final normalizedPosition = (panPosition + 1) / 2; // -1..1 → 0..1
 
     return Container(
-      height: 71,
+      height: 70,
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
       color: Colors.black,
       child: Column(
