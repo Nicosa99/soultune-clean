@@ -220,15 +220,55 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
     }
   }
 
+  /// Ad blocker domain list.
+  static const _adDomains = [
+    'doubleclick.net',
+    'googlesyndication.com',
+    'googleadservices.com',
+    'google-analytics.com',
+    'googletagmanager.com',
+    'facebook.net',
+    'ads.youtube.com',
+    'ad.doubleclick.net',
+    'adservice.google.com',
+    'pagead2.googlesyndication.com',
+  ];
+
+  /// Checks if domain is an ad domain.
+  bool _isAdDomain(String host) {
+    return _adDomains.any((adDomain) => host.contains(adDomain));
+  }
+
   /// Initializes the WebView controller.
   void _initializeWebView() {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(Colors.black)
+      ..addJavaScriptChannel(
+        'UrlChangeHandler',
+        onMessageReceived: (message) {
+          final newUrl = message.message;
+          if (newUrl != _currentUrl) {
+            setState(() {
+              _currentUrl = newUrl;
+              _urlController.text = newUrl;
+            });
+            _updateCurrentSite(newUrl);
+            _saveBrowserState();
+            _logger.i('URL changed via JS: $newUrl');
+          }
+        },
+      )
       ..setNavigationDelegate(
         NavigationDelegate(
           onNavigationRequest: (request) {
             final uri = Uri.parse(request.url);
+
+            // Ad blocker - block known ad domains
+            if (_isAdDomain(uri.host)) {
+              _logger.i('🚫 Blocked ad: ${uri.host}');
+              return NavigationDecision.prevent;
+            }
 
             // Block non-http(s) URLs (intent://, blob://, etc.)
             if (uri.scheme != 'http' && uri.scheme != 'https') {
@@ -273,6 +313,9 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
             // Save state
             _saveBrowserState();
 
+            // Inject URL change listener for SPAs (YouTube, etc.)
+            _injectUrlChangeListener();
+
             // Inject frequency if enabled
             if (_isHz432Enabled) {
               _injectFrequency();
@@ -289,6 +332,71 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
         ),
       )
       ..loadRequest(Uri.parse(_currentUrl));
+  }
+
+  /// Injects URL change listener for Single Page Apps.
+  ///
+  /// Detects URL changes in SPAs like YouTube that use History API.
+  /// Also blocks popups.
+  Future<void> _injectUrlChangeListener() async {
+    final script = '''
+(function() {
+  // Only inject once
+  if (window.urlChangeListenerInjected) return;
+  window.urlChangeListenerInjected = true;
+
+  // === URL Change Listener ===
+
+  // Store original pushState and replaceState
+  const originalPushState = history.pushState;
+  const originalReplaceState = history.replaceState;
+
+  // Override pushState
+  history.pushState = function() {
+    originalPushState.apply(history, arguments);
+    UrlChangeHandler.postMessage(window.location.href);
+  };
+
+  // Override replaceState
+  history.replaceState = function() {
+    originalReplaceState.apply(history, arguments);
+    UrlChangeHandler.postMessage(window.location.href);
+  };
+
+  // Listen for popstate (back/forward buttons)
+  window.addEventListener('popstate', function() {
+    UrlChangeHandler.postMessage(window.location.href);
+  });
+
+  // === Popup Blocker ===
+
+  // Block window.open
+  window.open = function() {
+    console.log('🚫 Popup blocked');
+    return null;
+  };
+
+  // Block target="_blank" links
+  document.addEventListener('click', function(e) {
+    const target = e.target.closest('a');
+    if (target && target.target === '_blank') {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('🚫 Blocked _blank link:', target.href);
+      return false;
+    }
+  }, true);
+
+  console.log('URL change listener & popup blocker active');
+})();
+''';
+
+    try {
+      await _controller.runJavaScript(script);
+      _logger.i('URL change listener & popup blocker injected');
+    } catch (e) {
+      _logger.e('Failed to inject URL change listener: $e');
+    }
   }
 
   /// Injects frequency mixing JavaScript into the page.
