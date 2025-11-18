@@ -229,7 +229,7 @@ class _FrequencyNowPlayingScreenState
                   painter: PulsingCirclePainter(
                     progress: _pulseController.value,
                     color: frequencyColor,
-                    frequency: primaryFreq,
+                    frequency: displayFrequency,
                   ),
                 );
               },
