@@ -314,9 +314,16 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(Colors.black)
-      ..setOnDownloadStartRequest((request) async {
-        await _handleDownload(request.url, request.suggestedFilename);
-      })
+      ..addJavaScriptChannel(
+        'DownloadHandler',
+        onMessageReceived: (message) async {
+          // Format: "url|filename"
+          final parts = message.message.split('|');
+          final url = parts[0];
+          final filename = parts.length > 1 ? parts[1] : null;
+          await _handleDownload(url, filename);
+        },
+      )
       ..addJavaScriptChannel(
         'UrlChangeHandler',
         onMessageReceived: (message) {
@@ -410,7 +417,7 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
   /// Injects URL change listener for Single Page Apps.
   ///
   /// Detects URL changes in SPAs like YouTube that use History API.
-  /// Also blocks popups.
+  /// Also blocks popups and intercepts downloads.
   Future<void> _injectUrlChangeListener() async {
     final script = '''
 (function() {
@@ -441,6 +448,37 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
     UrlChangeHandler.postMessage(window.location.href);
   });
 
+  // === Download Interceptor ===
+
+  // Intercept clicks on download links
+  document.addEventListener('click', function(e) {
+    const target = e.target.closest('a');
+    if (target && target.href) {
+      const url = target.href;
+      const filename = target.download || url.split('/').pop() || 'download';
+
+      // Check if it's a downloadable file
+      const downloadExtensions = ['.mp3', '.m4a', '.flac', '.wav', '.aac', '.ogg', '.opus', '.wma'];
+      const isDownloadLink = downloadExtensions.some(ext => url.toLowerCase().includes(ext));
+
+      if (isDownloadLink || target.download) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('📥 Download detected:', url);
+        DownloadHandler.postMessage(url + '|' + filename);
+        return false;
+      }
+
+      // Block target="_blank" links (popup blocker)
+      if (target.target === '_blank') {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🚫 Blocked _blank link:', url);
+        return false;
+      }
+    }
+  }, true);
+
   // === Popup Blocker ===
 
   // Block window.open
@@ -449,26 +487,15 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
     return null;
   };
 
-  // Block target="_blank" links
-  document.addEventListener('click', function(e) {
-    const target = e.target.closest('a');
-    if (target && target.target === '_blank') {
-      e.preventDefault();
-      e.stopPropagation();
-      console.log('🚫 Blocked _blank link:', target.href);
-      return false;
-    }
-  }, true);
-
-  console.log('URL change listener & popup blocker active');
+  console.log('URL change listener, download interceptor & popup blocker active');
 })();
 ''';
 
     try {
       await _controller.runJavaScript(script);
-      _logger.i('URL change listener & popup blocker injected');
+      _logger.i('URL change listener, download interceptor & popup blocker injected');
     } catch (e) {
-      _logger.e('Failed to inject URL change listener: $e');
+      _logger.e('Failed to inject scripts: $e');
     }
   }
 
