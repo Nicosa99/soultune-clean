@@ -77,6 +77,9 @@ dev_dependencies:
   integration_test:
     sdk: flutter
 
+  # Icon Generation
+  flutter_launcher_icons: ^0.13.1
+
 flutter:
   uses-material-design: true
 
@@ -92,3 +95,11 @@ flutter:
   #       - asset: assets/fonts/Inter-Regular.ttf
   #       - asset: assets/fonts/Inter-Bold.ttf
   #         weight: 700
+
+# App Icon Configuration
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "soultune-app-icon.png"
+  adaptive_icon_background: "#1A1A2E"
+  adaptive_icon_foreground: "soultune-app-icon.png"
