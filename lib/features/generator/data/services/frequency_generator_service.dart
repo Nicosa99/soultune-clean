@@ -207,7 +207,8 @@ class FrequencyGeneratorService {
 
     // Use fade time to prevent clicking/popping
     // Fade duration = half of update interval for smooth transition
-    final fadeDuration = (_currentPanningConfig?.updateIntervalMs ?? 50) / 2000.0;
+    final fadeDurationMs = (_currentPanningConfig?.updateIntervalMs ?? 50) ~/ 2;
+    final fadeDuration = Duration(milliseconds: fadeDurationMs);
 
     // For binaural beats, we adjust the volume of left/right channels
     // For mono layers, we adjust the overall volume based on position
@@ -251,7 +252,7 @@ class FrequencyGeneratorService {
       // Reset volumes to base smoothly
       final baseVolume = _currentPreset?.volume ?? 0.7;
       for (final handle in _activeHandles) {
-        _soLoud!.fadeVolume(handle, baseVolume, 0.1);
+        _soLoud!.fadeVolume(handle, baseVolume, const Duration(milliseconds: 100));
       }
       _logger.i('Panning disabled');
     }
