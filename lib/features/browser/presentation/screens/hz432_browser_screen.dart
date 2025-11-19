@@ -315,7 +315,55 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
     final filename = suggestedFilename ?? 'download.mp3';
     _logger.i('🔽 Download detected: $filename from $url');
 
-    // Request storage permission first
+    // Check if this is from a download service (already handled by native listener)
+    final downloadServiceDomains = ['savenow.to', 'loader.to', 'y2mate.', 'mp3juice.'];
+    final isDownloadService = downloadServiceDomains.any((domain) => url.contains(domain));
+
+    if (isDownloadService) {
+      _logger.i('📥 Download service detected - native listener handles download');
+
+      // Schedule automatic import scan after download completes
+      // Native downloads typically take 3-10 seconds
+      Future.delayed(const Duration(seconds: 5), () {
+        if (mounted) {
+          _logger.i('🔍 Auto-scanning downloads folder after service download');
+          _scanAndImportDownloads();
+        }
+      });
+
+      if (!mounted) return;
+
+      // Show notification that download is in progress
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '⬇️ Download in progress...',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '📱 Check notification for progress • Auto-scan in 5s',
+                style: TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.blue,
+          duration: const Duration(seconds: 4),
+          action: SnackBarAction(
+            label: 'Scan Now',
+            textColor: Colors.white,
+            onPressed: () => _scanAndImportDownloads(),
+          ),
+        ),
+      );
+      return;
+    }
+
+    // For direct downloads, request permission and use MethodChannel
     PermissionStatus status = await Permission.storage.status;
 
     if (!status.isGranted) {
@@ -385,6 +433,14 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
           ),
         ),
       );
+
+      // Auto-scan after 5 seconds for direct downloads too
+      Future.delayed(const Duration(seconds: 5), () {
+        if (mounted) {
+          _logger.i('🔍 Auto-scanning downloads folder');
+          _scanAndImportDownloads();
+        }
+      });
     } catch (e) {
       _logger.e('Download failed: $e');
       if (!mounted) return;
@@ -778,6 +834,15 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
       document.body.appendChild(iframe);
 
       console.log('📦 Loading download in hidden iframe');
+
+      // For download services, send a notification after iframe loads
+      // This triggers the import scanner
+      if (isDownloadService) {
+        setTimeout(() => {
+          console.log('📥 Download service detected - triggering import scan');
+          DownloadHandler.postMessage(url + '|download_from_service.mp3');
+        }, 2000); // Wait 2 seconds for download to start
+      }
 
       // Clean up iframe after 30 seconds
       setTimeout(() => {
