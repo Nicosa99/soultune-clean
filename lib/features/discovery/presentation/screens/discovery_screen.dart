@@ -47,10 +47,209 @@ class DiscoveryScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.only(bottom: 24),
         children: [
+          _buildHowToUseSection(context),
+          _buildBrowserSection(context),
+          _buildFrequenciesSection(context),
           _buildCIASection(context, ref),
           _buildOBESection(context, ref),
           _buildRemoteViewingSection(context, ref),
           _buildScienceSection(context),
+        ],
+      ),
+    );
+  }
+
+  /// How to Use SoulTune Section.
+  Widget _buildHowToUseSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Card(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: ExpansionTile(
+        leading: const Text('📱', style: TextStyle(fontSize: 32)),
+        title: const Text(
+          'How to Use SoulTune',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: const Text('Your complete guide to healing frequencies'),
+        initiallyExpanded: true,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '4 POWERFUL FEATURES',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildFeatureItem(
+                  '🎵 Library',
+                  'Play your music files with 432 Hz pitch shifting',
+                  theme,
+                ),
+                const SizedBox(height: 12),
+                _buildFeatureItem(
+                  '🌊 Generator',
+                  'Pure frequency synthesis with binaural beats and '
+                      'Solfeggio frequencies',
+                  theme,
+                ),
+                const SizedBox(height: 12),
+                _buildFeatureItem(
+                  '🌐 Browser',
+                  'Listen to YouTube, Spotify, SoundCloud with 432 Hz '
+                      'frequency injection',
+                  theme,
+                ),
+                const SizedBox(height: 12),
+                _buildFeatureItem(
+                  '🔬 Discovery',
+                  'Learn the science behind brain synchronization',
+                  theme,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Helper to build a feature item.
+  Widget _buildFeatureItem(String title, String description, ThemeData theme) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                description,
+                style: theme.textTheme.bodySmall?.copyWith(height: 1.5),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Browser & Download Section.
+  Widget _buildBrowserSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: ExpansionTile(
+        leading: const Text('⬇️', style: TextStyle(fontSize: 32)),
+        title: const Text(
+          'Browser & Downloads',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: const Text('Download music and inject healing frequencies'),
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'HOW TO DOWNLOAD MUSIC',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '1. Open Browser tab\n'
+                  '2. Go to YouTube or tap "Loader.to" quick link\n'
+                  '3. Find the music you want\n'
+                  '4. On Loader.to: paste YouTube URL and download\n'
+                  '5. Downloads save automatically to your device\n'
+                  '6. Use "Scan Downloads" to import to Library\n\n'
+                  '432 Hz WEB INJECTION:\n'
+                  'Toggle "432 Hz" switch while browsing to inject healing '
+                  'frequencies into any website\'s audio in real-time.\n\n'
+                  'Works on:\n'
+                  '• YouTube, Spotify, SoundCloud, Apple Music\n'
+                  '• Any website with audio/video\n'
+                  '• Choose from 174-963 Hz Solfeggio frequencies\n\n'
+                  'Ad Blocker & Popup Blocker included!',
+                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Solfeggio Frequencies Section.
+  Widget _buildFrequenciesSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: ExpansionTile(
+        leading: const Text('🎼', style: TextStyle(fontSize: 32)),
+        title: const Text(
+          'Solfeggio Frequencies',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: const Text('Ancient healing tones'),
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'THE SACRED FREQUENCIES',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '174 Hz - Pain Relief & Grounding\n'
+                  '285 Hz - Cellular Healing & Tissue Repair\n'
+                  '396 Hz - Liberation from Fear (Root Chakra)\n'
+                  '417 Hz - Facilitating Change (Sacral Chakra)\n'
+                  '528 Hz - DNA Repair & Love (Solar Plexus) ★\n'
+                  '639 Hz - Relationships & Connection (Heart)\n'
+                  '741 Hz - Awakening Intuition (Throat Chakra)\n'
+                  '852 Hz - Spiritual Awareness (Third Eye)\n'
+                  '963 Hz - Divine Enlightenment (Crown)\n\n'
+                  '★ 528 Hz is called the "Love Frequency" or '
+                  '"Miracle Tone" - used by biochemists to repair DNA.\n\n'
+                  '432 Hz:\n'
+                  'The "Natural Frequency" - mathematically consistent '
+                  'with the universe. Concert pitch A=432 Hz instead '
+                  'of the modern A=440 Hz creates more harmonious sound.',
+                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
