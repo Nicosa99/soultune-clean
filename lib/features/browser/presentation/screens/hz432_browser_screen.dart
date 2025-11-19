@@ -240,6 +240,72 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
     return _adDomains.any((adDomain) => host.contains(adDomain));
   }
 
+  /// Checks if URL is a download URL (audio file, blob, data URI, etc.)
+  bool _isDownloadUrl(Uri uri, String fullUrl) {
+    // Check for non-http(s) schemes that indicate downloads
+    if (uri.scheme == 'blob' ||
+        uri.scheme == 'data' ||
+        uri.scheme == 'intent' ||
+        uri.scheme == 'file') {
+      return true;
+    }
+
+    // Check for common audio file extensions
+    const audioExtensions = [
+      '.mp3',
+      '.m4a',
+      '.flac',
+      '.wav',
+      '.aac',
+      '.ogg',
+      '.opus',
+      '.wma',
+      '.webm',
+    ];
+
+    final lowerUrl = fullUrl.toLowerCase();
+    if (audioExtensions.any((ext) => lowerUrl.contains(ext))) {
+      return true;
+    }
+
+    // Check if URL path ends with audio extension
+    if (audioExtensions.any((ext) => uri.path.toLowerCase().endsWith(ext))) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /// Extracts filename from URL
+  String _extractFilename(String url) {
+    try {
+      final uri = Uri.parse(url);
+
+      // Try to get filename from path
+      if (uri.pathSegments.isNotEmpty) {
+        final lastSegment = uri.pathSegments.last;
+        if (lastSegment.isNotEmpty && lastSegment.contains('.')) {
+          return lastSegment;
+        }
+      }
+
+      // Try to extract from query parameters
+      if (uri.queryParameters.containsKey('filename')) {
+        return uri.queryParameters['filename']!;
+      }
+
+      if (uri.queryParameters.containsKey('title')) {
+        return '${uri.queryParameters['title']}.mp3';
+      }
+
+      // Fallback: generate filename from timestamp
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      return 'download_$timestamp.mp3';
+    } catch (e) {
+      return 'download.mp3';
+    }
+  }
+
   /// Handles file downloads detected from WebView.
   Future<void> _handleDownload(String url, String? suggestedFilename) async {
     final filename = suggestedFilename ?? 'download.mp3';
@@ -376,19 +442,19 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
               return NavigationDecision.prevent;
             }
 
-            // Block non-http(s) URLs (intent://, blob://, etc.)
-            if (uri.scheme != 'http' && uri.scheme != 'https') {
-              _logger.w('Blocked non-http(s) URL: ${uri.scheme}://${uri.host}');
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    '⚠️ Download ready! Check your Downloads folder, '
-                    'then tap "Scan Downloads"',
-                  ),
-                  backgroundColor: Colors.orange,
-                  duration: const Duration(seconds: 3),
-                ),
-              );
+            // Check if this is a download URL (audio files, blob, data URLs)
+            final isDownloadUrl = _isDownloadUrl(uri, request.url);
+
+            if (isDownloadUrl) {
+              _logger.i('📥 Download URL detected in navigation: ${request.url}');
+
+              // Extract filename from URL
+              final filename = _extractFilename(request.url);
+
+              // Trigger download via MethodChannel
+              _handleDownload(request.url, filename);
+
+              // Prevent navigation (we're downloading instead)
               return NavigationDecision.prevent;
             }
 
@@ -539,11 +605,55 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
     }
   }, true);
 
+  // === Fetch & XMLHttpRequest Interceptor ===
+
+  // Intercept Fetch API for download detection
+  const originalFetch = window.fetch;
+  window.fetch = function(...args) {
+    const url = args[0];
+    const urlString = typeof url === 'string' ? url : url.url;
+
+    console.log('🌐 Fetch request:', urlString);
+
+    // Check if it's a download URL
+    const downloadExtensions = ['.mp3', '.m4a', '.flac', '.wav', '.aac', '.ogg', '.opus', '.wma'];
+    const isDownload = downloadExtensions.some(ext => urlString.toLowerCase().includes(ext));
+
+    if (isDownload) {
+      console.log('📥 Download detected via Fetch!', urlString);
+      const filename = urlString.split('/').pop() || 'download.mp3';
+      DownloadHandler.postMessage(urlString + '|' + filename);
+    }
+
+    return originalFetch.apply(this, arguments);
+  };
+
+  // Intercept XMLHttpRequest for download detection
+  const originalXHROpen = XMLHttpRequest.prototype.open;
+  XMLHttpRequest.prototype.open = function(method, url, ...rest) {
+    console.log('🌐 XHR request:', method, url);
+
+    // Check if it's a download URL
+    const downloadExtensions = ['.mp3', '.m4a', '.flac', '.wav', '.aac', '.ogg', '.opus', '.wma'];
+    const urlString = url.toString();
+    const isDownload = downloadExtensions.some(ext => urlString.toLowerCase().includes(ext));
+
+    if (isDownload) {
+      console.log('📥 Download detected via XHR!', urlString);
+      const filename = urlString.split('/').pop() || 'download.mp3';
+      DownloadHandler.postMessage(urlString + '|' + filename);
+    }
+
+    return originalXHROpen.apply(this, [method, url, ...rest]);
+  };
+
   // === Popup Blocker ===
 
   // Intercept window.open but allow download URLs
   const originalWindowOpen = window.open;
   window.open = function(url, target, features) {
+    console.log('🔗 window.open called:', url);
+
     // Allow if URL looks like a download
     if (url && (url.includes('.mp3') || url.includes('.m4a') || url.includes('.flac') ||
                 url.includes('.wav') || url.includes('download') || url.startsWith('blob:'))) {
@@ -556,7 +666,7 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
     return null;
   };
 
-  console.log('URL change listener, download interceptor & popup blocker active');
+  console.log('✅ Full interceptor active: URL changes, downloads, fetch, XHR, popups');
 })();
 ''';
 
