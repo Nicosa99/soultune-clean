@@ -11,8 +11,6 @@
 /// - Standard browser navigation
 library;
 
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,7 +18,6 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:logger/logger.dart';
 import 'package:soultune/shared/services/file/download_scanner_service.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:webview_flutter_android/webview_flutter_android.dart';
 
 /// Quick site model for browser bookmarks.
 class QuickSite {
@@ -243,42 +240,20 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
   }
 
   /// Handles file downloads detected from WebView.
-  Future<void> _handleDownload(String url, String suggestedFilename) async {
-    _logger.i('🔽 Download detected: $suggestedFilename from $url');
+  Future<void> _handleDownload(String url, String? suggestedFilename) async {
+    final filename = suggestedFilename ?? 'download.mp3';
+    _logger.i('🔽 Download detected: $filename from $url');
 
-    // Inject JavaScript to trigger download via anchor click
-    // This bypasses WebView limitations and triggers system download
-    final escapedUrl = url.replaceAll("'", "\\'");
-    final escapedFilename = suggestedFilename.replaceAll("'", "\\'");
-
-    final downloadScript = '''
-(function() {
-  console.log('🚀 Triggering download: $escapedFilename');
-
-  // Create a temporary anchor element
-  var a = document.createElement('a');
-  a.href = '$escapedUrl';
-  a.download = '$escapedFilename';
-  a.style.display = 'none';
-
-  // Add to document
-  document.body.appendChild(a);
-
-  // Trigger click
-  a.click();
-
-  // Remove element after a short delay
-  setTimeout(function() {
-    document.body.removeChild(a);
-  }, 100);
-
-  console.log('✅ Download initiated');
-})();
-''';
+    // Use Android MethodChannel to trigger native download
+    const platform = MethodChannel('soultune.download');
 
     try {
-      await _controller.runJavaScript(downloadScript);
-      _logger.i('✅ Download JavaScript executed');
+      await platform.invokeMethod('download', {
+        'url': url,
+        'filename': filename,
+      });
+
+      _logger.i('✅ Download triggered via MethodChannel');
 
       if (!mounted) return;
 
@@ -290,7 +265,7 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '⬇️ Downloading: $suggestedFilename',
+                '⬇️ Downloading: $filename',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 4),
@@ -310,12 +285,12 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
         ),
       );
     } catch (e) {
-      _logger.e('Failed to trigger download: $e');
+      _logger.e('Download failed: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('⚠️ Download initiated - check notifications'),
-          backgroundColor: Colors.orange,
+          content: Text('❌ Download failed: $e'),
+          backgroundColor: Colors.red,
           duration: const Duration(seconds: 3),
         ),
       );
@@ -486,24 +461,6 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
         ),
       )
       ..loadRequest(Uri.parse(_currentUrl));
-
-    // Configure Android-specific download handling
-    if (Platform.isAndroid && _controller.platform is AndroidWebViewController) {
-      final androidController =
-          _controller.platform as AndroidWebViewController;
-
-      androidController.setOnDownloadStartRequest((request) async {
-        _logger.i(
-          '📥 Android download start: ${request.url} '
-          '(${request.suggestedFilename})',
-        );
-
-        // Trigger the download
-        await _handleDownload(request.url, request.suggestedFilename);
-      });
-
-      _logger.i('✅ Android download handler configured');
-    }
   }
 
   /// Injects URL change listener for Single Page Apps.
