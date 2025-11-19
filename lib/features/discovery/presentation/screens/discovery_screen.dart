@@ -935,39 +935,73 @@ class DiscoveryScreen extends ConsumerWidget {
     final url = Uri.parse(urlString);
 
     try {
-      // Try to launch with external browser
-      final canLaunch = await canLaunchUrl(url);
+      // First try: External application
+      bool launched = await launchUrl(
+        url,
+        mode: LaunchMode.externalApplication,
+      );
 
-      if (canLaunch) {
-        final launched = await launchUrl(
+      // Second try: Platform default
+      if (!launched) {
+        launched = await launchUrl(
           url,
-          mode: LaunchMode.externalApplication,
+          mode: LaunchMode.platformDefault,
         );
+      }
 
-        if (!launched && context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Could not open: $urlString'),
-              backgroundColor: Theme.of(context).colorScheme.error,
+      // Third try: In-app WebView
+      if (!launched) {
+        launched = await launchUrl(
+          url,
+          mode: LaunchMode.inAppWebView,
+        );
+      }
+
+      if (!launched && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not open link: $urlString'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            action: SnackBarAction(
+              label: 'Copy',
+              textColor: Colors.white,
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: urlString));
+              },
             ),
-          );
-        }
-      } else {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('No app found to open: $urlString'),
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-          );
-        }
+          ),
+        );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Could not open link'),
+                const SizedBox(height: 4),
+                Text(
+                  urlString,
+                  style: const TextStyle(fontSize: 11),
+                ),
+              ],
+            ),
             backgroundColor: Theme.of(context).colorScheme.error,
+            action: SnackBarAction(
+              label: 'Copy URL',
+              textColor: Colors.white,
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: urlString));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('✓ URL copied to clipboard'),
+                    duration: Duration(seconds: 1),
+                  ),
+                );
+              },
+            ),
           ),
         );
       }
