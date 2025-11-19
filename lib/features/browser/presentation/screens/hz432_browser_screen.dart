@@ -593,7 +593,7 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
           .substring(0, 100);            // Limit length
 
         // Add .mp3 extension if not present
-        if (!pageTitle.match(/\\.(mp3|m4a|flac|wav|aac|ogg|opus|wma)$/i)) {
+        if (!pageTitle.match(/\\.(mp3|m4a|flac|wav|aac|ogg|opus|wma)\$/i)) {
           pageTitle += '.mp3';
         }
 
@@ -618,7 +618,7 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
         const lastPart = pathParts[pathParts.length - 1];
 
         // If it has an audio extension, use it
-        if (lastPart.match(/\\.(mp3|m4a|flac|wav|aac|ogg|opus|wma)$/i)) {
+        if (lastPart.match(/\\.(mp3|m4a|flac|wav|aac|ogg|opus|wma)\$/i)) {
           return decodeURIComponent(lastPart);
         }
       }
