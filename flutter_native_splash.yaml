@@ -10,30 +10,19 @@ flutter_native_splash:
   image: soultune-app-icon.png
   image_dark: soultune-app-icon.png
 
-  # Branding (optional bottom image)
-  # branding: assets/images/branding.png
-  # branding_dark: assets/images/branding_dark.png
-
   # Android-specific configuration
   android: true
+  android_gravity: center
+  fullscreen: true
+
+  # Android 12+ configuration
   android_12:
-    # Android 12+ uses different splash screen API
     image: soultune-app-icon.png
     color: "#0F0F1E"
     icon_background_color: "#1A1A2E"
 
-  # iOS-specific configuration
-  ios: true
-  ios_content_mode: center
+  # iOS-specific configuration (disabled - no iOS folder)
+  ios: false
 
-  # Web configuration (optional)
+  # Web configuration
   web: false
-
-  # Remove native splash screen after Flutter splash
-  android_gravity: center
-  ios_content_mode: center
-  fullscreen: true
-
-  # Info.plist settings for iOS
-  info_plist_files:
-    - 'ios/Runner/Info.plist'

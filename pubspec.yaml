@@ -101,7 +101,8 @@ flutter:
 # App Icon Configuration
 flutter_launcher_icons:
   android: true
-  ios: true
+  ios: false  # No iOS folder in this project
   image_path: "soultune-app-icon.png"
   adaptive_icon_background: "#1A1A2E"
   adaptive_icon_foreground: "soultune-app-icon.png"
+  remove_alpha_ios: true
