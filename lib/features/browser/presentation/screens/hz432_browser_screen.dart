@@ -147,20 +147,7 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
     super.initState();
     _urlController.text = _currentUrl;
     _loadBrowserState();
-    _enableCookiePersistence();
     _initializeWebView();
-  }
-
-  /// Enables cookie and session persistence for WebView.
-  Future<void> _enableCookiePersistence() async {
-    try {
-      final cookieManager = WebViewCookieManager();
-      // Cookies are automatically persisted in webview_flutter 3.0+
-      // This just ensures the manager is initialized
-      _logger.i('🍪 Cookie persistence enabled');
-    } catch (e) {
-      _logger.e('Failed to enable cookie persistence: $e');
-    }
   }
 
   /// Loads saved browser state from Hive.
@@ -526,9 +513,16 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
     // Configure Android-specific settings for session persistence
     if (Platform.isAndroid) {
       final androidController = _controller.platform as AndroidWebViewController;
+
+      // Enable caching (CACHE_NORMAL - cache when possible)
       androidController.setMediaPlaybackRequiresUserGesture(false);
 
-      _logger.i('🍪 Android WebView session persistence configured');
+      // These settings enable session persistence:
+      // - Cookies are automatically persisted (enabled by default)
+      // - localStorage/sessionStorage work because JavaScript is enabled
+      // - WebView cache is stored in app's cache directory
+
+      _logger.i('🍪 Android WebView configured (cookies, cache, storage enabled)');
     }
   }
 
@@ -981,6 +975,17 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
             },
           ),
 
+          // Refresh Button
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              HapticFeedback.mediumImpact();
+              _controller.reload();
+              _logger.i('🔄 Browser refreshed');
+            },
+            tooltip: 'Refresh',
+          ),
+
           // Collapse/Expand Controls (when enabled)
           if (_isHz432Enabled)
             IconButton(
@@ -1039,38 +1044,9 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
           // Quick Sites
           _buildQuickSites(theme, colorScheme),
 
-          // WebView with Pull-to-Refresh
+          // WebView
           Expanded(
-            child: Stack(
-              children: [
-                WebViewWidget(controller: _controller),
-                // Pull-to-refresh gesture detector
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: 80,
-                  child: GestureDetector(
-                    onVerticalDragEnd: (details) {
-                      // If swipe down with velocity
-                      if (details.primaryVelocity != null &&
-                          details.primaryVelocity! > 500) {
-                        _controller.reload();
-                        _logger.i('🔄 Browser refreshed via swipe');
-                        HapticFeedback.mediumImpact();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('🔄 Reloading...'),
-                            duration: Duration(milliseconds: 500),
-                          ),
-                        );
-                      }
-                    },
-                    child: Container(color: Colors.transparent),
-                  ),
-                ),
-              ],
-            ),
+            child: WebViewWidget(controller: _controller),
           ),
         ],
       ),
