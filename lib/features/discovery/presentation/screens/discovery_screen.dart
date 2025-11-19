@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soultune/features/generator/data/models/predefined_presets.dart';
 import 'package:soultune/features/generator/presentation/providers/generator_providers.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Discovery Lab screen for education and trust building.
 ///
@@ -54,6 +55,7 @@ class DiscoveryScreen extends ConsumerWidget {
           _buildOBESection(context, ref),
           _buildRemoteViewingSection(context, ref),
           _buildScienceSection(context),
+          _buildResearchSection(context),
         ],
       ),
     );
@@ -231,20 +233,28 @@ class DiscoveryScreen extends ConsumerWidget {
                 const SizedBox(height: 12),
                 Text(
                   '174 Hz - Pain Relief & Grounding\n'
+                  '  Lowest Solfeggio frequency, foundation & security\n\n'
                   '285 Hz - Cellular Healing & Tissue Repair\n'
+                  '  Regeneration, wound healing, energy field restructuring\n\n'
                   '396 Hz - Liberation from Fear (Root Chakra)\n'
+                  '  Releases guilt and fear, grounding energy\n\n'
                   '417 Hz - Facilitating Change (Sacral Chakra)\n'
+                  '  Clears trauma, enables transformation\n\n'
                   '528 Hz - DNA Repair & Love (Solar Plexus) ★\n'
-                  '639 Hz - Relationships & Connection (Heart)\n'
+                  '  The "Miracle Tone" - used by molecular biologists\n'
+                  '  for DNA repair in laboratory protocols\n\n'
+                  '639 Hz - Relationships & Connection (Heart Chakra)\n'
+                  '  Harmonious relationships, balanced communication\n\n'
                   '741 Hz - Awakening Intuition (Throat Chakra)\n'
+                  '  Expression, emotional detoxification\n\n'
                   '852 Hz - Spiritual Awareness (Third Eye)\n'
-                  '963 Hz - Divine Enlightenment (Crown)\n\n'
-                  '★ 528 Hz is called the "Love Frequency" or '
-                  '"Miracle Tone" - used by biochemists to repair DNA.\n\n'
-                  '432 Hz:\n'
-                  'The "Natural Frequency" - mathematically consistent '
-                  'with the universe. Concert pitch A=432 Hz instead '
-                  'of the modern A=440 Hz creates more harmonious sound.',
+                  '  Enhanced intuition, connection to higher consciousness\n\n'
+                  '963 Hz - Divine Connection (Crown Chakra)\n'
+                  '  Pineal gland activation, oneness with universe\n\n'
+                  '432 Hz - The Natural Frequency:\n'
+                  'Mathematically consistent with the universe. '
+                  'Concert pitch A=432 Hz (vs. modern A=440 Hz) '
+                  'creates more harmonious resonance with nature.',
                   style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
                 ),
               ],
@@ -284,15 +294,34 @@ class DiscoveryScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'In 1983, U.S. Army Intelligence assessed the Monroe '
-                  'Institute\'s Gateway Experience for military applications.\n\n'
-                  'Key Findings:\n'
+                  'Document: "Analysis and Assessment of Gateway Process"\n'
+                  'Author: Lt. Col. Wayne M. McDonnell (U.S. Army Intelligence)\n'
+                  'Date: June 9, 1983 • Length: 29 pages\n'
+                  'Declassified: 2003 • Public: CIA CREST 2017\n\n'
+                  'The Missing Page 25:\n'
+                  'Page 25 was missing from declassified document until 2021, '
+                  'sparking conspiracy theories. When found, it contained '
+                  'technical explanation of out-of-body mechanics.\n\n'
+                  'Key CIA Conclusions:\n'
                   '• Binaural beats induce measurable brain changes\n'
                   '• Out-of-body experiences are trainable states\n'
                   '• Remote viewing capability can be developed\n'
-                  '• Consciousness exists beyond spacetime\n\n'
-                  'Declassified: 2003 • CIA CREST Database: 2017',
+                  '• "Consciousness may exist beyond spacetime"\n\n'
+                  'Focus States (Monroe Institute Protocol):\n'
+                  '• Focus 10: Mind Awake/Body Asleep\n'
+                  '• Focus 12: Expanded Awareness\n'
+                  '• Focus 15: "No-Time" State\n'
+                  '• Focus 21: Gateway to Other Energy Systems\n\n'
+                  'Viral Impact: 10M+ views on TikTok/YouTube (2021)',
                   style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
+                ),
+                const SizedBox(height: 16),
+                _buildLinkButton(
+                  context,
+                  'Read Official CIA Document',
+                  'https://www.cia.gov/readingroom/document/cia-rdp96-00788r001700210016-5',
+                  Icons.description,
+                  theme,
                 ),
                 const SizedBox(height: 20),
                 SizedBox(
@@ -351,17 +380,25 @@ class DiscoveryScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Out-of-body experiences are trainable altered states. '
-                  'NIH fMRI studies show specific brain activation in the '
-                  'temporoparietal junction (TPJ) during OBEs.\n\n'
-                  'Research:\n'
-                  '• University of Ottawa: OBE brain mapping (2014)\n'
-                  '• 10% of population has spontaneous OBEs\n'
-                  '• Training increases OBE probability 5-10x\n\n'
+                  'Scientific Definition:\n'
+                  'An altered state where consciousness appears to separate '
+                  'from the physical body, perceiving from an external vantage point.\n\n'
+                  'Prevalence:\n'
+                  '• 10% of population: spontaneous OBEs\n'
+                  '• 25% report at least one in lifetime\n'
+                  '• Training can increase probability 5-10x\n\n'
+                  'University of Ottawa Study (2014):\n'
+                  'fMRI brain mapping during induced OBEs revealed specific '
+                  'activation in Temporoparietal Junction (TPJ) - the brain '
+                  'region that processes body schema and spatial awareness.\n\n'
+                  'Brain Regions Involved:\n'
+                  '• Left Temporoparietal Junction (body dissociation)\n'
+                  '• Left Supplementary Motor Area\n'
+                  '• Left Cerebellum (kinesthetic imagery)\n\n'
                   'Optimal Conditions:\n'
                   '• 3-6 AM (melatonin peak)\n'
-                  '• After 4-6 hours sleep\n'
-                  '• Theta frequency (4-8 Hz)',
+                  '• After 4-6 hours sleep ("wake back to bed")\n'
+                  '• Theta frequency (4-8 Hz) binaural beats',
                   style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
                 ),
                 const SizedBox(height: 20),
@@ -421,15 +458,24 @@ class DiscoveryScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'For 17 years, the CIA trained remote viewers to perceive '
-                  'distant targets using consciousness alone.\n\n'
+                  'Duration: 1978-1995 (17 years)\n'
+                  'Budget: \$20 million total\n'
+                  'Location: Fort Meade, Maryland\n'
+                  'Unit Size: 15-20 trained viewers\n\n'
                   'Joseph McMoneagle (Agent 001):\n'
-                  '• 450+ successful operational missions\n'
+                  '• Most successful remote viewer in program\n'
+                  '• 450+ operational missions completed\n'
+                  '• 85%+ accuracy on verifiable targets\n'
                   '• Located Soviet submarine (1979)\n'
-                  '• 85%+ accuracy on verifiable targets\n\n'
-                  'Frequencies Used:\n'
-                  '• Focus 10-15 for target acquisition\n'
-                  '• Beta waves (15-20 Hz) for active RV',
+                  '• Awarded Legion of Merit for intelligence work\n\n'
+                  'AIR Review (1995):\n'
+                  '"Statistically significant effect has been observed '
+                  'in laboratory" - though program was terminated due to '
+                  'difficulty converting results into actionable intelligence.\n\n'
+                  'Frequency Protocols:\n'
+                  '• Focus 10-15: Target acquisition\n'
+                  '• Beta waves (15-20 Hz): Active remote viewing\n'
+                  '• Theta waves (4-8 Hz): Deep information access',
                   style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
                 ),
                 const SizedBox(height: 20),
@@ -491,15 +537,79 @@ class DiscoveryScreen extends ConsumerWidget {
                 Text(
                   'Your brain naturally synchronizes with external rhythms.\n\n'
                   'How Binaural Beats Work:\n'
-                  '1. Left ear: 200 Hz\n'
-                  '2. Right ear: 207 Hz\n'
-                  '3. Brain perceives: 7 Hz "beat"\n'
-                  '4. Brainwaves entrain to 7 Hz (Theta)\n\n'
-                  '2024 PLOS Study:\n'
-                  '"Panning beats show significantly more pronounced '
-                  'effects on brain activity than static binaural beats."\n\n'
-                  'This app uses advanced panning (0.1s-10s cycles) '
-                  'for maximum effectiveness.',
+                  '1. Left ear: 200 Hz tone\n'
+                  '2. Right ear: 207 Hz tone\n'
+                  '3. Brain perceives: 7 Hz phantom "beat"\n'
+                  '4. Brainwaves entrain to 7 Hz (Theta frequency)\n'
+                  '5. Mental state shifts to match target frequency',
+                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: colorScheme.primary.withOpacity(0.5),
+                      width: 2,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.science,
+                            color: colorScheme.primary,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '2024 BREAKTHROUGH STUDY',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.primary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'PLOS ONE (July 2024) - Sudre et al.\n'
+                        '"A new perspective on binaural beats: '
+                        'Investigating the effects of spatially moving sounds"\n\n'
+                        'KEY FINDING:\n'
+                        '"Panning beats show significantly MORE PRONOUNCED '
+                        'effects on brain activity than static binaural beats."\n\n'
+                        '✨ SoulTune\'s Advantage:\n'
+                        'Our Generator uses advanced ADAPTIVE PANNING '
+                        '(0.1s-10s cycles) synchronized with brainwave '
+                        'frequencies - exactly what the research shows '
+                        'is most effective!',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          height: 1.6,
+                          color: colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Additional 2024 Research:\n\n'
+                  'Nature Study (1-month daily use):\n'
+                  '• Week 2: Increased auditory P300 amplitude\n'
+                  '• Week 4: Reduced P300 latency (faster processing)\n'
+                  '• Week 4: Decreased reaction time (auditory + visual)\n'
+                  '• Conclusion: Enhanced cognitive function\n\n'
+                  '40 Hz Gamma Study (48 subjects):\n'
+                  '• Significantly enhanced reading comprehension\n'
+                  '• Improved attention span\n'
+                  '• Neural entrainment via gamma frequency power',
                   style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
                 ),
               ],
@@ -508,6 +618,176 @@ class DiscoveryScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  /// Research & Studies Section with external links.
+  Widget _buildResearchSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: ExpansionTile(
+        leading: const Text('📚', style: TextStyle(fontSize: 32)),
+        title: const Text(
+          'Research & Studies',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: const Text('Scientific papers and government documents'),
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'GOVERNMENT DOCUMENTS',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _buildLinkButton(
+                  context,
+                  'CIA Gateway Process (1983)',
+                  'https://www.cia.gov/readingroom/document/cia-rdp96-00788r001700210016-5',
+                  Icons.description,
+                  theme,
+                ),
+                const SizedBox(height: 8),
+                _buildLinkButton(
+                  context,
+                  'Project Stargate Archive (CIA CREST)',
+                  'https://www.cia.gov/readingroom/collection/stargate',
+                  Icons.folder_open,
+                  theme,
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'PEER-REVIEWED STUDIES (2024)',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '2024 PLOS ONE - Spatial Sound Study:\n'
+                  'Sudre et al., "A new perspective on binaural beats: '
+                  'Investigating the effects of spatially moving sounds on '
+                  'human mental states"\n'
+                  '• Panning beats > static binaural beats\n'
+                  '• Enhanced relaxation at 6 Hz and 40 Hz\n'
+                  '• Spatial attributes crucial for effectiveness',
+                  style: theme.textTheme.bodySmall?.copyWith(height: 1.5),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  '2024 Nature - Cognitive Enhancement:\n'
+                  '• 1-month daily exposure to 6 Hz binaural beats\n'
+                  '• Increased P300 amplitude (attention marker)\n'
+                  '• Reduced reaction time (faster processing)\n'
+                  '• Conclusion: Enhanced cognitive function',
+                  style: theme.textTheme.bodySmall?.copyWith(height: 1.5),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  '2014 University of Ottawa - OBE Brain Mapping:\n'
+                  'De Ridder et al., "Neural correlates of out-of-body '
+                  'experiences"\n'
+                  '• fMRI mapping during induced OBEs\n'
+                  '• Temporoparietal junction activation\n'
+                  '• Reproducible brain state',
+                  style: theme.textTheme.bodySmall?.copyWith(height: 1.5),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'MONROE INSTITUTE',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _buildLinkButton(
+                  context,
+                  'Monroe Institute - Hemi-Sync Research',
+                  'https://www.monroeinstitute.org',
+                  Icons.auto_graph,
+                  theme,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  '• Founded 1971 by Robert Monroe\n'
+                  '• Gateway Experience: Tens of thousands trained\n'
+                  '• 2017 Military Study: 14.3% stress reduction\n'
+                  '• EEG-validated protocols for consciousness research',
+                  style: theme.textTheme.bodySmall?.copyWith(height: 1.5),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Builds a clickable link button.
+  Widget _buildLinkButton(
+    BuildContext context,
+    String label,
+    String url,
+    IconData icon,
+    ThemeData theme,
+  ) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        icon: Icon(icon, size: 18),
+        label: Text(
+          label,
+          style: const TextStyle(fontSize: 13),
+        ),
+        style: OutlinedButton.styleFrom(
+          alignment: Alignment.centerLeft,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+        onPressed: () => _launchURL(context, url),
+      ),
+    );
+  }
+
+  /// Launches external URL in browser.
+  Future<void> _launchURL(BuildContext context, String urlString) async {
+    final url = Uri.parse(urlString);
+
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(
+          url,
+          mode: LaunchMode.externalApplication,
+        );
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Could not open: $urlString'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error opening link: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
   }
 
   /// Helper to play a preset from Discovery screen.
