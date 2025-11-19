@@ -216,7 +216,7 @@ class DiscoveryScreen extends ConsumerWidget {
           'Solfeggio Frequencies',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: const Text('Ancient healing tones'),
+        subtitle: const Text('Ancient healing tones & chakra alignment'),
         children: [
           Padding(
             padding: const EdgeInsets.all(20),
@@ -230,32 +230,184 @@ class DiscoveryScreen extends ConsumerWidget {
                     color: colorScheme.primary,
                   ),
                 ),
+                const SizedBox(height: 16),
+                _buildFrequencyCard(
+                  '174 Hz',
+                  'Pain Relief & Grounding',
+                  'Lowest Solfeggio frequency, foundation & security',
+                  '🌍',
+                  Colors.brown,
+                  theme,
+                ),
                 const SizedBox(height: 12),
+                _buildFrequencyCard(
+                  '285 Hz',
+                  'Cellular Healing',
+                  'Tissue regeneration, wound healing, energy field restructuring',
+                  '🔬',
+                  Colors.teal,
+                  theme,
+                ),
+                const SizedBox(height: 12),
+                _buildFrequencyCard(
+                  '396 Hz',
+                  'Liberation from Fear',
+                  'Root Chakra • Releases guilt and fear, grounding energy',
+                  '🔴',
+                  Colors.red,
+                  theme,
+                ),
+                const SizedBox(height: 12),
+                _buildFrequencyCard(
+                  '417 Hz',
+                  'Facilitating Change',
+                  'Sacral Chakra • Clears trauma, enables transformation',
+                  '🟠',
+                  Colors.orange,
+                  theme,
+                ),
+                const SizedBox(height: 12),
+                _buildFrequencyCard(
+                  '528 Hz',
+                  'DNA Repair & Love ★',
+                  'Solar Plexus • The "Miracle Tone" used by molecular '
+                      'biologists for DNA repair in laboratory protocols',
+                  '🟡',
+                  Colors.amber,
+                  theme,
+                  isHighlighted: true,
+                ),
+                const SizedBox(height: 12),
+                _buildFrequencyCard(
+                  '639 Hz',
+                  'Relationships & Connection',
+                  'Heart Chakra • Harmonious relationships, balanced communication',
+                  '🟢',
+                  Colors.green,
+                  theme,
+                ),
+                const SizedBox(height: 12),
+                _buildFrequencyCard(
+                  '741 Hz',
+                  'Awakening Intuition',
+                  'Throat Chakra • Expression, emotional detoxification',
+                  '🔵',
+                  Colors.blue,
+                  theme,
+                ),
+                const SizedBox(height: 12),
+                _buildFrequencyCard(
+                  '852 Hz',
+                  'Spiritual Awareness',
+                  'Third Eye • Enhanced intuition, higher consciousness',
+                  '🟣',
+                  Colors.indigo,
+                  theme,
+                ),
+                const SizedBox(height: 12),
+                _buildFrequencyCard(
+                  '963 Hz',
+                  'Divine Connection',
+                  'Crown Chakra • Pineal gland activation, oneness with universe',
+                  '⚪',
+                  Colors.purple,
+                  theme,
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Text('🎵', style: TextStyle(fontSize: 24)),
+                          const SizedBox(width: 12),
+                          Text(
+                            '432 Hz - The Natural Frequency',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Mathematically consistent with the universe. '
+                        'Concert pitch A=432 Hz (vs. modern A=440 Hz) '
+                        'creates more harmonious resonance with nature.',
+                        style: theme.textTheme.bodySmall?.copyWith(height: 1.5),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Builds a frequency card with color coding.
+  Widget _buildFrequencyCard(
+    String frequency,
+    String title,
+    String description,
+    String emoji,
+    Color color,
+    ThemeData theme, {
+    bool isHighlighted = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isHighlighted
+            ? color.withOpacity(0.15)
+            : color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: color.withOpacity(isHighlighted ? 0.5 : 0.3),
+          width: isHighlighted ? 2 : 1,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 24)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      frequency,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: color.withOpacity(0.9),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
                 Text(
-                  '174 Hz - Pain Relief & Grounding\n'
-                  '  Lowest Solfeggio frequency, foundation & security\n\n'
-                  '285 Hz - Cellular Healing & Tissue Repair\n'
-                  '  Regeneration, wound healing, energy field restructuring\n\n'
-                  '396 Hz - Liberation from Fear (Root Chakra)\n'
-                  '  Releases guilt and fear, grounding energy\n\n'
-                  '417 Hz - Facilitating Change (Sacral Chakra)\n'
-                  '  Clears trauma, enables transformation\n\n'
-                  '528 Hz - DNA Repair & Love (Solar Plexus) ★\n'
-                  '  The "Miracle Tone" - used by molecular biologists\n'
-                  '  for DNA repair in laboratory protocols\n\n'
-                  '639 Hz - Relationships & Connection (Heart Chakra)\n'
-                  '  Harmonious relationships, balanced communication\n\n'
-                  '741 Hz - Awakening Intuition (Throat Chakra)\n'
-                  '  Expression, emotional detoxification\n\n'
-                  '852 Hz - Spiritual Awareness (Third Eye)\n'
-                  '  Enhanced intuition, connection to higher consciousness\n\n'
-                  '963 Hz - Divine Connection (Crown Chakra)\n'
-                  '  Pineal gland activation, oneness with universe\n\n'
-                  '432 Hz - The Natural Frequency:\n'
-                  'Mathematically consistent with the universe. '
-                  'Concert pitch A=432 Hz (vs. modern A=440 Hz) '
-                  'creates more harmonious resonance with nature.',
-                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
+                  description,
+                  style: theme.textTheme.bodySmall?.copyWith(height: 1.4),
                 ),
               ],
             ),
@@ -665,37 +817,55 @@ class DiscoveryScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'PEER-REVIEWED STUDIES (2024)',
+                  'PEER-REVIEWED STUDIES',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: colorScheme.primary,
                   ),
                 ),
                 const SizedBox(height: 12),
+                _buildLinkButton(
+                  context,
+                  'PLOS ONE 2024 - Panning Binaural Beats',
+                  'https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0306229',
+                  Icons.article,
+                  theme,
+                ),
+                const SizedBox(height: 8),
                 Text(
-                  '2024 PLOS ONE - Spatial Sound Study:\n'
-                  'Sudre et al., "A new perspective on binaural beats: '
-                  'Investigating the effects of spatially moving sounds on '
-                  'human mental states"\n'
+                  'Sudre et al., "A new perspective on binaural beats"\n'
                   '• Panning beats > static binaural beats\n'
                   '• Enhanced relaxation at 6 Hz and 40 Hz\n'
                   '• Spatial attributes crucial for effectiveness',
                   style: theme.textTheme.bodySmall?.copyWith(height: 1.5),
                 ),
                 const SizedBox(height: 16),
+                _buildLinkButton(
+                  context,
+                  'Nature 2024 - Cognitive Enhancement Study',
+                  'https://www.nature.com/articles/s41598-024-52556-0',
+                  Icons.article,
+                  theme,
+                ),
+                const SizedBox(height: 8),
                 Text(
-                  '2024 Nature - Cognitive Enhancement:\n'
-                  '• 1-month daily exposure to 6 Hz binaural beats\n'
+                  '1-month daily 6 Hz binaural beat exposure:\n'
                   '• Increased P300 amplitude (attention marker)\n'
                   '• Reduced reaction time (faster processing)\n'
-                  '• Conclusion: Enhanced cognitive function',
+                  '• Enhanced cognitive function',
                   style: theme.textTheme.bodySmall?.copyWith(height: 1.5),
                 ),
                 const SizedBox(height: 16),
+                _buildLinkButton(
+                  context,
+                  'Frontiers 2014 - OBE Brain Mapping',
+                  'https://www.frontiersin.org/articles/10.3389/fnhum.2014.00070/full',
+                  Icons.article,
+                  theme,
+                ),
+                const SizedBox(height: 8),
                 Text(
-                  '2014 University of Ottawa - OBE Brain Mapping:\n'
-                  'De Ridder et al., "Neural correlates of out-of-body '
-                  'experiences"\n'
+                  'De Ridder et al., "Neural correlates of OBEs"\n'
                   '• fMRI mapping during induced OBEs\n'
                   '• Temporoparietal junction activation\n'
                   '• Reproducible brain state',
@@ -763,16 +933,28 @@ class DiscoveryScreen extends ConsumerWidget {
     final url = Uri.parse(urlString);
 
     try {
-      if (await canLaunchUrl(url)) {
-        await launchUrl(
+      // Try to launch with external browser
+      final canLaunch = await canLaunchUrl(url);
+
+      if (canLaunch) {
+        final launched = await launchUrl(
           url,
           mode: LaunchMode.externalApplication,
         );
+
+        if (!launched && context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Could not open: $urlString'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
       } else {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Could not open: $urlString'),
+              content: Text('No app found to open: $urlString'),
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
@@ -782,7 +964,7 @@ class DiscoveryScreen extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error opening link: $e'),
+            content: Text('Error: $e'),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
