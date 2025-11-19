@@ -829,7 +829,7 @@ class DiscoveryScreen extends ConsumerWidget {
                 _buildLinkButton(
                   context,
                   'PLOS ONE 2024 - Panning Binaural Beats',
-                  'https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0306229',
+                  'https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0306427',
                   Icons.article,
                   theme,
                 ),
@@ -845,7 +845,7 @@ class DiscoveryScreen extends ConsumerWidget {
                 _buildLinkButton(
                   context,
                   'Nature 2024 - Cognitive Enhancement Study',
-                  'https://www.nature.com/articles/s41598-024-52556-0',
+                  'https://www.nature.com/articles/s41598-024-68628-9',
                   Icons.article,
                   theme,
                 ),
@@ -861,16 +861,52 @@ class DiscoveryScreen extends ConsumerWidget {
                 _buildLinkButton(
                   context,
                   'Frontiers 2014 - OBE Brain Mapping',
-                  'https://www.frontiersin.org/articles/10.3389/fnhum.2014.00070/full',
+                  'https://pubmed.ncbi.nlm.nih.gov/24550805/',
                   Icons.article,
                   theme,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'De Ridder et al., "Neural correlates of OBEs"\n'
-                  '• fMRI mapping during induced OBEs\n'
+                  'Smith & Messier, "Voluntary out-of-body experience: an fMRI study"\n'
+                  '• University of Ottawa fMRI mapping during induced OBEs\n'
                   '• Temporoparietal junction activation\n'
                   '• Reproducible brain state',
+                  style: theme.textTheme.bodySmall?.copyWith(height: 1.5),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  '432 HZ RESEARCH',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _buildLinkButton(
+                  context,
+                  'Italian Study 2019 - Heart Rate Effects',
+                  'https://pubmed.ncbi.nlm.nih.gov/31031095/',
+                  Icons.favorite,
+                  theme,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Calamassi & Pomponi: 432 Hz music decreased heart rate '
+                  'by 4.79 bpm (p=0.05) compared to 440 Hz',
+                  style: theme.textTheme.bodySmall?.copyWith(height: 1.5),
+                ),
+                const SizedBox(height: 16),
+                _buildLinkButton(
+                  context,
+                  'Chilean Dental Study 2020 - Cortisol Reduction',
+                  'https://www.scielo.br/j/jaos/a/kkzqnX5PgqgdKzT3BhHdX7w/',
+                  Icons.spa,
+                  theme,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Aravena et al.: 432 Hz reduced salivary cortisol by 64% '
+                  'compared to 440 Hz (p<0.05) - biological stress marker validation',
                   style: theme.textTheme.bodySmall?.copyWith(height: 1.5),
                 ),
                 const SizedBox(height: 20),

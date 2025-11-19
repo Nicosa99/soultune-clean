@@ -77,13 +77,18 @@ dev_dependencies:
   integration_test:
     sdk: flutter
 
+  # Icon Generation
+  flutter_launcher_icons: ^0.13.1
+
+  # Native Splash Screen
+  flutter_native_splash: ^2.4.1
+
 flutter:
   uses-material-design: true
 
   # Asset Configuration
-  # assets:
-  #   - assets/images/
-  #   - assets/icons/
+  assets:
+    - soultune-app-icon.png
 
   # Custom fonts will be added in theming phase
   # fonts:
@@ -92,3 +97,12 @@ flutter:
   #       - asset: assets/fonts/Inter-Regular.ttf
   #       - asset: assets/fonts/Inter-Bold.ttf
   #         weight: 700
+
+# App Icon Configuration
+flutter_launcher_icons:
+  android: true
+  ios: false  # No iOS folder in this project
+  image_path: "soultune-app-icon.png"
+  adaptive_icon_background: "#1A1A2E"
+  adaptive_icon_foreground: "soultune-app-icon.png"
+  remove_alpha_ios: true
