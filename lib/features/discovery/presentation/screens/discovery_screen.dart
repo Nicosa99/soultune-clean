@@ -49,6 +49,7 @@ class DiscoveryScreen extends ConsumerWidget {
         padding: const EdgeInsets.only(bottom: 24),
         children: [
           _buildHowToUseSection(context),
+          _buildWhyItWorksSection(context),
           _buildBrowserSection(context),
           _buildFrequenciesSection(context),
           _buildCIASection(context, ref),
@@ -142,6 +143,180 @@ class DiscoveryScreen extends ConsumerWidget {
               Text(
                 description,
                 style: theme.textTheme.bodySmall?.copyWith(height: 1.5),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Why Frequencies Work - Scientific Explanation.
+  Widget _buildWhyItWorksSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: ExpansionTile(
+        leading: const Text('🔬', style: TextStyle(fontSize: 32)),
+        title: const Text(
+          'Why Frequencies Work',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: const Text('The neuroscience behind brain synchronization'),
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'FREQUENCY FOLLOWING RESPONSE (FFR)',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Your brain naturally synchronizes with external rhythmic '
+                  'stimuli. This phenomenon, called Frequency Following '
+                  'Response, has been documented in neuroscience since the '
+                  '1930s.\n\n'
+                  'HOW IT WORKS:\n\n'
+                  '1️⃣ AUDITORY INPUT\n'
+                  'Sound waves enter your ears and activate the auditory '
+                  'cortex.\n\n'
+                  '2️⃣ BRAINWAVE ENTRAINMENT\n'
+                  'Your neurons begin firing in sync with the sound frequency. '
+                  'This is automatic and involuntary - your brain MUST '
+                  'respond.\n\n'
+                  '3️⃣ STATE CHANGE\n'
+                  'As brainwaves shift to match the target frequency, your '
+                  'mental state changes accordingly.\n\n'
+                  'EXAMPLE: 7 Hz Theta Frequency\n'
+                  '• Left ear: 200 Hz tone\n'
+                  '• Right ear: 207 Hz tone\n'
+                  '• Brain perceives: 7 Hz difference (binaural beat)\n'
+                  '• Brainwaves entrain: Theta state (deep meditation)\n'
+                  '• Result: Reduced anxiety, enhanced creativity\n\n'
+                  'SCIENTIFIC VALIDATION:\n'
+                  '• 2019 Nature Study: FFR originates from both subcortical '
+                  'AND cortical brain regions\n'
+                  '• Measurable on EEG within 5-10 minutes\n'
+                  '• Effects persist 15-30 minutes after exposure\n'
+                  '• Cumulative benefits with regular use',
+                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: colorScheme.secondaryContainer.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: colorScheme.secondary.withOpacity(0.5),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.psychology,
+                            color: colorScheme.secondary,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'BRAINWAVE STATES',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      _buildBrainwaveItem(
+                        'Delta (0.5-4 Hz)',
+                        'Deep sleep, healing, unconscious',
+                        Colors.indigo,
+                        theme,
+                      ),
+                      const SizedBox(height: 8),
+                      _buildBrainwaveItem(
+                        'Theta (4-8 Hz)',
+                        'Meditation, creativity, REM sleep',
+                        Colors.purple,
+                        theme,
+                      ),
+                      const SizedBox(height: 8),
+                      _buildBrainwaveItem(
+                        'Alpha (8-13 Hz)',
+                        'Relaxation, flow state, present moment',
+                        Colors.blue,
+                        theme,
+                      ),
+                      const SizedBox(height: 8),
+                      _buildBrainwaveItem(
+                        'Beta (13-30 Hz)',
+                        'Active thinking, focus, alertness',
+                        Colors.green,
+                        theme,
+                      ),
+                      const SizedBox(height: 8),
+                      _buildBrainwaveItem(
+                        'Gamma (30-100 Hz)',
+                        'Peak performance, learning, insight',
+                        Colors.orange,
+                        theme,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Helper to build brainwave state item.
+  Widget _buildBrainwaveItem(
+    String name,
+    String description,
+    Color color,
+    ThemeData theme,
+  ) {
+    return Row(
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                name,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                description,
+                style: theme.textTheme.bodySmall,
               ),
             ],
           ),
