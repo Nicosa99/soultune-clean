@@ -305,71 +305,17 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
       ..addJavaScriptChannel(
         'DownloadHandler',
         onMessageReceived: (message) async {
-          // Format: "url|filename" or "button_clicked"
-          if (message.message == 'button_clicked') {
-            // Show helper dialog for button-based downloads
-            if (!mounted) return;
-            showDialog(
-              context: context,
-              builder: (ctx) => AlertDialog(
-                title: const Row(
-                  children: [
-                    Icon(Icons.download, color: Colors.blue),
-                    SizedBox(width: 12),
-                    Text('Download Instructions'),
-                  ],
-                ),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      '⚠️ WebView cannot handle downloads automatically.',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text('Please follow these steps:'),
-                    const SizedBox(height: 12),
-                    _buildDialogStep('1', 'The download should start in your browser'),
-                    _buildDialogStep('2', 'Check your notification area for download progress'),
-                    _buildDialogStep('3', 'When complete, come back here and tap "Scan Downloads"'),
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.green),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(Icons.file_download_outlined, color: Colors.green, size: 20),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'The green "Scan Downloads" button is at the bottom right',
-                              style: TextStyle(fontSize: 12),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    child: const Text('Got it'),
-                  ),
-                ],
-              ),
-            );
+          // Format: "url|filename"
+          final parts = message.message.split('|');
+          if (parts.isEmpty || parts[0].isEmpty) {
+            _logger.w('Invalid download message: ${message.message}');
             return;
           }
 
-          final parts = message.message.split('|');
           final url = parts[0];
           final filename = parts.length > 1 ? parts[1] : null;
+
+          _logger.i('📥 Download request: $url (${filename ?? "no filename"})');
           await _handleDownload(url, filename);
         },
       )
@@ -543,11 +489,21 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
         }
       }
 
-      // If it's a download button, notify but DON'T block
+      // If it's a download button, try to extract URL and trigger download
       if (isDownloadButton) {
         console.log('🎯 Download button clicked!');
-        DownloadHandler.postMessage('button_clicked');
-        // Don't prevent default - let the download happen naturally
+
+        // Try to get URL from button's href
+        if (target.href) {
+          const url = target.href;
+          const filename = target.download || url.split('/').pop() || 'download.mp3';
+          console.log('📥 Download button with URL:', url);
+          DownloadHandler.postMessage(url + '|' + filename);
+        } else {
+          // No URL found - let browser handle it
+          console.log('⚠️ Download button without URL - letting browser handle');
+        }
+        // Don't prevent default - let the download happen naturally too
       }
     }
   }, true);
