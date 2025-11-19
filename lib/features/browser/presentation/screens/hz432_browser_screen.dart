@@ -566,6 +566,71 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
 
   // === Download Interceptor ===
 
+  // Helper function to extract proper filename
+  function extractFilename(url) {
+    try {
+      // Try to get title from page first (for loader.to, YouTube downloaders)
+      let pageTitle = '';
+
+      // Check for loader.to title
+      const loaderTitle = document.querySelector('.media-heading, .video-title, h1, h2');
+      if (loaderTitle) {
+        pageTitle = loaderTitle.textContent.trim();
+      }
+
+      // Check for YouTube title
+      const ytTitle = document.querySelector('h1.ytd-video-primary-info-renderer, yt-formatted-string.ytd-watch-metadata');
+      if (ytTitle) {
+        pageTitle = ytTitle.textContent.trim();
+      }
+
+      // Clean up title (remove invalid filename characters)
+      if (pageTitle) {
+        pageTitle = pageTitle
+          .replace(/[<>:"/\\|?*]/g, '') // Remove invalid chars
+          .replace(/\\s+/g, ' ')         // Normalize spaces
+          .trim()
+          .substring(0, 100);            // Limit length
+
+        // Add .mp3 extension if not present
+        if (!pageTitle.match(/\\.(mp3|m4a|flac|wav|aac|ogg|opus|wma)$/i)) {
+          pageTitle += '.mp3';
+        }
+
+        console.log('📝 Using page title as filename:', pageTitle);
+        return pageTitle;
+      }
+
+      // Fallback: try to extract from URL
+      const urlObj = new URL(url);
+
+      // Check query parameters for filename/title
+      if (urlObj.searchParams.has('filename')) {
+        return urlObj.searchParams.get('filename');
+      }
+      if (urlObj.searchParams.has('title')) {
+        return urlObj.searchParams.get('title') + '.mp3';
+      }
+
+      // Get last part of URL path
+      const pathParts = urlObj.pathname.split('/').filter(p => p);
+      if (pathParts.length > 0) {
+        const lastPart = pathParts[pathParts.length - 1];
+
+        // If it has an audio extension, use it
+        if (lastPart.match(/\\.(mp3|m4a|flac|wav|aac|ogg|opus|wma)$/i)) {
+          return decodeURIComponent(lastPart);
+        }
+      }
+
+      // Last resort: use timestamp
+      return 'audio_' + Date.now() + '.mp3';
+    } catch (e) {
+      console.error('Filename extraction failed:', e);
+      return 'download_' + Date.now() + '.mp3';
+    }
+  }
+
   // Intercept ALL clicks for debugging and download detection
   document.addEventListener('click', function(e) {
     const target = e.target.closest('a, button, [role="button"]');
@@ -586,7 +651,7 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
       // Check if it's an <a> link
       if (target.href) {
         const url = target.href;
-        const filename = target.download || url.split('/').pop() || 'download';
+        const filename = target.download || extractFilename(url);
 
         // Check if it's a downloadable file
         const downloadExtensions = ['.mp3', '.m4a', '.flac', '.wav', '.aac', '.ogg', '.opus', '.wma', '.zip'];
@@ -595,7 +660,7 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
 
         // If it's a direct download link, intercept and notify
         if (isDownloadLink || target.download || isBlobUrl) {
-          console.log('📥 Download link detected:', url);
+          console.log('📥 Download link detected:', url, 'filename:', filename);
           DownloadHandler.postMessage(url + '|' + filename);
           // Don't prevent default - let browser handle the download
           return true;
@@ -617,8 +682,8 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
         // Try to get URL from button's href
         if (target.href) {
           const url = target.href;
-          const filename = target.download || url.split('/').pop() || 'download.mp3';
-          console.log('📥 Download button with URL:', url);
+          const filename = target.download || extractFilename(url);
+          console.log('📥 Download button with URL:', url, 'filename:', filename);
           DownloadHandler.postMessage(url + '|' + filename);
         } else {
           // No URL found - let browser handle it
@@ -652,7 +717,7 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
 
     if (hasDownloadExtension || (isDownloadService && isPacificDownload)) {
       console.log('📥 Download detected via Fetch!', urlString);
-      const filename = urlString.split('/').pop()?.split('?')[0] || 'download.mp3';
+      const filename = extractFilename(urlString);
       DownloadHandler.postMessage(urlString + '|' + filename);
     }
 
@@ -678,7 +743,7 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
 
     if (hasDownloadExtension || (isDownloadService && isPacificDownload)) {
       console.log('📥 Download detected via XHR!', urlString);
-      const filename = urlString.split('/').pop()?.split('?')[0] || 'download.mp3';
+      const filename = extractFilename(urlString);
       DownloadHandler.postMessage(urlString + '|' + filename);
     }
 
