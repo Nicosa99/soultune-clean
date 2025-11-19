@@ -70,6 +70,8 @@
 /// ```
 library;
 
+import 'dart:async';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:soultune/features/player/data/repositories/player_repository.dart';
 import 'package:soultune/shared/models/audio_file.dart';
@@ -113,6 +115,9 @@ Future<PlayerRepository> playerRepository(PlayerRepositoryRef ref) async {
 ///
 /// Returns `null` if no track is playing.
 ///
+/// Listens to playback events and only emits when the track ID changes,
+/// preventing unnecessary rebuilds while ensuring auto-play updates work.
+///
 /// ## Example
 ///
 /// ```dart
@@ -129,9 +134,20 @@ Stream<AudioFile?> currentAudioFile(CurrentAudioFileRef ref) async* {
   // Emit initial state
   yield repository.currentAudioFile;
 
-  // Listen to playing stream to detect track changes
-  await for (final _ in repository.playingStream) {
-    yield repository.currentAudioFile;
+  // Track last emitted file to detect changes
+  String? lastFileId = repository.currentAudioFile?.id;
+
+  // Use playbackEventStream which emits on ALL player state changes
+  // Only yield when the actual track changes (not on position updates)
+  await for (final _ in repository.playbackEventStream) {
+    final currentFile = repository.currentAudioFile;
+    final currentFileId = currentFile?.id;
+
+    // Only emit if track actually changed
+    if (currentFileId != lastFileId) {
+      lastFileId = currentFileId;
+      yield currentFile;
+    }
   }
 }
 

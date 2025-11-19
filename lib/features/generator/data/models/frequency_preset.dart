@@ -103,9 +103,23 @@ class FrequencyPreset with _$FrequencyPreset {
 
   /// Short summary of frequencies for display.
   String get frequencySummary {
-    if (layers.isEmpty) return 'No frequencies';
+    final parts = <String>[];
 
-    final freqs = layers.map((l) => '${l.frequency.toStringAsFixed(0)}Hz');
-    return freqs.join(' + ');
+    // Add layer frequencies
+    if (layers.isNotEmpty) {
+      final layerFreqs =
+          layers.map((l) => '${l.frequency.toStringAsFixed(0)}Hz');
+      parts.addAll(layerFreqs);
+    }
+
+    // Add binaural beat frequency if present
+    if (binauralConfig != null) {
+      final beatFreq = binauralConfig!.beatFrequency.toStringAsFixed(1);
+      parts.add('${beatFreq}Hz Binaural');
+    }
+
+    // Return combined or fallback
+    if (parts.isEmpty) return 'No frequencies';
+    return parts.join(' + ');
   }
 }

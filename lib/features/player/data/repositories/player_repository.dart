@@ -848,6 +848,12 @@ class PlayerRepository {
   /// Stream of playing state changes.
   Stream<bool> get playingStream => _audioPlayerService.playingStream;
 
+  /// Stream of playback events (position + state combined).
+  ///
+  /// Emits on all player state changes including track loads.
+  Stream<dynamic> get playbackEventStream =>
+      _audioPlayerService.playbackEventStream;
+
   /// Stream of library changes.
   Stream<List<AudioFile>> get libraryStream => _dataSource.watchLibrary();
 

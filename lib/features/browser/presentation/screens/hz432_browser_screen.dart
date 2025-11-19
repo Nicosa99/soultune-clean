@@ -315,7 +315,55 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
     final filename = suggestedFilename ?? 'download.mp3';
     _logger.i('🔽 Download detected: $filename from $url');
 
-    // Request storage permission first
+    // Check if this is from a download service (already handled by native listener)
+    final downloadServiceDomains = ['savenow.to', 'loader.to', 'y2mate.', 'mp3juice.'];
+    final isDownloadService = downloadServiceDomains.any((domain) => url.contains(domain));
+
+    if (isDownloadService) {
+      _logger.i('📥 Download service detected - native listener handles download');
+
+      // Schedule automatic import scan after download completes
+      // Native downloads typically take 3-10 seconds
+      Future.delayed(const Duration(seconds: 5), () {
+        if (mounted) {
+          _logger.i('🔍 Auto-scanning downloads folder after service download');
+          _scanAndImportDownloads();
+        }
+      });
+
+      if (!mounted) return;
+
+      // Show notification that download is in progress
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '⬇️ Download in progress...',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '📱 Check notification for progress • Auto-scan in 5s',
+                style: TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.blue,
+          duration: const Duration(seconds: 4),
+          action: SnackBarAction(
+            label: 'Scan Now',
+            textColor: Colors.white,
+            onPressed: () => _scanAndImportDownloads(),
+          ),
+        ),
+      );
+      return;
+    }
+
+    // For direct downloads, request permission and use MethodChannel
     PermissionStatus status = await Permission.storage.status;
 
     if (!status.isGranted) {
@@ -385,6 +433,14 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
           ),
         ),
       );
+
+      // Auto-scan after 5 seconds for direct downloads too
+      Future.delayed(const Duration(seconds: 5), () {
+        if (mounted) {
+          _logger.i('🔍 Auto-scanning downloads folder');
+          _scanAndImportDownloads();
+        }
+      });
     } catch (e) {
       _logger.e('Download failed: $e');
       if (!mounted) return;
@@ -651,18 +707,29 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
       // Check if it's an <a> link
       if (target.href) {
         const url = target.href;
-        const filename = target.download || extractFilename(url);
+
+        // Check if it's from a download service (loader.to, savenow.to, etc.)
+        const downloadServiceDomains = ['savenow.to', 'loader.to', 'y2mate.', 'mp3juice.'];
+        const isDownloadService = downloadServiceDomains.some(domain => url.includes(domain));
 
         // Check if it's a downloadable file
         const downloadExtensions = ['.mp3', '.m4a', '.flac', '.wav', '.aac', '.ogg', '.opus', '.wma', '.zip'];
         const isDownloadLink = downloadExtensions.some(ext => url.toLowerCase().includes(ext));
         const isBlobUrl = url.startsWith('blob:');
 
-        // If it's a direct download link, intercept and notify
-        if (isDownloadLink || target.download || isBlobUrl) {
-          console.log('📥 Download link detected:', url, 'filename:', filename);
+        // ONLY trigger download for direct file URLs or blob URLs
+        // DO NOT trigger for download service pages - they handle it natively
+        if ((isDownloadLink || isBlobUrl) && !isDownloadService) {
+          const filename = target.download || extractFilename(url);
+          console.log('📥 Direct download link detected:', url, 'filename:', filename);
           DownloadHandler.postMessage(url + '|' + filename);
-          // Don't prevent default - let browser handle the download
+          return true;
+        }
+
+        // For download services, let them handle it natively
+        // The native download listener will catch the actual file download
+        if (isDownloadService) {
+          console.log('🔗 Download service link - letting native handler catch it');
           return true;
         }
 
@@ -673,23 +740,6 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
           console.log('🚫 Blocked _blank link:', url);
           return false;
         }
-      }
-
-      // If it's a download button, try to extract URL and trigger download
-      if (isDownloadButton) {
-        console.log('🎯 Download button clicked!');
-
-        // Try to get URL from button's href
-        if (target.href) {
-          const url = target.href;
-          const filename = target.download || extractFilename(url);
-          console.log('📥 Download button with URL:', url, 'filename:', filename);
-          DownloadHandler.postMessage(url + '|' + filename);
-        } else {
-          // No URL found - let browser handle it
-          console.log('⚠️ Download button without URL - letting browser handle');
-        }
-        // Don't prevent default - let the download happen naturally too
       }
     }
   }, true);
@@ -704,7 +754,7 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
 
     console.log('🌐 Fetch request:', urlString);
 
-    // Check if it's a download URL
+    // Check if it's a download URL with audio extension
     const downloadExtensions = ['.mp3', '.m4a', '.flac', '.wav', '.aac', '.ogg', '.opus', '.wma'];
     const hasDownloadExtension = downloadExtensions.some(ext => urlString.toLowerCase().includes(ext));
 
@@ -712,13 +762,14 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
     const downloadServiceDomains = ['savenow.to', 'loader.to', 'nip.io'];
     const isDownloadService = downloadServiceDomains.some(domain => urlString.includes(domain));
 
-    // Check for 'pacific' path (loader.to download path)
-    const isPacificDownload = urlString.includes('/pacific/');
-
-    if (hasDownloadExtension || (isDownloadService && isPacificDownload)) {
-      console.log('📥 Download detected via Fetch!', urlString);
+    // ONLY trigger for direct audio files, NOT for download service pages
+    // The native download listener will catch downloads from services
+    if (hasDownloadExtension && !isDownloadService) {
+      console.log('📥 Direct download detected via Fetch!', urlString);
       const filename = extractFilename(urlString);
       DownloadHandler.postMessage(urlString + '|' + filename);
+    } else if (isDownloadService) {
+      console.log('🔗 Download service fetch - ignoring (native handler will catch)');
     }
 
     return originalFetch.apply(this, arguments);
@@ -729,7 +780,7 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
   XMLHttpRequest.prototype.open = function(method, url, ...rest) {
     console.log('🌐 XHR request:', method, url);
 
-    // Check if it's a download URL
+    // Check if it's a download URL with audio extension
     const downloadExtensions = ['.mp3', '.m4a', '.flac', '.wav', '.aac', '.ogg', '.opus', '.wma'];
     const urlString = url.toString();
     const hasDownloadExtension = downloadExtensions.some(ext => urlString.toLowerCase().includes(ext));
@@ -738,13 +789,14 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
     const downloadServiceDomains = ['savenow.to', 'loader.to', 'nip.io'];
     const isDownloadService = downloadServiceDomains.some(domain => urlString.includes(domain));
 
-    // Check for 'pacific' path (loader.to download path)
-    const isPacificDownload = urlString.includes('/pacific/');
-
-    if (hasDownloadExtension || (isDownloadService && isPacificDownload)) {
-      console.log('📥 Download detected via XHR!', urlString);
+    // ONLY trigger for direct audio files, NOT for download service pages
+    // The native download listener will catch downloads from services
+    if (hasDownloadExtension && !isDownloadService) {
+      console.log('📥 Direct download detected via XHR!', urlString);
       const filename = extractFilename(urlString);
       DownloadHandler.postMessage(urlString + '|' + filename);
+    } else if (isDownloadService) {
+      console.log('🔗 Download service XHR - ignoring (native handler will catch)');
     }
 
     return originalXHROpen.apply(this, [method, url, ...rest]);
@@ -782,6 +834,15 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
       document.body.appendChild(iframe);
 
       console.log('📦 Loading download in hidden iframe');
+
+      // For download services, send a notification after iframe loads
+      // This triggers the import scanner
+      if (isDownloadService) {
+        setTimeout(() => {
+          console.log('📥 Download service detected - triggering import scan');
+          DownloadHandler.postMessage(url + '|download_from_service.mp3');
+        }, 2000); // Wait 2 seconds for download to start
+      }
 
       // Clean up iframe after 30 seconds
       setTimeout(() => {
@@ -1035,17 +1096,6 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
           ],
         ),
         actions: [
-          // Forward Button
-          IconButton(
-            icon: const Icon(Icons.arrow_forward),
-            onPressed: () async {
-              if (await _controller.canGoForward()) {
-                HapticFeedback.selectionClick();
-                await _controller.goForward();
-              }
-            },
-          ),
-
           // Refresh Button
           IconButton(
             icon: const Icon(Icons.refresh),

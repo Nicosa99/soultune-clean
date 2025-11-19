@@ -59,6 +59,12 @@ class FrequencyGeneratorService {
   /// Whether panning is enabled.
   bool _panningEnabled = false;
 
+  /// Current panning configuration.
+  PanningConfig? _currentPanningConfig;
+
+  /// Current master volume (0.0 - 1.0).
+  double _currentVolume = 0.7;
+
   /// Stream controller for playing state.
   final _playingController = StreamController<bool>.broadcast();
 
@@ -85,6 +91,9 @@ class FrequencyGeneratorService {
 
   /// Current pan position (-1.0 to 1.0).
   double get currentPanPosition => _panningEngine.currentPanPosition;
+
+  /// Current master volume (0.0 - 1.0).
+  double get currentVolume => _currentVolume;
 
   /// Sets up notification callbacks for system media controls.
   void _setupNotificationCallbacks() {
@@ -202,6 +211,11 @@ class FrequencyGeneratorService {
   void _applyPanning(double leftVolume, double rightVolume) {
     if (!_isInitialized || _soLoud == null) return;
 
+    // Use fade time to prevent clicking/popping
+    // Fade duration = half of update interval for smooth transition
+    final fadeDurationMs = (_currentPanningConfig?.updateIntervalMs ?? 50) ~/ 2;
+    final fadeDuration = Duration(milliseconds: fadeDurationMs);
+
     // For binaural beats, we adjust the volume of left/right channels
     // For mono layers, we adjust the overall volume based on position
     for (var i = 0; i < _activeHandles.length; i++) {
@@ -211,16 +225,16 @@ class FrequencyGeneratorService {
       // If we have stereo binaural (2 handles = left/right)
       if (_activeHandles.length == 2) {
         if (i == 0) {
-          // Left channel
-          _soLoud!.setVolume(handle, baseVolume * leftVolume);
+          // Left channel - fade to prevent clicks
+          _soLoud!.fadeVolume(handle, baseVolume * leftVolume, fadeDuration);
         } else {
-          // Right channel
-          _soLoud!.setVolume(handle, baseVolume * rightVolume);
+          // Right channel - fade to prevent clicks
+          _soLoud!.fadeVolume(handle, baseVolume * rightVolume, fadeDuration);
         }
       } else {
-        // Mono layers - apply average modulation
+        // Mono layers - apply average modulation with fade
         final avgVolume = (leftVolume + rightVolume) / 2;
-        _soLoud!.setVolume(handle, baseVolume * avgVolume);
+        _soLoud!.fadeVolume(handle, baseVolume * avgVolume, fadeDuration);
       }
     }
   }
@@ -231,18 +245,20 @@ class FrequencyGeneratorService {
 
     if (enabled && !_panningEnabled) {
       _panningEnabled = true;
+      _currentPanningConfig = config ?? PanningConfig.research;
       _panningEngine.startPanning(
-        config: config ?? PanningConfig.research,
+        config: _currentPanningConfig!,
         onPanChange: _applyPanning,
       );
       _logger.i('Panning enabled');
     } else if (!enabled && _panningEnabled) {
       _panningEnabled = false;
+      _currentPanningConfig = null;
       _panningEngine.stopPanning();
-      // Reset volumes to base
+      // Reset volumes to base smoothly
       final baseVolume = _currentPreset?.volume ?? 0.7;
       for (final handle in _activeHandles) {
-        _soLoud!.setVolume(handle, baseVolume);
+        _soLoud!.fadeVolume(handle, baseVolume, const Duration(milliseconds: 100));
       }
       _logger.i('Panning disabled');
     }
@@ -488,6 +504,8 @@ class FrequencyGeneratorService {
     if (!_isInitialized) return;
 
     final clampedVolume = volume.clamp(0.0, 1.0);
+    _currentVolume = clampedVolume; // Save current volume
+
     for (final handle in _activeHandles) {
       _soLoud!.setVolume(handle, clampedVolume);
     }
