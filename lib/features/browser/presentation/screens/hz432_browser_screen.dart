@@ -334,7 +334,29 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
       ..addJavaScriptChannel(
         'DownloadHandler',
         onMessageReceived: (message) async {
-          // Format: "url|filename"
+          // Format: "url|filename" or "button_clicked"
+          if (message.message == 'button_clicked') {
+            // Show helper message for button-based downloads
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text(
+                  '📥 Download starting...\n'
+                  'The file will be saved to your Downloads folder.\n'
+                  'Tap "Scan Downloads" when complete to import.',
+                ),
+                backgroundColor: Colors.blue,
+                duration: const Duration(seconds: 5),
+                action: SnackBarAction(
+                  label: 'Got it',
+                  textColor: Colors.white,
+                  onPressed: () {},
+                ),
+              ),
+            );
+            return;
+          }
+
           final parts = message.message.split('|');
           final url = parts[0];
           final filename = parts.length > 1 ? parts[1] : null;
@@ -509,14 +531,17 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
 
       // Check if it's a download button
       const text = target.textContent?.toLowerCase() || '';
-      if (text.includes('download') || text.includes('save')) {
-        console.log('🎯 Download button clicked, monitoring...');
-        // Wait for blob URL creation
+      if (text.includes('download') || text.includes('save') || text.includes('get')) {
+        console.log('🎯 Download button clicked!');
+        // Notify Flutter immediately
+        DownloadHandler.postMessage('button_clicked');
+
+        // Also try to catch blob URLs (some sites use them)
         setTimeout(() => {
           const links = document.querySelectorAll('a[download], a[href^="blob:"]');
           links.forEach(link => {
             if (link.href && link.href.startsWith('blob:')) {
-              console.log('📥 Auto-download blob:', link.href);
+              console.log('📥 Found blob URL:', link.href);
               DownloadHandler.postMessage(link.href + '|' + (link.download || 'download.mp3'));
             }
           });
