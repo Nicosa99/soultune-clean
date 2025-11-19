@@ -961,6 +961,71 @@ class DiscoveryScreen extends ConsumerWidget {
                     },
                   ),
                 ),
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: colorScheme.primary.withOpacity(0.5),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.psychology_alt,
+                            color: colorScheme.primary,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'BEGINNER RV EXERCISE',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Try this basic remote viewing exercise:\n\n'
+                        'SETUP:\n'
+                        '1. Have a friend/partner select a random image online\n'
+                        '2. They assign it a random 6-digit coordinate (e.g., 482-916)\n'
+                        '3. They DON\'T show you the image or describe it\n\n'
+                        'PROTOCOL:\n'
+                        '1. Play "RV Training Protocol" preset (15-20 minutes)\n'
+                        '2. Enter Focus 15 state (meditative but alert)\n'
+                        '3. Write down the 6-digit coordinate\n'
+                        '4. Relax and let impressions come naturally\n'
+                        '5. Sketch/describe whatever pops into your mind\n'
+                        '   • Colors? Shapes? Textures?\n'
+                        '   • Indoor or outdoor?\n'
+                        '   • Natural or man-made?\n'
+                        '   • Hot or cold feeling?\n\n'
+                        'IMPORTANT:\n'
+                        '• Don\'t judge or censor impressions\n'
+                        '• First thought = often correct\n'
+                        '• You\'re not "seeing" - receiving gestalt impressions\n'
+                        '• 30-40% accuracy is considered successful!\n\n'
+                        'AFTER 10-15 MINUTES:\n'
+                        'Compare your impressions to the actual image. '
+                        'Look for symbolic matches, not literal ones. '
+                        'Example: "Water" could mean ocean OR swimming pool.\n\n'
+                        'ADVANCED:\n'
+                        'After 10+ successful sessions, try real coordinates '
+                        'from verified databases (coordinates.remoteviewing.org).',
+                        style: theme.textTheme.bodySmall?.copyWith(height: 1.6),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
