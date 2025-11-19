@@ -63,9 +63,13 @@ class Hz432BrowserScreen extends ConsumerStatefulWidget {
       _Hz432BrowserScreenState();
 }
 
-class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
+class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
+    with AutomaticKeepAliveClientMixin {
   /// WebView controller.
   late WebViewController _controller;
+
+  @override
+  bool get wantKeepAlive => true;
 
   /// Logger instance.
   final _logger = Logger();
@@ -864,6 +868,8 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
+
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
