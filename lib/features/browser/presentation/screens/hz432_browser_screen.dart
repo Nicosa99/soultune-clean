@@ -647,26 +647,66 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
     return originalXHROpen.apply(this, [method, url, ...rest]);
   };
 
-  // === Popup Blocker ===
+  // === Popup Blocker with Download Support ===
 
   // Intercept window.open but allow download URLs
   const originalWindowOpen = window.open;
   window.open = function(url, target, features) {
     console.log('🔗 window.open called:', url);
 
-    // Allow if URL looks like a download
-    if (url && (url.includes('.mp3') || url.includes('.m4a') || url.includes('.flac') ||
-                url.includes('.wav') || url.includes('download') || url.startsWith('blob:'))) {
-      console.log('✅ Allowing download popup:', url);
-      return originalWindowOpen.apply(window, arguments);
+    if (!url) {
+      console.log('🚫 Popup blocked: no URL');
+      return null;
     }
 
-    // Block other popups
-    console.log('🚫 Popup blocked:', url);
+    // Check if URL is from a download service (savenow.to, loader.to, etc.)
+    const downloadDomains = ['savenow.to', 'loader.to', 'y2mate.', 'mp3juice.'];
+    const isDownloadService = downloadDomains.some(domain => url.includes(domain));
+
+    // Allow if URL looks like a direct download
+    const isDirectDownload = url.includes('.mp3') || url.includes('.m4a') ||
+                             url.includes('.flac') || url.includes('.wav') ||
+                             url.includes('download') || url.startsWith('blob:');
+
+    if (isDirectDownload || isDownloadService) {
+      console.log('✅ Download-related popup detected:', url);
+
+      // Instead of opening a new window, load in hidden iframe
+      // This allows us to intercept the download
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = url;
+      document.body.appendChild(iframe);
+
+      console.log('📦 Loading download in hidden iframe');
+
+      // Clean up iframe after 30 seconds
+      setTimeout(() => {
+        try {
+          document.body.removeChild(iframe);
+          console.log('🧹 Cleaned up download iframe');
+        } catch (e) {
+          console.log('⚠️ Iframe already removed');
+        }
+      }, 30000);
+
+      // Return fake window object to prevent errors
+      return {
+        closed: false,
+        close: function() {
+          try {
+            document.body.removeChild(iframe);
+          } catch (e) {}
+        }
+      };
+    }
+
+    // Block ad popups
+    console.log('🚫 Ad popup blocked:', url);
     return null;
   };
 
-  console.log('✅ Full interceptor active: URL changes, downloads, fetch, XHR, popups');
+  console.log('✅ Full interceptor active: URL changes, downloads, fetch, XHR, popups, iframes');
 })();
 ''';
 
