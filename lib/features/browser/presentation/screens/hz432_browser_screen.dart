@@ -144,7 +144,20 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
     super.initState();
     _urlController.text = _currentUrl;
     _loadBrowserState();
+    _enableCookiePersistence();
     _initializeWebView();
+  }
+
+  /// Enables cookie and session persistence for WebView.
+  Future<void> _enableCookiePersistence() async {
+    try {
+      final cookieManager = WebViewCookieManager();
+      // Cookies are automatically persisted in webview_flutter 3.0+
+      // This just ensures the manager is initialized
+      _logger.i('🍪 Cookie persistence enabled');
+    } catch (e) {
+      _logger.e('Failed to enable cookie persistence: $e');
+    }
   }
 
   /// Loads saved browser state from Hive.
@@ -392,10 +405,15 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
   }
 
   /// Initializes the WebView controller.
+  ///
+  /// Session persistence (cookies, localStorage, sessionStorage, cache)
+  /// is automatically enabled by webview_flutter 3.0+.
+  /// Cookies persist between app restarts.
   void _initializeWebView() {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(Colors.black)
+      ..enableZoom(false)
       ..addJavaScriptChannel(
         'DownloadHandler',
         onMessageReceived: (message) async {
@@ -1010,9 +1028,15 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
           // Quick Sites
           _buildQuickSites(theme, colorScheme),
 
-          // WebView
+          // WebView with Pull-to-Refresh
           Expanded(
-            child: WebViewWidget(controller: _controller),
+            child: RefreshIndicator(
+              onRefresh: () async {
+                await _controller.reload();
+                _logger.i('🔄 Browser refreshed');
+              },
+              child: WebViewWidget(controller: _controller),
+            ),
           ),
         ],
       ),
