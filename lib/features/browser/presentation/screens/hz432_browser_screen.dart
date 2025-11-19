@@ -17,11 +17,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
-import 'package:path/path.dart' as path;
 import 'package:soultune/shared/services/file/download_scanner_service.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
 
 /// Quick site model for browser bookmarks.
 class QuickSite {
@@ -243,84 +242,81 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
     return _adDomains.any((adDomain) => host.contains(adDomain));
   }
 
-  /// Handles file downloads from WebView.
-  Future<void> _handleDownload(String url, String? suggestedFilename) async {
+  /// Handles file downloads detected from WebView.
+  Future<void> _handleDownload(String url, String suggestedFilename) async {
+    _logger.i('🔽 Download detected: $suggestedFilename from $url');
+
+    // Inject JavaScript to trigger download via anchor click
+    // This bypasses WebView limitations and triggers system download
+    final escapedUrl = url.replaceAll("'", "\\'");
+    final escapedFilename = suggestedFilename.replaceAll("'", "\\'");
+
+    final downloadScript = '''
+(function() {
+  console.log('🚀 Triggering download: $escapedFilename');
+
+  // Create a temporary anchor element
+  var a = document.createElement('a');
+  a.href = '$escapedUrl';
+  a.download = '$escapedFilename';
+  a.style.display = 'none';
+
+  // Add to document
+  document.body.appendChild(a);
+
+  // Trigger click
+  a.click();
+
+  // Remove element after a short delay
+  setTimeout(function() {
+    document.body.removeChild(a);
+  }, 100);
+
+  console.log('✅ Download initiated');
+})();
+''';
+
     try {
-      _logger.i('Download started: $url');
+      await _controller.runJavaScript(downloadScript);
+      _logger.i('✅ Download JavaScript executed');
 
-      // Show download starting notification
       if (!mounted) return;
+
+      // Show success message with helpful instructions
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('⬇️ Downloading ${suggestedFilename ?? 'file'}...'),
-          duration: const Duration(seconds: 2),
-        ),
-      );
-
-      // Check if it's a blob URL (can't download directly)
-      if (url.startsWith('blob:')) {
-        _logger.w('Blob URL detected - cannot download directly');
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              '⚠️ Blob download detected. The file should be in your Downloads folder. '
-              'Tap "Scan Downloads" to import.',
-            ),
-            backgroundColor: Colors.orange,
-            duration: Duration(seconds: 4),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '⬇️ Downloading: $suggestedFilename',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                '📱 Check your notification area for progress',
+                style: TextStyle(fontSize: 12),
+              ),
+            ],
           ),
-        );
-        return;
-      }
-
-      // Download file via HTTP
-      final response = await http.get(Uri.parse(url));
-
-      if (response.statusCode != 200) {
-        throw Exception('Download failed: ${response.statusCode}');
-      }
-
-      // Get Downloads directory
-      final downloadsDir = Directory('/storage/emulated/0/Download');
-      if (!await downloadsDir.exists()) {
-        await downloadsDir.create(recursive: true);
-      }
-
-      // Generate filename
-      final filename = suggestedFilename ??
-          path.basename(Uri.parse(url).path) ??
-          'download_${DateTime.now().millisecondsSinceEpoch}';
-
-      final filePath = path.join(downloadsDir.path, filename);
-
-      // Save file
-      final file = File(filePath);
-      await file.writeAsBytes(response.bodyBytes);
-
-      _logger.i('Download completed: $filePath');
-
-      // Show success notification
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('✅ Download complete: $filename'),
           backgroundColor: Colors.green,
-          duration: const Duration(seconds: 3),
+          duration: const Duration(seconds: 4),
           action: SnackBarAction(
-            label: 'Scan',
+            label: 'Scan Downloads',
             textColor: Colors.white,
             onPressed: () => _scanAndImportDownloads(),
           ),
         ),
       );
     } catch (e) {
-      _logger.e('Download failed: $e');
+      _logger.e('Failed to trigger download: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('❌ Download failed: $e'),
-          backgroundColor: Colors.red,
+          content: Text('⚠️ Download initiated - check notifications'),
+          backgroundColor: Colors.orange,
+          duration: const Duration(seconds: 3),
         ),
       );
     }
@@ -336,22 +332,61 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
         onMessageReceived: (message) async {
           // Format: "url|filename" or "button_clicked"
           if (message.message == 'button_clicked') {
-            // Show helper message for button-based downloads
+            // Show helper dialog for button-based downloads
             if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text(
-                  '📥 Download starting...\n'
-                  'The file will be saved to your Downloads folder.\n'
-                  'Tap "Scan Downloads" when complete to import.',
+            showDialog(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: const Row(
+                  children: [
+                    Icon(Icons.download, color: Colors.blue),
+                    SizedBox(width: 12),
+                    Text('Download Instructions'),
+                  ],
                 ),
-                backgroundColor: Colors.blue,
-                duration: const Duration(seconds: 5),
-                action: SnackBarAction(
-                  label: 'Got it',
-                  textColor: Colors.white,
-                  onPressed: () {},
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '⚠️ WebView cannot handle downloads automatically.',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Please follow these steps:'),
+                    const SizedBox(height: 12),
+                    _buildDialogStep('1', 'The download should start in your browser'),
+                    _buildDialogStep('2', 'Check your notification area for download progress'),
+                    _buildDialogStep('3', 'When complete, come back here and tap "Scan Downloads"'),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.green),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.file_download_outlined, color: Colors.green, size: 20),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'The green "Scan Downloads" button is at the bottom right',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Got it'),
+                  ),
+                ],
               ),
             );
             return;
@@ -451,6 +486,24 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
         ),
       )
       ..loadRequest(Uri.parse(_currentUrl));
+
+    // Configure Android-specific download handling
+    if (Platform.isAndroid && _controller.platform is AndroidWebViewController) {
+      final androidController =
+          _controller.platform as AndroidWebViewController;
+
+      androidController.setOnDownloadStartRequest((request) async {
+        _logger.i(
+          '📥 Android download start: ${request.url} '
+          '(${request.suggestedFilename})',
+        );
+
+        // Trigger the download
+        await _handleDownload(request.url, request.suggestedFilename);
+      });
+
+      _logger.i('✅ Android download handler configured');
+    }
   }
 
   /// Injects URL change listener for Single Page Apps.
@@ -914,6 +967,43 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
         ),
       );
     }
+  }
+
+  /// Builds a dialog step widget.
+  Widget _buildDialogStep(String number, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: Colors.blue,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                number,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(text),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   /// Shows import dialog with preview of new files.
