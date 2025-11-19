@@ -11,6 +11,8 @@
 /// - Standard browser navigation
 library;
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,6 +21,7 @@ import 'package:logger/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:soultune/shared/services/file/download_scanner_service.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
 
 /// Quick site model for browser bookmarks.
 class QuickSite {
@@ -519,6 +522,14 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
         ),
       )
       ..loadRequest(Uri.parse(_currentUrl));
+
+    // Configure Android-specific settings for session persistence
+    if (Platform.isAndroid) {
+      final androidController = _controller.platform as AndroidWebViewController;
+      androidController.setMediaPlaybackRequiresUserGesture(false);
+
+      _logger.i('🍪 Android WebView session persistence configured');
+    }
   }
 
   /// Injects URL change listener for Single Page Apps.
@@ -1030,12 +1041,35 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
 
           // WebView with Pull-to-Refresh
           Expanded(
-            child: RefreshIndicator(
-              onRefresh: () async {
-                await _controller.reload();
-                _logger.i('🔄 Browser refreshed');
-              },
-              child: WebViewWidget(controller: _controller),
+            child: Stack(
+              children: [
+                WebViewWidget(controller: _controller),
+                // Pull-to-refresh gesture detector
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 80,
+                  child: GestureDetector(
+                    onVerticalDragEnd: (details) {
+                      // If swipe down with velocity
+                      if (details.primaryVelocity != null &&
+                          details.primaryVelocity! > 500) {
+                        _controller.reload();
+                        _logger.i('🔄 Browser refreshed via swipe');
+                        HapticFeedback.mediumImpact();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('🔄 Reloading...'),
+                            duration: Duration(milliseconds: 500),
+                          ),
+                        );
+                      }
+                    },
+                    child: Container(color: Colors.transparent),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
