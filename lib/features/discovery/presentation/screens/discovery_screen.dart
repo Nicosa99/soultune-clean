@@ -522,6 +522,54 @@ class DiscoveryScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Text('💡', style: TextStyle(fontSize: 24)),
+                          const SizedBox(width: 12),
+                          Text(
+                            'HOW TO USE SOLFEGGIO FREQUENCIES',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        '1. IDENTIFY YOUR INTENTION\n'
+                        '   • Physical healing? → 174/285 Hz\n'
+                        '   • Emotional release? → 396/417 Hz\n'
+                        '   • Love & relationships? → 528/639 Hz\n'
+                        '   • Spiritual growth? → 741/852/963 Hz\n\n'
+                        '2. LISTEN DURATION\n'
+                        '   • Minimum: 15 minutes per session\n'
+                        '   • Optimal: 20-30 minutes\n'
+                        '   • Maximum benefit: 45-60 minutes\n\n'
+                        '3. BEST PRACTICES\n'
+                        '   • Use headphones for binaural beats\n'
+                        '   • Quiet, distraction-free environment\n'
+                        '   • Meditative or relaxed state\n'
+                        '   • Daily use for cumulative effects\n\n'
+                        '4. COMBINING FREQUENCIES\n'
+                        '   You can layer multiple Solfeggio tones:\n'
+                        '   • 528 Hz (DNA healing) + 432 Hz (base pitch)\n'
+                        '   • 396 Hz (fear release) + 639 Hz (love)\n'
+                        '   Use the Generator tab to create custom blends!',
+                        style: theme.textTheme.bodySmall?.copyWith(height: 1.6),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
