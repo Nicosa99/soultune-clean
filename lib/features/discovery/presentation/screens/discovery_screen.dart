@@ -158,12 +158,12 @@ class DiscoveryScreen extends ConsumerWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ExpansionTile(
-        leading: const Text('⬇️', style: TextStyle(fontSize: 32)),
+        leading: const Text('🌐', style: TextStyle(fontSize: 32)),
         title: const Text(
-          'Browser & Downloads',
+          'Integrated Browser',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: const Text('Download music and inject healing frequencies'),
+        subtitle: const Text('Browse the web with frequency injection'),
         children: [
           Padding(
             padding: const EdgeInsets.all(20),
@@ -171,7 +171,7 @@ class DiscoveryScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'HOW TO DOWNLOAD MUSIC',
+                  'INTEGRATED WEB BROWSER',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: colorScheme.primary,
@@ -179,20 +179,22 @@ class DiscoveryScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  '1. Open Browser tab\n'
-                  '2. Go to YouTube or tap "Loader.to" quick link\n'
-                  '3. Find the music you want\n'
-                  '4. On Loader.to: paste YouTube URL and download\n'
-                  '5. Downloads save automatically to your device\n'
-                  '6. Use "Scan Downloads" to import to Library\n\n'
+                  'Browse your favorite music platforms with built-in '
+                  'frequency enhancement.\n\n'
                   '432 Hz WEB INJECTION:\n'
-                  'Toggle "432 Hz" switch while browsing to inject healing '
+                  'Toggle the "432 Hz" switch while browsing to inject healing '
                   'frequencies into any website\'s audio in real-time.\n\n'
-                  'Works on:\n'
+                  'Supported Platforms:\n'
                   '• YouTube, Spotify, SoundCloud, Apple Music\n'
-                  '• Any website with audio/video\n'
+                  '• Any website with audio/video content\n'
                   '• Choose from 174-963 Hz Solfeggio frequencies\n\n'
-                  'Ad Blocker & Popup Blocker included!',
+                  'Features:\n'
+                  '• Ad Blocker & Popup Blocker included\n'
+                  '• Automatic detection of audio files\n'
+                  '• Downloads folder scanner for easy import\n'
+                  '• Session persistence (stay logged in)\n\n'
+                  'When you download music files through the browser, '
+                  'use "Scan Downloads" to import them directly to your Library.',
                   style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
                 ),
               ],
