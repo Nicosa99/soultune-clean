@@ -139,9 +139,6 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
     ),
   ];
 
-  /// Whether to show scan downloads button.
-  bool get _showScanButton => _currentSite?.isDownloader ?? false;
-
   @override
   void initState() {
     super.initState();
@@ -1019,14 +1016,6 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
           ),
         ],
       ),
-      floatingActionButton: _showScanButton
-          ? FloatingActionButton.extended(
-              icon: const Icon(Icons.file_download_outlined),
-              label: const Text('Scan Downloads'),
-              backgroundColor: Colors.green,
-              onPressed: _scanAndImportDownloads,
-            )
-          : null,
     );
   }
 
