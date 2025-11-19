@@ -38,7 +38,7 @@ lib/
 ├── app/constants/frequencies.dart      # Frequency preset definitions (kPitch432Hz, etc.)
 ├── features/
 │   ├── home/                           # Main screen with bottom navigation
-│   │   └── presentation/screens/home_screen.dart   # Entry point (Library, Playlists, Now Playing, Generator tabs)
+│   │   └── presentation/screens/home_screen.dart   # Entry point (Library, Generator, Browser, Discovery tabs)
 │   ├── player/
 │   │   ├── data/
 │   │   │   ├── datasources/hive_audio_datasource.dart   # Hive CRUD for audio files
@@ -51,7 +51,7 @@ lib/
 │   ├── playlist/                                        # Playlist management feature
 │   │   ├── data/datasources/hive_playlist_datasource.dart
 │   │   └── presentation/                                # playlist screens, providers, widgets
-│   ├── generator/                                       # ⭐ Frequency Generator (NEW)
+│   ├── generator/                                       # ⭐ Frequency Generator
 │   │   ├── data/
 │   │   │   ├── models/                                  # binaural_config, frequency_preset, waveform
 │   │   │   │   ├── frequency_constants.dart             # Solfeggio (174-963Hz) & brainwave frequencies
@@ -65,6 +65,12 @@ lib/
 │   │       ├── screens/custom_generator_screen.dart     # Custom frequency editor
 │   │       ├── screens/binaural_editor_screen.dart      # Advanced binaural beat editor
 │   │       └── widgets/                                 # waveform_visualizer, panning_indicator, preset_detail
+│   ├── browser/                                         # 432 Hz Web Browser
+│   │   └── presentation/screens/hz432_browser_screen.dart  # WebView with frequency injection via Web Audio API
+│   ├── discovery/                                       # Discovery Lab
+│   │   └── presentation/screens/discovery_screen.dart      # Educational content about CIA Gateway, OBE, science
+│   ├── gateway/                                         # Gateway Protocol (8-week program)
+│   │   └── presentation/screens/gateway_protocol_screen.dart  # Guided CIA Gateway training with progress tracking
 │   ├── equalizer/                                       # Audio equalizer feature (future)
 │   └── settings/                                        # App settings feature (future)
 └── shared/
@@ -73,6 +79,10 @@ lib/
     │   ├── playlist.dart               # Playlist model
     │   ├── frequency_setting.dart      # Frequency configuration
     │   ├── loop_mode.dart              # Playback loop mode enum
+    │   ├── gateway_progress.dart       # Gateway Protocol progress tracking
+    │   ├── user_stats.dart             # User statistics (listening time, sessions, etc.)
+    │   ├── achievement.dart            # Achievement/badge system
+    │   ├── journal_entry.dart          # User journal for tracking experiences
     │   ├── json_converters.dart        # Custom JSON converters for Freezed
     │   └── hive_adapters.dart          # Hive type adapters registration
     ├── services/
@@ -84,6 +94,9 @@ lib/
     │   │   └── audio_service_integration.dart   # Integrates audio_service with player
     │   ├── storage/hive_service.dart            # Local database initialization
     │   └── file/                                # File system & permissions
+    │       ├── file_system_service.dart         # File scanning and selection
+    │       ├── permission_service.dart          # Storage permission handling
+    │       └── download_scanner_service.dart    # Auto-scan Downloads folder for new audio files
     ├── widgets/                        # Shared UI components (mini_player, etc.)
     ├── utils/                          # Formatters and utilities
     ├── theme/                          # Material 3 dark theme
@@ -162,6 +175,76 @@ const double kSolfeggio963Hz = 963.0;  // Enlightenment (Crown Chakra)
 - **Predefined presets**: CIA Gateway, OBE (Out-of-Body Experience), Focus, Sleep, Meditation
 - **Custom editor**: Create and save custom frequency combinations
 - **Waveform visualization**: Real-time audio waveform display
+
+### 3. 432 Hz Web Browser (WebView with Frequency Injection)
+
+Embedded WebView browser that injects healing frequencies into website audio:
+
+```dart
+// lib/features/browser/presentation/screens/hz432_browser_screen.dart
+// Uses webview_flutter with Web Audio API JavaScript injection
+// Allows mixing 432 Hz or Solfeggio frequencies with any website's audio
+```
+
+**Browser Features:**
+- **Universal frequency injection**: Works with YouTube, Spotify Web, SoundCloud, etc.
+- **Web Audio API**: JavaScript injection intercepts website audio streams
+- **Volume control**: Adjustable frequency layer volume
+- **Quick bookmarks**: Pre-configured sites for healing music
+- **Download integration**: Auto-scans Downloads folder for audio files from downloader sites (loader.to, savenow.to)
+- **Standard navigation**: Back, forward, refresh, URL bar
+
+### 4. Discovery Lab (Educational Content)
+
+Educational screen about the science behind frequency synchronization:
+
+**Discovery Lab Features:**
+- **CIA Gateway Process**: Declassified research on brain synchronization
+- **Out-of-Body Experiences**: Scientific studies and methods
+- **Remote Viewing**: History and applications
+- **Brainwave Science**: How different frequencies affect consciousness
+- **Interactive presets**: Direct links to try relevant frequency presets
+- **External resources**: Links to research papers and documentation
+
+### 5. Gateway Protocol (8-Week Program)
+
+Guided training program based on CIA Gateway Process:
+
+**Gateway Protocol Features:**
+- **8-week structure**: Progressive training program
+  - Week 1-2: Focus 10 (Body Asleep, Mind Awake)
+  - Week 3-4: Focus 12 (Expanded Awareness)
+  - Week 5-6: Focus 15 (No Time)
+  - Week 7-8: Focus 21 (Other Energy Systems)
+- **Progress tracking**: Session completion and week advancement
+- **Integrated frequency presets**: Direct access to relevant binaural beats
+- **Journal integration**: Log experiences and insights (future)
+
+### 6. Gamification System
+
+User engagement and progress tracking:
+
+**Gamification Models:**
+- `user_stats.dart`: Track listening time, sessions, favorite frequencies
+- `achievement.dart`: Badge system for milestones (e.g., "7-day meditation streak")
+- `journal_entry.dart`: Personal logs for tracking experiences with different frequencies
+- `gateway_progress.dart`: Specific tracking for Gateway Protocol advancement
+
+## Navigation Structure
+
+The app uses a PageView-based bottom navigation (NOT go_router):
+
+```dart
+// lib/features/home/presentation/screens/home_screen.dart
+// Bottom Navigation Tabs (4 tabs):
+// 1. Library - Music files, playlists, local audio
+// 2. Generator - Frequency presets, custom frequencies, binaural beats
+// 3. Browser - 432 Hz web browser with frequency injection
+// 4. Discovery - Educational content, science, research
+
+// Mini Player: Shown on all tabs when audio is playing (Library, Generator, Browser, Discovery)
+// Full Player: Modal screen (NowPlayingScreen) - swipe up from mini player
+```
 
 ## Code Patterns
 
@@ -302,20 +385,48 @@ The project enforces strict linting (`analysis_options.yaml`):
 
 ## Key Files for Context
 
+**Documentation:**
 - `NOTIFICATION_SETUP.md` - Android media notification configuration
 - `PERMISSIONS_SETUP.md` - Storage permission setup
 - `PLAN.md` - Feature roadmap and implementation phases
 - `ANDROID_V2_FIX.md` - Android v2 embedding migration fixes
+
+**Core Architecture:**
+- `lib/main.dart` - App entry point with Hive and NotificationService initialization
+- `lib/features/home/presentation/screens/home_screen.dart` - Main app with bottom navigation (4 tabs)
+- `lib/shared/widgets/mini_player.dart` - Persistent mini player UI (shown on all tabs)
+
+**Player Feature:**
 - `lib/app/constants/frequencies.dart` - Frequency constants for pitch shifting
 - `lib/features/player/presentation/providers/player_providers.dart` - Player state management
+- `lib/features/player/presentation/screens/now_playing_screen.dart` - Full player screen
+- `lib/shared/services/audio/audio_player_service.dart` - just_audio wrapper with pitch shift
+
+**Playlist Feature:**
 - `lib/features/playlist/presentation/providers/playlist_providers.dart` - Playlist state management
+- `lib/features/playlist/data/datasources/hive_playlist_datasource.dart` - Playlist data access
+
+**Generator Feature:**
 - `lib/features/generator/presentation/providers/generator_providers.dart` - Generator state management
+- `lib/features/generator/presentation/screens/generator_screen.dart` - Main generator UI
 - `lib/features/generator/data/models/frequency_constants.dart` - Solfeggio & brainwave frequencies
-- `lib/features/generator/data/models/predefined_presets.dart` - All preset definitions
+- `lib/features/generator/data/models/predefined_presets.dart` - All preset definitions (CIA Gateway, OBE, etc.)
 - `lib/features/generator/data/services/frequency_generator_service.dart` - SoLoud synthesis engine
 - `lib/features/generator/domain/panning_engine.dart` - Adaptive panning algorithm
-- `lib/features/home/presentation/screens/home_screen.dart` - Main app entry with bottom navigation
-- `lib/shared/widgets/mini_player.dart` - Persistent mini player UI (shown on Library/Playlists tabs)
+
+**Browser Feature:**
+- `lib/features/browser/presentation/screens/hz432_browser_screen.dart` - WebView with frequency injection
+- `lib/shared/services/file/download_scanner_service.dart` - Auto-scan Downloads for audio files
+
+**Discovery & Gateway Features:**
+- `lib/features/discovery/presentation/screens/discovery_screen.dart` - Educational content screen
+- `lib/features/gateway/presentation/screens/gateway_protocol_screen.dart` - 8-week training program
+
+**Gamification:**
+- `lib/shared/models/user_stats.dart` - User statistics tracking
+- `lib/shared/models/achievement.dart` - Achievement/badge system
+- `lib/shared/models/journal_entry.dart` - User journal for experiences
+- `lib/shared/models/gateway_progress.dart` - Gateway Protocol progress
 
 ## Git Commit Convention
 
