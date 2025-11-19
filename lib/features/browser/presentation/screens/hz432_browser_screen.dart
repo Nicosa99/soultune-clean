@@ -502,6 +502,10 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
     });
 
     if (target) {
+      // Check if it's a download button by text
+      const text = target.textContent?.toLowerCase() || '';
+      const isDownloadButton = text.includes('download') || text.includes('save') || text.includes('get');
+
       // Check if it's an <a> link
       if (target.href) {
         const url = target.href;
@@ -512,16 +516,16 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
         const isDownloadLink = downloadExtensions.some(ext => url.toLowerCase().includes(ext));
         const isBlobUrl = url.startsWith('blob:');
 
+        // If it's a direct download link, intercept and notify
         if (isDownloadLink || target.download || isBlobUrl) {
-          e.preventDefault();
-          e.stopPropagation();
-          console.log('📥 Download link:', url);
+          console.log('📥 Download link detected:', url);
           DownloadHandler.postMessage(url + '|' + filename);
-          return false;
+          // Don't prevent default - let browser handle the download
+          return true;
         }
 
-        // Block target="_blank" links (popup blocker)
-        if (target.target === '_blank') {
+        // Block target="_blank" links ONLY if it's not a download button
+        if (target.target === '_blank' && !isDownloadButton) {
           e.preventDefault();
           e.stopPropagation();
           console.log('🚫 Blocked _blank link:', url);
@@ -529,32 +533,29 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
         }
       }
 
-      // Check if it's a download button
-      const text = target.textContent?.toLowerCase() || '';
-      if (text.includes('download') || text.includes('save') || text.includes('get')) {
+      // If it's a download button, notify but DON'T block
+      if (isDownloadButton) {
         console.log('🎯 Download button clicked!');
-        // Notify Flutter immediately
         DownloadHandler.postMessage('button_clicked');
-
-        // Also try to catch blob URLs (some sites use them)
-        setTimeout(() => {
-          const links = document.querySelectorAll('a[download], a[href^="blob:"]');
-          links.forEach(link => {
-            if (link.href && link.href.startsWith('blob:')) {
-              console.log('📥 Found blob URL:', link.href);
-              DownloadHandler.postMessage(link.href + '|' + (link.download || 'download.mp3'));
-            }
-          });
-        }, 500);
+        // Don't prevent default - let the download happen naturally
       }
     }
   }, true);
 
   // === Popup Blocker ===
 
-  // Block window.open
-  window.open = function() {
-    console.log('🚫 Popup blocked');
+  // Intercept window.open but allow download URLs
+  const originalWindowOpen = window.open;
+  window.open = function(url, target, features) {
+    // Allow if URL looks like a download
+    if (url && (url.includes('.mp3') || url.includes('.m4a') || url.includes('.flac') ||
+                url.includes('.wav') || url.includes('download') || url.startsWith('blob:'))) {
+      console.log('✅ Allowing download popup:', url);
+      return originalWindowOpen.apply(window, arguments);
+    }
+
+    // Block other popups
+    console.log('🚫 Popup blocked:', url);
     return null;
   };
 
