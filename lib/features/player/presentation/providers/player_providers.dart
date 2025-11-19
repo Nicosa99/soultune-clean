@@ -70,6 +70,8 @@
 /// ```
 library;
 
+import 'dart:async';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:soultune/features/player/data/repositories/player_repository.dart';
 import 'package:soultune/shared/models/audio_file.dart';
@@ -113,6 +115,10 @@ Future<PlayerRepository> playerRepository(PlayerRepositoryRef ref) async {
 ///
 /// Returns `null` if no track is playing.
 ///
+/// Listens to both playing state and duration changes to detect track switches.
+/// When a track completes and auto-play starts the next one, the duration
+/// change triggers a UI update even though playing state remains true.
+///
 /// ## Example
 ///
 /// ```dart
@@ -129,8 +135,29 @@ Stream<AudioFile?> currentAudioFile(CurrentAudioFileRef ref) async* {
   // Emit initial state
   yield repository.currentAudioFile;
 
-  // Listen to playing stream to detect track changes
-  await for (final _ in repository.playingStream) {
+  // Create a controller to merge both streams
+  final controller = StreamController<void>.broadcast();
+
+  // Listen to both playing state and duration changes
+  // This catches track changes during auto-play (duration changes)
+  // and manual play/pause actions (playing state changes)
+  final playingSubscription = repository.playingStream.listen((_) {
+    controller.add(null);
+  });
+
+  final durationSubscription = repository.durationStream.listen((_) {
+    controller.add(null);
+  });
+
+  // Clean up subscriptions when provider is disposed
+  ref.onDispose(() {
+    playingSubscription.cancel();
+    durationSubscription.cancel();
+    controller.close();
+  });
+
+  // Emit current audio file whenever either stream emits
+  await for (final _ in controller.stream) {
     yield repository.currentAudioFile;
   }
 }

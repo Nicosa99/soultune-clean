@@ -100,10 +100,19 @@ class FileSystemService {
   ];
 
   /// Common music directories on Android.
+  ///
+  /// Includes multiple download paths for compatibility with different
+  /// Android versions and device configurations:
+  /// - Standard Music directory
+  /// - Download/Downloads folders (both singular and plural)
+  /// - /sdcard symlink paths (common on many devices)
   static const List<String> androidMusicDirs = [
     '/storage/emulated/0/Music',
     '/storage/emulated/0/Download',
     '/storage/emulated/0/Downloads',
+    '/sdcard/Music',
+    '/sdcard/Download',
+    '/sdcard/Downloads',
   ];
 
   // ---------------------------------------------------------------------------
@@ -504,6 +513,25 @@ class FileSystemService {
     final audioPaths = <String>[];
 
     if (Platform.isAndroid) {
+      // Also scan external storage directories if available
+      try {
+        final externalDir = await getExternalStorageDirectory();
+        if (externalDir != null) {
+          final externalDownloads = Directory(
+            '${externalDir.path}/../../Download',
+          ).absolute;
+          if (await externalDownloads.exists()) {
+            final paths = await _scanDirectory(externalDownloads);
+            audioPaths.addAll(paths);
+            _logger.i(
+              'Found ${paths.length} files in external downloads: ${externalDownloads.path}',
+            );
+          }
+        }
+      } catch (e) {
+        _logger.w('Could not access external storage directory: $e');
+      }
+
       // Scan Android music directories
       for (final dirPath in androidMusicDirs) {
         final directory = Directory(dirPath);
@@ -514,9 +542,13 @@ class FileSystemService {
           final paths = await _scanDirectory(directory);
           audioPaths.addAll(paths);
 
-          _logger.d('Found ${paths.length} files in $dirPath');
+          if (paths.isNotEmpty) {
+            _logger.i('Found ${paths.length} audio files in $dirPath');
+          } else {
+            _logger.d('No audio files found in $dirPath');
+          }
         } else {
-          _logger.d('Directory does not exist: $dirPath');
+          _logger.d('Directory does not exist or not accessible: $dirPath');
         }
       }
     } else if (Platform.isIOS) {
@@ -534,7 +566,14 @@ class FileSystemService {
     }
 
     // Remove duplicates (in case of symlinks or multiple paths to same file)
-    return audioPaths.toSet().toList();
+    final uniquePaths = audioPaths.toSet().toList();
+
+    _logger.i(
+      'Total unique audio files found: ${uniquePaths.length} '
+      '(${audioPaths.length - uniquePaths.length} duplicates removed)',
+    );
+
+    return uniquePaths;
   }
 
   /// Recursively scans a directory for audio files.
