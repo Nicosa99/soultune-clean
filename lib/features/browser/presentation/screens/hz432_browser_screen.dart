@@ -658,8 +658,8 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
         const isDownloadLink = downloadExtensions.some(ext => url.toLowerCase().includes(ext));
         const isBlobUrl = url.startsWith('blob:');
 
-        // If it's a direct download link, intercept and notify
-        if (isDownloadLink || target.download || isBlobUrl) {
+        // ONLY trigger download if URL actually points to an audio file or blob
+        if (isDownloadLink || isBlobUrl || (target.download && isDownloadLink)) {
           console.log('📥 Download link detected:', url, 'filename:', filename);
           DownloadHandler.postMessage(url + '|' + filename);
           // Don't prevent default - let browser handle the download
@@ -673,23 +673,13 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
           console.log('🚫 Blocked _blank link:', url);
           return false;
         }
-      }
 
-      // If it's a download button, try to extract URL and trigger download
-      if (isDownloadButton) {
-        console.log('🎯 Download button clicked!');
-
-        // Try to get URL from button's href
-        if (target.href) {
-          const url = target.href;
-          const filename = target.download || extractFilename(url);
-          console.log('📥 Download button with URL:', url, 'filename:', filename);
-          DownloadHandler.postMessage(url + '|' + filename);
-        } else {
-          // No URL found - let browser handle it
-          console.log('⚠️ Download button without URL - letting browser handle');
+        // If download button but URL is NOT an audio file, don't trigger download
+        // (It's probably a navigation button to start the download process)
+        if (isDownloadButton && !isDownloadLink) {
+          console.log('⏭️ Download button navigation (not actual file) - ignored');
+          return true;
         }
-        // Don't prevent default - let the download happen naturally too
       }
     }
   }, true);
