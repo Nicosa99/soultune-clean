@@ -1035,17 +1035,6 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
           ],
         ),
         actions: [
-          // Forward Button
-          IconButton(
-            icon: const Icon(Icons.arrow_forward),
-            onPressed: () async {
-              if (await _controller.canGoForward()) {
-                HapticFeedback.selectionClick();
-                await _controller.goForward();
-              }
-            },
-          ),
-
           // Refresh Button
           IconButton(
             icon: const Icon(Icons.refresh),
