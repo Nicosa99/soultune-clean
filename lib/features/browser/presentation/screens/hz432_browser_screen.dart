@@ -16,6 +16,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:logger/logger.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:soultune/shared/services/file/download_scanner_service.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -243,6 +244,36 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
   Future<void> _handleDownload(String url, String? suggestedFilename) async {
     final filename = suggestedFilename ?? 'download.mp3';
     _logger.i('🔽 Download detected: $filename from $url');
+
+    // Request storage permission first
+    PermissionStatus status = await Permission.storage.status;
+
+    if (!status.isGranted) {
+      _logger.i('📱 Requesting storage permission...');
+      status = await Permission.storage.request();
+
+      if (!status.isGranted) {
+        _logger.w('❌ Storage permission denied');
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              '❌ Storage permission required for downloads',
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+            action: SnackBarAction(
+              label: 'Settings',
+              textColor: Colors.white,
+              onPressed: () => openAppSettings(),
+            ),
+          ),
+        );
+        return;
+      }
+    }
+
+    _logger.i('✅ Storage permission granted');
 
     // Use Android MethodChannel to trigger native download
     const platform = MethodChannel('soultune.download');
