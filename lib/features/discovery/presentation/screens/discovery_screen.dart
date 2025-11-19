@@ -814,6 +814,76 @@ class DiscoveryScreen extends ConsumerWidget {
                     },
                   ),
                 ),
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: colorScheme.tertiaryContainer.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: colorScheme.tertiary.withOpacity(0.5),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.menu_book,
+                            color: colorScheme.tertiary,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'OBE TRAINING PROTOCOL',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'BEGINNER PROTOCOL (Weeks 1-2):\n\n'
+                        'STEP 1: Master Focus 10 (Mind Awake, Body Asleep)\n'
+                        '• Practice: 20-30 minutes daily\n'
+                        '• Goal: Maintain awareness as body falls asleep\n'
+                        '• Frequency: Theta (4-7 Hz)\n'
+                        '• Signs: Body numbness, tingling, vibrations\n\n'
+                        'STEP 2: Progress to Focus 12 (Expanded Awareness)\n'
+                        '• Practice: Once comfortable with Focus 10\n'
+                        '• Goal: Perception beyond physical senses\n'
+                        '• Frequency: High Theta (6-8 Hz)\n'
+                        '• Signs: Floating sensation, spatial awareness shifts\n\n'
+                        'INTERMEDIATE PROTOCOL (Weeks 3-4):\n\n'
+                        'STEP 3: Focus 15 ("No-Time" State)\n'
+                        '• Practice: Build on Focus 12 stability\n'
+                        '• Goal: Consciousness beyond temporal constraints\n'
+                        '• Frequency: Theta/Alpha border (7-9 Hz)\n'
+                        '• Signs: Time distortion, increased lucidity\n\n'
+                        'ADVANCED PROTOCOL (Week 5+):\n\n'
+                        'STEP 4: Focus 21 (Gateway to OBE)\n'
+                        '• Practice: After mastering previous states\n'
+                        '• Goal: Full separation from physical body\n'
+                        '• Frequency: Deep Theta (4-6 Hz)\n'
+                        '• Optimal Time: 3-6 AM (melatonin peak)\n\n'
+                        'SUCCESS TIPS:\n'
+                        '• Don\'t force it - let it happen naturally\n'
+                        '• Exit fear is normal - stay calm\n'
+                        '• Vibrations = you\'re close (don\'t panic!)\n'
+                        '• First OBE often lasts only seconds\n'
+                        '• Practice = longer, more controlled experiences\n\n'
+                        'SAFETY NOTE:\n'
+                        'OBEs are considered safe. If uncomfortable, simply '
+                        'wiggle fingers/toes to return to body immediately.',
+                        style: theme.textTheme.bodySmall?.copyWith(height: 1.6),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
