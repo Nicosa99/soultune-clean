@@ -617,11 +617,18 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
 
     // Check if it's a download URL
     const downloadExtensions = ['.mp3', '.m4a', '.flac', '.wav', '.aac', '.ogg', '.opus', '.wma'];
-    const isDownload = downloadExtensions.some(ext => urlString.toLowerCase().includes(ext));
+    const hasDownloadExtension = downloadExtensions.some(ext => urlString.toLowerCase().includes(ext));
 
-    if (isDownload) {
+    // Check if URL is from a download service
+    const downloadServiceDomains = ['savenow.to', 'loader.to', 'nip.io'];
+    const isDownloadService = downloadServiceDomains.some(domain => urlString.includes(domain));
+
+    // Check for 'pacific' path (loader.to download path)
+    const isPacificDownload = urlString.includes('/pacific/');
+
+    if (hasDownloadExtension || (isDownloadService && isPacificDownload)) {
       console.log('📥 Download detected via Fetch!', urlString);
-      const filename = urlString.split('/').pop() || 'download.mp3';
+      const filename = urlString.split('/').pop()?.split('?')[0] || 'download.mp3';
       DownloadHandler.postMessage(urlString + '|' + filename);
     }
 
@@ -636,11 +643,18 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen> {
     // Check if it's a download URL
     const downloadExtensions = ['.mp3', '.m4a', '.flac', '.wav', '.aac', '.ogg', '.opus', '.wma'];
     const urlString = url.toString();
-    const isDownload = downloadExtensions.some(ext => urlString.toLowerCase().includes(ext));
+    const hasDownloadExtension = downloadExtensions.some(ext => urlString.toLowerCase().includes(ext));
 
-    if (isDownload) {
+    // Check if URL is from a download service
+    const downloadServiceDomains = ['savenow.to', 'loader.to', 'nip.io'];
+    const isDownloadService = downloadServiceDomains.some(domain => urlString.includes(domain));
+
+    // Check for 'pacific' path (loader.to download path)
+    const isPacificDownload = urlString.includes('/pacific/');
+
+    if (hasDownloadExtension || (isDownloadService && isPacificDownload)) {
       console.log('📥 Download detected via XHR!', urlString);
-      const filename = urlString.split('/').pop() || 'download.mp3';
+      const filename = urlString.split('/').pop()?.split('?')[0] || 'download.mp3';
       DownloadHandler.postMessage(urlString + '|' + filename);
     }
 
