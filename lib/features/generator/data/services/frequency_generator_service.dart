@@ -62,6 +62,9 @@ class FrequencyGeneratorService {
   /// Current panning configuration.
   PanningConfig? _currentPanningConfig;
 
+  /// Current master volume (0.0 - 1.0).
+  double _currentVolume = 0.7;
+
   /// Stream controller for playing state.
   final _playingController = StreamController<bool>.broadcast();
 
@@ -88,6 +91,9 @@ class FrequencyGeneratorService {
 
   /// Current pan position (-1.0 to 1.0).
   double get currentPanPosition => _panningEngine.currentPanPosition;
+
+  /// Current master volume (0.0 - 1.0).
+  double get currentVolume => _currentVolume;
 
   /// Sets up notification callbacks for system media controls.
   void _setupNotificationCallbacks() {
@@ -498,6 +504,8 @@ class FrequencyGeneratorService {
     if (!_isInitialized) return;
 
     final clampedVolume = volume.clamp(0.0, 1.0);
+    _currentVolume = clampedVolume; // Save current volume
+
     for (final handle in _activeHandles) {
       _soLoud!.setVolume(handle, clampedVolume);
     }

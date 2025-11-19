@@ -40,7 +40,6 @@ class _FrequencyNowPlayingScreenState
     extends ConsumerState<FrequencyNowPlayingScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
-  double _masterVolume = 0.7;
   int _elapsedSeconds = 0;
   Timer? _sessionTimer;
 
@@ -575,6 +574,9 @@ class _FrequencyNowPlayingScreenState
 
   /// Builds volume controls.
   Widget _buildVolumeControls() {
+    // Read current volume from provider to persist across screen rebuilds
+    final currentVolume = ref.watch(currentGeneratorVolumeProvider);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Row(
@@ -597,15 +599,13 @@ class _FrequencyNowPlayingScreenState
                 ),
               ),
               child: Slider(
-                value: _masterVolume,
+                value: currentVolume,
                 min: 0,
                 max: 1,
                 activeColor: Colors.white,
                 inactiveColor: Colors.white30,
                 onChanged: (value) {
-                  setState(() {
-                    _masterVolume = value;
-                  });
+                  // Update volume through provider (persists in service)
                   ref.read(setGeneratorVolumeProvider)(value);
                 },
               ),

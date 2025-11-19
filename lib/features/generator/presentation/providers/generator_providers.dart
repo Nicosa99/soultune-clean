@@ -93,12 +93,21 @@ Future<void> Function() stopFrequencyGeneration(
   };
 }
 
+/// Provides current generator volume (0.0 - 1.0).
+@riverpod
+double currentGeneratorVolume(CurrentGeneratorVolumeRef ref) {
+  final service = ref.watch(frequencyGeneratorServiceProvider);
+  return service.currentVolume;
+}
+
 /// Action to set generator volume.
 @riverpod
 void Function(double) setGeneratorVolume(SetGeneratorVolumeRef ref) {
   return (double volume) {
     final service = ref.read(frequencyGeneratorServiceProvider);
     service.setVolume(volume);
+    // Invalidate to trigger rebuild
+    ref.invalidate(currentGeneratorVolumeProvider);
   };
 }
 
