@@ -9,6 +9,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:soultune/features/home/presentation/screens/home_screen.dart';
 import 'package:soultune/shared/services/audio/notification_service.dart';
+import 'package:soultune/shared/services/premium/premium_service.dart';
+import 'package:soultune/shared/services/premium/revenue_cat_service.dart';
 import 'package:soultune/shared/services/storage/hive_service.dart';
 import 'package:soultune/shared/theme/app_theme.dart';
 import 'package:soultune/shared/widgets/splash_screen.dart';
@@ -102,6 +104,18 @@ class _AppInitializerState extends State<AppInitializer> {
       } catch (e) {
         debugPrint('⚠️ NotificationService failed to initialize: $e');
         debugPrint('📱 App will continue without system notifications');
+      }
+
+      // Initialize RevenueCat for subscription management
+      try {
+        await RevenueCatService.instance.initialize(
+          apiKey: 'test_YVgpnblAlLpIHOzxPrFlCyZQTES',
+        );
+        PremiumService.instance.initialize();
+        debugPrint('✅ RevenueCat initialized - subscriptions enabled!');
+      } catch (e) {
+        debugPrint('⚠️ RevenueCat failed to initialize: $e');
+        debugPrint('📱 App will continue without premium features');
       }
 
       // Ensure minimum splash duration (2.5 seconds for smooth UX)
