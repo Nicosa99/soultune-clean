@@ -6,6 +6,7 @@ library;
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:soultune/shared/services/premium/models/premium_status.dart';
@@ -59,11 +60,20 @@ class RevenueCatPremiumService implements PremiumService {
   bool get isPremium => _currentStatus.isPremium;
 
   @override
+  bool get isFree => _currentStatus.tier == PremiumTier.free;
+
+  @override
+  bool get expiresSoon => _currentStatus.expiresSoon;
+
+  @override
   bool get hasActiveSubscription =>
       _currentStatus.isPremium && _currentStatus.tier != PremiumTier.lifetime;
 
   @override
   PremiumTier get currentTier => _currentStatus.tier;
+
+  @override
+  bool get isInitialized => _isInitialized;
 
   @override
   Future<void> initialize() async {
@@ -80,8 +90,10 @@ class RevenueCatPremiumService implements PremiumService {
         RevenueCatConfig.getApiKey()!,
       );
 
+      // Note: LogLevel setting was removed in v9.x
+      // Debug logs are now controlled via Purchases.logLevel setter after configure
       if (RevenueCatConfig.enableDebugLogs) {
-        configuration.logLevel = LogLevel.debug;
+        await Purchases.setLogLevel(LogLevel.debug);
       }
 
       // Initialize Purchases
@@ -245,7 +257,8 @@ class RevenueCatPremiumService implements PremiumService {
       _logger.e('❌ Purchase error: ${e.code} - ${e.message}');
 
       // Handle specific error codes
-      if (e.code == PurchasesErrorHelper.purchaseCancelledError) {
+      // In v9.x, user cancellation is error code '1' (PURCHASE_CANCELLED_ERROR)
+      if (e.code == '1' || e.message?.contains('cancelled') == true) {
         _logger.i('ℹ️  User cancelled purchase');
         return false;
       }
