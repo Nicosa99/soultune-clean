@@ -2,15 +2,11 @@
 ///
 /// Provides easy access to RevenueCat Customer Center for managing
 /// subscriptions within the app.
-///
-/// **NOTE**: Requires `purchases_ui_flutter` package.
-/// Add to pubspec.yaml when ready: `purchases_ui_flutter: ^7.x.x`
 library;
 
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
-// TODO: Uncomment when purchases_ui_flutter is added to pubspec.yaml
-// import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
+import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 
 /// Helper class for presenting RevenueCat Customer Center.
 ///
@@ -60,8 +56,6 @@ class CustomerCenterHelper {
   static Future<bool> show(BuildContext context) async {
     _logger.i('📱 Opening Customer Center...');
 
-    // TODO: Uncomment when purchases_ui_flutter is added
-    /*
     try {
       // Present Customer Center
       await RevenueCatUI.presentCustomerCenter();
@@ -87,31 +81,6 @@ class CustomerCenterHelper {
 
       return false;
     }
-    */
-
-    // Temporary: Show dialog explaining Customer Center is not yet available
-    if (context.mounted) {
-      showDialog<void>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Subscription Management'),
-          content: const Text(
-            'To manage your subscription, please visit:\n\n'
-            '• Google Play Store (Android)\n'
-            '• App Store (iOS)\n\n'
-            'Go to your account settings → Subscriptions → SoulTune',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return true;
   }
 
   /// Shows Customer Center in settings context.
