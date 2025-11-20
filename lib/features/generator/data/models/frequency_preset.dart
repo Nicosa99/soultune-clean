@@ -56,6 +56,12 @@ class FrequencyPreset with _$FrequencyPreset {
     /// Whether this is a user-created preset.
     @Default(false) bool isCustom,
 
+    /// Whether this preset requires premium subscription.
+    ///
+    /// Free tier includes only 1 preset (Deep Sleep).
+    /// All other presets require premium subscription ($29.99/year).
+    @Default(true) bool isPremium,
+
     /// Whether L→R→L panning modulation is enabled.
     @Default(false) bool panningEnabled,
 

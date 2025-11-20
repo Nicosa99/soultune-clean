@@ -28,6 +28,93 @@ flutter build apk --release
 flutter build ios --release
 ```
 
+## Monetization Strategy (Freemium Model)
+
+SoulTune uses a **freemium model** with NO ADS. The free tier provides real value while premium unlocks advanced features.
+
+### Free Tier (No Subscription Required)
+
+```
+✅ Music Player:
+   - 432 Hz pitch shifting (unlimited)
+   - 440 Hz standard playback
+
+✅ Frequency Generator:
+   - 1 Preset: "Deep Sleep" (Delta waves + 174 Hz Solfeggio)
+   - All other 19+ presets locked
+
+✅ Browser (432 Hz Web Browser):
+   - 432 Hz frequency injection only
+   - Works with YouTube, Spotify Web, etc.
+   - Gentle upgrade prompts for other frequencies
+
+✅ Discovery Lab:
+   - Full access to all educational content
+   - CIA Gateway Process articles
+   - OBE, Remote Viewing research
+   - Trust-building & marketing content
+
+✅ Gateway Protocol Screen:
+   - Readable content
+   - "Start Session" buttons locked
+
+❌ NO ADS - Clean experience for maximum retention
+```
+
+### Premium Tier ($29.99/year or $4.99/month)
+
+```
+🔒 Music Player:
+   - All Solfeggio frequencies (528 Hz, 639 Hz, etc.)
+   - Complete healing frequency library (174-963 Hz)
+
+🔒 Frequency Generator:
+   - All 20+ scientifically-designed presets
+   - CIA Gateway Process (Focus 10, 12, 15, 21)
+   - OBE & Astral Projection presets
+   - Remote Viewing protocols
+   - All categories unlocked
+
+🔒 Custom Generator:
+   - Create custom frequency presets (Coming Soon)
+   - Save unlimited custom configurations
+   - Advanced binaural beat controls
+
+🔒 Browser:
+   - All 9 Solfeggio frequencies
+   - Full frequency control
+
+🔒 Gateway Protocol:
+   - Start all training sessions
+   - Progress tracking
+   - Session history
+```
+
+### Lifetime Option
+
+```
+💎 One-time payment: $69.99
+   - All Premium features forever
+   - No recurring payments
+   - Limited availability (launch period only)
+```
+
+### Implementation Details
+
+**Premium Checks:**
+- `FrequencySetting.isPremium`: Player frequencies (528 Hz, 639 Hz require premium)
+- `FrequencyPreset.isPremium`: Generator presets (only "Deep Sleep" is free)
+- Browser: Check premium status before allowing non-432 Hz frequencies
+- Custom Generator: Show "Coming Soon" or premium upgrade prompt
+- Discovery Lab: Always free (marketing/trust-building)
+
+**Conversion Strategy:**
+Users experience real value in free tier (432 Hz works perfectly), then upgrade when they want advanced frequencies (528 Hz "Love Frequency"), CIA Gateway protocols, or OBE training presets.
+
+**Target conversion rate**: 5-8% free to paid (realistic for freemium apps)
+
+---
+
 ## Architecture Overview
 
 Feature-first clean architecture with Riverpod state management:

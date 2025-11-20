@@ -49,6 +49,7 @@ List<FrequencyPreset> getPredefinedPresets() {
         rightFrequency: 207,
       ),
       durationMinutes: 60,
+      isPremium: false, // ✅ FREE TIER - Only free preset
       tags: ['sleep', 'delta', 'healing', 'rest'],
       createdAt: now,
     ),
