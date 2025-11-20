@@ -120,7 +120,23 @@ abstract class PremiumService {
   /// Throws [PremiumServiceException] on errors.
   Future<bool> purchaseLifetime();
 
-  /// Start free trial (7 days, no credit card).
+  /// Start free trial (7 days, no credit card required).
+  ///
+  /// **Production Behavior:**
+  /// Triggers platform-native free trial via:
+  /// - Google Play: Subscription with trial period
+  /// - App Store: Free trial via StoreKit
+  ///
+  /// Trial configuration (duration, eligibility) is managed in
+  /// the respective Store Console, NOT in-app.
+  ///
+  /// **Eligibility:**
+  /// - First-time users only (enforced by platform)
+  /// - Never used trial before on this account
+  ///
+  /// **Post-Trial:**
+  /// Automatically converts to paid subscription unless cancelled.
+  /// User can cancel anytime during trial period.
   ///
   /// Available for first-time users only.
   ///

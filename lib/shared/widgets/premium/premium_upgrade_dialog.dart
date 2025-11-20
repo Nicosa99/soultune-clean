@@ -211,7 +211,7 @@ class _PremiumUpgradeDialogState
 
         // Subtitle
         Text(
-          'Join 10,000+ users experiencing CIA-backed meditation',
+          'Experience CIA-backed meditation and healing frequencies',
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurface.withOpacity(0.7),
           ),
@@ -600,6 +600,10 @@ class _PremiumUpgradeDialogState
   }
 
   Future<void> _handleFreeTrial() async {
+    // NOTE: In production (RevenueCat), this triggers the platform's
+    // native free trial via Google Play/App Store subscription APIs.
+    // The trial period (7 days) is configured in the Store Console.
+    // No credit card required - handled automatically by the platform.
     setState(() => _isProcessing = true);
 
     try {
