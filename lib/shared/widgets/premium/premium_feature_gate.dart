@@ -343,43 +343,44 @@ class ConditionalPremiumWrapper extends ConsumerWidget {
         }
 
         // Not premium - show with lock overlay
-        return Stack(
-          children: [
-            // Dimmed child
-            Opacity(
-              opacity: 0.5,
-              child: child,
-            ),
+        return _buildLockedOverlay(context);
+      },
+      // CRITICAL: During loading, show locked state (fail-safe)
+      // Never show unlocked content while checking premium status!
+      loading: () => _buildLockedOverlay(context),
+      // CRITICAL: On error, default to locked (fail-safe to free tier)
+      error: (_, __) => _buildLockedOverlay(context),
+    );
+  }
 
-            // Lock overlay
-            Positioned.fill(
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: onTap ??
-                      () => PremiumUpgradeDialog.show(
-                            context,
-                            feature: feature,
-                          ),
-                  child: Container(
-                    alignment: Alignment.center,
-                    child: const PremiumBadge(),
-                  ),
-                ),
+  /// Builds the locked overlay (dimmed child + lock badge).
+  Widget _buildLockedOverlay(BuildContext context) {
+    return Stack(
+      children: [
+        // Dimmed child
+        Opacity(
+          opacity: 0.5,
+          child: IgnorePointer(child: child),
+        ),
+
+        // Lock overlay
+        Positioned.fill(
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap ??
+                  () => PremiumUpgradeDialog.show(
+                        context,
+                        feature: feature,
+                      ),
+              child: Container(
+                alignment: Alignment.center,
+                child: const PremiumBadge(),
               ),
             ),
-          ],
-        );
-      },
-      loading: () => child,
-      error: (_, __) => Stack(
-        children: [
-          Opacity(opacity: 0.5, child: child),
-          const Positioned.fill(
-            child: Center(child: PremiumBadge()),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
