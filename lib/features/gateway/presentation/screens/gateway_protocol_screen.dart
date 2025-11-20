@@ -4,6 +4,9 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:soultune/shared/services/premium/premium_providers.dart';
+import 'package:soultune/shared/widgets/premium/premium_widgets.dart';
 
 /// Gateway Protocol screen for guided 8-week program.
 ///
@@ -12,12 +15,12 @@ import 'package:flutter/material.dart';
 /// - Week 3-4: Focus 12 (Expanded Awareness)
 /// - Week 5-6: Focus 15 (No Time)
 /// - Week 7-8: Focus 21 (Other Energy Systems)
-class GatewayProtocolScreen extends StatelessWidget {
+class GatewayProtocolScreen extends ConsumerWidget {
   /// Creates a [GatewayProtocolScreen].
   const GatewayProtocolScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -52,6 +55,8 @@ class GatewayProtocolScreen extends StatelessWidget {
           _buildHeader(theme, currentWeek, completedSessions),
           const SizedBox(height: 24),
           _buildPhaseCard(
+            context,
+            ref,
             theme,
             'Week 1-2: Focus 10',
             'Body Asleep, Mind Awake',
@@ -61,6 +66,8 @@ class GatewayProtocolScreen extends StatelessWidget {
             isCurrent: currentWeek <= 2,
           ),
           _buildPhaseCard(
+            context,
+            ref,
             theme,
             'Week 3-4: Focus 12',
             'Expanded Awareness',
@@ -70,6 +77,8 @@ class GatewayProtocolScreen extends StatelessWidget {
             isCurrent: currentWeek >= 3 && currentWeek <= 4,
           ),
           _buildPhaseCard(
+            context,
+            ref,
             theme,
             'Week 5-6: Focus 15',
             'No Time',
@@ -79,6 +88,8 @@ class GatewayProtocolScreen extends StatelessWidget {
             isCurrent: currentWeek >= 5 && currentWeek <= 6,
           ),
           _buildPhaseCard(
+            context,
+            ref,
             theme,
             'Week 7-8: Focus 21',
             'Gateway State',
@@ -132,6 +143,8 @@ class GatewayProtocolScreen extends StatelessWidget {
   }
 
   Widget _buildPhaseCard(
+    BuildContext context,
+    WidgetRef ref,
     ThemeData theme,
     String title,
     String subtitle,
@@ -228,8 +241,28 @@ class GatewayProtocolScreen extends StatelessWidget {
             ),
             if (!isLocked && isCurrent)
               ElevatedButton(
-                onPressed: () {
-                  // TODO: Start session
+                onPressed: () async {
+                  // Check premium status
+                  final isPremiumAsync = ref.read(isPremiumProvider);
+                  final isPremium = await isPremiumAsync.last;
+
+                  if (!context.mounted) return;
+
+                  if (isPremium) {
+                    // TODO: Start session
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Starting $title session...'),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  } else {
+                    // Show premium upgrade dialog
+                    PremiumUpgradeDialog.show(
+                      context,
+                      feature: 'Gateway Protocol - $title',
+                    );
+                  }
                 },
                 child: const Text('START'),
               ),

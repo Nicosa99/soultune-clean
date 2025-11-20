@@ -20,6 +20,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:logger/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:soultune/shared/services/file/download_scanner_service.dart';
+import 'package:soultune/shared/services/premium/premium_providers.dart';
+import 'package:soultune/shared/widgets/premium/premium_widgets.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 
@@ -1341,51 +1343,29 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
                 child: DropdownButton<double>(
                   value: _selectedFrequency,
                   isExpanded: true,
-                  items: const [
-                    DropdownMenuItem(
-                      value: 174,
-                      child: Text('174 Hz (Pain Relief)'),
-                    ),
-                    DropdownMenuItem(
-                      value: 285,
-                      child: Text('285 Hz (Healing)'),
-                    ),
-                    DropdownMenuItem(
-                      value: 396,
-                      child: Text('396 Hz (Liberation)'),
-                    ),
-                    DropdownMenuItem(
-                      value: 417,
-                      child: Text('417 Hz (Change)'),
-                    ),
-                    DropdownMenuItem(
-                      value: 432,
-                      child: Text('432 Hz (Peace)'),
-                    ),
-                    DropdownMenuItem(
-                      value: 528,
-                      child: Text('528 Hz (Love & DNA)'),
-                    ),
-                    DropdownMenuItem(
-                      value: 639,
-                      child: Text('639 Hz (Connection)'),
-                    ),
-                    DropdownMenuItem(
-                      value: 741,
-                      child: Text('741 Hz (Awakening)'),
-                    ),
-                    DropdownMenuItem(
-                      value: 852,
-                      child: Text('852 Hz (Intuition)'),
-                    ),
-                    DropdownMenuItem(
-                      value: 963,
-                      child: Text('963 Hz (Enlightenment)'),
-                    ),
-                  ],
+                  items: _buildFrequencyDropdownItems(),
                   onChanged: (freq) async {
                     if (freq == null) return;
                     HapticFeedback.selectionClick();
+
+                    // Check if premium required for non-432 Hz frequencies
+                    if (freq != 432.0) {
+                      final isPremiumAsync = ref.read(isPremiumProvider);
+                      final isPremium = await isPremiumAsync.last;
+
+                      if (!mounted) return;
+
+                      if (!isPremium) {
+                        // Show upgrade dialog for premium frequencies
+                        PremiumUpgradeDialog.show(
+                          context,
+                          feature: '${freq.toInt()} Hz Frequency',
+                        );
+                        return;
+                      }
+                    }
+
+                    // User has access - apply frequency
                     setState(() => _selectedFrequency = freq);
                     await _stopFrequency();
                     await _injectFrequency();
@@ -1456,6 +1436,44 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
             .toList(),
       ),
     );
+  }
+
+  /// Builds frequency dropdown items with premium indicators.
+  List<DropdownMenuItem<double>> _buildFrequencyDropdownItems() {
+    final isPremiumAsync = ref.watch(isPremiumProvider);
+    final isPremium = isPremiumAsync.valueOrNull ?? false;
+
+    final frequencies = [
+      (174.0, 'Pain Relief'),
+      (285.0, 'Healing'),
+      (396.0, 'Liberation'),
+      (417.0, 'Change'),
+      (432.0, 'Peace'),
+      (528.0, 'Love & DNA'),
+      (639.0, 'Connection'),
+      (741.0, 'Awakening'),
+      (852.0, 'Intuition'),
+      (963.0, 'Enlightenment'),
+    ];
+
+    return frequencies.map((freq) {
+      final value = freq.$1;
+      final label = freq.$2;
+      final isPremiumFreq = value != 432.0;
+
+      return DropdownMenuItem<double>(
+        value: value,
+        child: Row(
+          children: [
+            Text('${value.toInt()} Hz ($label)'),
+            if (isPremiumFreq && !isPremium) ...[
+              const SizedBox(width: 8),
+              const PremiumIndicator(size: 12),
+            ],
+          ],
+        ),
+      );
+    }).toList();
   }
 
   /// Builds a quick site chip.

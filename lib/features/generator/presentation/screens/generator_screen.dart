@@ -15,6 +15,8 @@ import 'package:soultune/features/generator/presentation/screens/binaural_editor
 import 'package:soultune/features/generator/presentation/screens/custom_generator_screen.dart';
 import 'package:soultune/features/generator/presentation/screens/frequency_now_playing_screen.dart';
 import 'package:soultune/features/generator/presentation/widgets/preset_detail_sheet.dart';
+import 'package:soultune/shared/services/premium/premium_providers.dart';
+import 'package:soultune/shared/widgets/premium/premium_widgets.dart';
 
 /// Generator screen for frequency presets.
 ///
@@ -125,37 +127,69 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Binaural Editor button
+          // Binaural Editor button (PREMIUM)
           FloatingActionButton.small(
             heroTag: 'binaural',
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (context) => const BinauralEditorScreen(),
-                ),
-              );
-            },
+            onPressed: () => _handleBinauralEditorTap(),
             backgroundColor: colorScheme.secondaryContainer,
             child: const Icon(Icons.headphones),
           ),
           const SizedBox(height: 8),
-          // Custom Generator button
+          // Custom Generator button (PREMIUM)
           FloatingActionButton(
             heroTag: 'custom',
-            onPressed: () {
-              HapticFeedback.mediumImpact();
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (context) => const CustomGeneratorScreen(),
-                ),
-              );
-            },
+            onPressed: () => _handleCustomGeneratorTap(),
             child: const Icon(Icons.tune),
           ),
         ],
       ),
     );
+  }
+
+  /// Handles binaural editor button tap with premium check.
+  Future<void> _handleBinauralEditorTap() async {
+    HapticFeedback.lightImpact();
+
+    final isPremiumAsync = ref.read(isPremiumProvider);
+    final isPremium = await isPremiumAsync.last;
+
+    if (!mounted) return;
+
+    if (isPremium) {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (context) => const BinauralEditorScreen(),
+        ),
+      );
+    } else {
+      PremiumUpgradeDialog.show(
+        context,
+        feature: 'Binaural Beat Editor',
+      );
+    }
+  }
+
+  /// Handles custom generator button tap with premium check.
+  Future<void> _handleCustomGeneratorTap() async {
+    HapticFeedback.mediumImpact();
+
+    final isPremiumAsync = ref.read(isPremiumProvider);
+    final isPremium = await isPremiumAsync.last;
+
+    if (!mounted) return;
+
+    if (isPremium) {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (context) => const CustomGeneratorScreen(),
+        ),
+      );
+    } else {
+      PremiumUpgradeDialog.show(
+        context,
+        feature: 'Custom Generator',
+      );
+    }
   }
 
   /// Builds a tab with emoji and text.
@@ -190,13 +224,17 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen>
       padding: const EdgeInsets.only(top: 8, bottom: 100),
       itemBuilder: (context, index) {
         final preset = categoryPresets[index];
-        return _PresetCard(
-          preset: preset,
-          isPlaying: currentPreset?.id == preset.id && isPlaying,
-          onPlay: () => _playPreset(preset),
-          onStop: _stopPreset,
-          onFavorite: () => _toggleFavorite(preset),
-          onTap: () => _showPresetDetails(preset),
+        return ConditionalPremiumWrapper(
+          gated: preset.isPremium,
+          feature: preset.name,
+          child: _PresetCard(
+            preset: preset,
+            isPlaying: currentPreset?.id == preset.id && isPlaying,
+            onPlay: () => _playPreset(preset),
+            onStop: _stopPreset,
+            onFavorite: () => _toggleFavorite(preset),
+            onTap: () => _showPresetDetails(preset),
+          ),
         );
       },
     );
