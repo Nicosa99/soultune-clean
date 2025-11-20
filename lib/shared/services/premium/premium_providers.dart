@@ -45,8 +45,22 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:soultune/shared/services/premium/mock_premium_service.dart';
 import 'package:soultune/shared/services/premium/models/premium_status.dart';
 import 'package:soultune/shared/services/premium/premium_service.dart';
+import 'package:soultune/shared/services/premium/revenuecat_config.dart';
+import 'package:soultune/shared/services/premium/revenuecat_premium_service.dart';
 
 part 'premium_providers.g.dart';
+
+// -----------------------------------------------------------------------------
+// Configuration
+// -----------------------------------------------------------------------------
+
+/// Whether to use mock service for development.
+///
+/// **IMPORTANT:** Set to false before production release!
+///
+/// - `true`: Uses [MockPremiumService] (no real purchases, instant testing)
+/// - `false`: Uses [RevenueCatPremiumService] (real subscriptions via stores)
+const bool _useMockService = true;
 
 // -----------------------------------------------------------------------------
 // Service Provider
@@ -56,8 +70,9 @@ part 'premium_providers.g.dart';
 ///
 /// Provides access to [PremiumService] throughout the app.
 ///
-/// **Current Implementation**: [MockPremiumService] (development)
-/// **Production**: Replace with RevenueCatPremiumService
+/// **Current Implementation**: Configurable via [_useMockService]
+/// - Development: [MockPremiumService]
+/// - Production: [RevenueCatPremiumService]
 ///
 /// ## Usage
 ///
@@ -73,10 +88,16 @@ part 'premium_providers.g.dart';
 /// Use [premiumStatusProvider] or [isPremiumProvider] instead.
 @Riverpod(keepAlive: true)
 PremiumService premiumService(PremiumServiceRef ref) {
-  // TODO: Replace with production service before release
-  // return RevenueCatPremiumService();
+  // Select implementation based on configuration
+  final PremiumService service;
 
-  final service = MockPremiumService();
+  if (_useMockService) {
+    // Development: Mock service for testing
+    service = MockPremiumService();
+  } else {
+    // Production: RevenueCat for real subscriptions
+    service = RevenueCatPremiumService();
+  }
 
   // Initialize on first access
   service.initialize();
