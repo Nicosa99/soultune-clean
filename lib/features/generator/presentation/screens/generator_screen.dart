@@ -147,13 +147,11 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen>
   }
 
   /// Handles binaural editor button tap with premium check.
-  Future<void> _handleBinauralEditorTap() async {
+  void _handleBinauralEditorTap() {
     HapticFeedback.lightImpact();
 
     final isPremiumAsync = ref.read(isPremiumProvider);
-    final isPremium = await isPremiumAsync.last;
-
-    if (!mounted) return;
+    final isPremium = isPremiumAsync.valueOrNull ?? false;
 
     if (isPremium) {
       Navigator.of(context).push(
@@ -170,13 +168,11 @@ class _GeneratorScreenState extends ConsumerState<GeneratorScreen>
   }
 
   /// Handles custom generator button tap with premium check.
-  Future<void> _handleCustomGeneratorTap() async {
+  void _handleCustomGeneratorTap() {
     HapticFeedback.mediumImpact();
 
     final isPremiumAsync = ref.read(isPremiumProvider);
-    final isPremium = await isPremiumAsync.last;
-
-    if (!mounted) return;
+    final isPremium = isPremiumAsync.valueOrNull ?? false;
 
     if (isPremium) {
       Navigator.of(context).push(

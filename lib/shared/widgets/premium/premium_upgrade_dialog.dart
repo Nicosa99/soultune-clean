@@ -588,7 +588,7 @@ class _PremiumUpgradeDialogState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Purchase failed: $e'),
-            backgroundColor: theme.colorScheme.error,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -628,7 +628,7 @@ class _PremiumUpgradeDialogState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Trial activation failed: $e'),
-            backgroundColor: theme.colorScheme.error,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -672,7 +672,7 @@ class _PremiumUpgradeDialogState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Restore failed: $e'),
-            backgroundColor: theme.colorScheme.error,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }

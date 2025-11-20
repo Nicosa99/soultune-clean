@@ -241,12 +241,10 @@ class GatewayProtocolScreen extends ConsumerWidget {
             ),
             if (!isLocked && isCurrent)
               ElevatedButton(
-                onPressed: () async {
+                onPressed: () {
                   // Check premium status
                   final isPremiumAsync = ref.read(isPremiumProvider);
-                  final isPremium = await isPremiumAsync.last;
-
-                  if (!context.mounted) return;
+                  final isPremium = isPremiumAsync.valueOrNull ?? false;
 
                   if (isPremium) {
                     // TODO: Start session

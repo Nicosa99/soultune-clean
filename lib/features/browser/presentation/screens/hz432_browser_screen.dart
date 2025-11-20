@@ -1344,16 +1344,14 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
                   value: _selectedFrequency,
                   isExpanded: true,
                   items: _buildFrequencyDropdownItems(),
-                  onChanged: (freq) async {
+                  onChanged: (freq) {
                     if (freq == null) return;
                     HapticFeedback.selectionClick();
 
                     // Check if premium required for non-432 Hz frequencies
                     if (freq != 432.0) {
                       final isPremiumAsync = ref.read(isPremiumProvider);
-                      final isPremium = await isPremiumAsync.last;
-
-                      if (!mounted) return;
+                      final isPremium = isPremiumAsync.valueOrNull ?? false;
 
                       if (!isPremium) {
                         // Show upgrade dialog for premium frequencies
@@ -1367,9 +1365,9 @@ class _Hz432BrowserScreenState extends ConsumerState<Hz432BrowserScreen>
 
                     // User has access - apply frequency
                     setState(() => _selectedFrequency = freq);
-                    await _stopFrequency();
-                    await _injectFrequency();
-                    await _saveBrowserState();
+                    _stopFrequency();
+                    _injectFrequency();
+                    _saveBrowserState();
                   },
                 ),
               ),
