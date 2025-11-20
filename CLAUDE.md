@@ -179,6 +179,11 @@ lib/
     │   │   ├── metadata_service.dart            # ID3 tag extraction
     │   │   ├── soultune_audio_handler.dart      # audio_service handler implementation
     │   │   └── audio_service_integration.dart   # Integrates audio_service with player
+    │   ├── premium/                             # ⭐ Premium subscription service
+    │   │   ├── models/premium_status.dart       # PremiumStatus model (Freezed)
+    │   │   ├── premium_service.dart             # Abstract interface
+    │   │   ├── mock_premium_service.dart        # Development implementation
+    │   │   └── premium_providers.dart           # Riverpod state management
     │   ├── storage/hive_service.dart            # Local database initialization
     │   └── file/                                # File system & permissions
     │       ├── file_system_service.dart         # File scanning and selection
@@ -430,6 +435,104 @@ try {
   throw AudioException('Unexpected playback error', e);
 }
 ```
+
+### Premium Service Architecture
+
+Enterprise-grade subscription management with clean architecture principles:
+
+```dart
+// Architecture layers:
+PremiumService (Abstract Interface)
+    ↓
+MockPremiumService (Development)
+RevenueCatPremiumService (Production - TODO)
+    ↓
+Riverpod Providers (State Management)
+    ↓
+UI Components (Feature Gating)
+```
+
+**Core Components:**
+
+1. **PremiumStatus Model** (`lib/shared/services/premium/models/premium_status.dart`)
+   - Freezed immutable model
+   - Tracks tier (free/monthly/annual/lifetime)
+   - Expiration dates, grace periods
+   - Computed properties (daysRemaining, expiresSoon)
+
+2. **PremiumService Interface** (`lib/shared/services/premium/premium_service.dart`)
+   - Abstract contract for all implementations
+   - Methods: initialize(), purchaseMonthly/Annual/Lifetime(), restorePurchases()
+   - Status stream for reactive UI
+   - Platform-agnostic
+
+3. **MockPremiumService** (`lib/shared/services/premium/mock_premium_service.dart`)
+   - Development/testing implementation
+   - Simulates purchase flows (2s delay)
+   - Force premium for testing: `mockService.forcePremium()`
+   - Default: FREE tier
+
+4. **Riverpod Providers** (`lib/shared/services/premium/premium_providers.dart`)
+   - `premiumServiceProvider`: Singleton service instance
+   - `premiumStatusProvider`: Stream of status changes
+   - `isPremiumProvider`: Derived boolean for quick checks
+   - Action providers: `purchaseAnnualActionProvider`, etc.
+
+**Usage Examples:**
+
+```dart
+// Check premium status in UI
+class MyWidget extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isPremiumAsync = ref.watch(isPremiumProvider);
+
+    return isPremiumAsync.when(
+      data: (isPremium) => isPremium
+          ? PremiumFeature()
+          : UpgradeButton(),
+      loading: () => CircularProgressIndicator(),
+      error: (_, __) => UpgradeButton(), // Default to free on error
+    );
+  }
+}
+
+// Initiate purchase
+final purchaseAction = ref.read(purchaseAnnualActionProvider);
+final success = await purchaseAction();
+
+if (success) {
+  // Status automatically updates via stream
+  // UI rebuilds reactively
+}
+
+// Feature gating
+final status = ref.watch(premiumStatusProvider).value;
+if (status?.isPremium ?? false) {
+  // Grant access
+} else {
+  // Show upgrade dialog
+}
+```
+
+**Production Migration:**
+
+When ready for production, replace MockPremiumService with RevenueCat:
+
+```dart
+// lib/shared/services/premium/premium_providers.dart
+@Riverpod(keepAlive: true)
+PremiumService premiumService(PremiumServiceRef ref) {
+  // return MockPremiumService(); // Development
+  return RevenueCatPremiumService(); // Production
+}
+```
+
+**Important Notes:**
+- Always default to FREE tier on errors (fail-safe)
+- Never block UI while checking premium status
+- Use streams for reactive updates
+- Test with `MockPremiumService.forcePremium()` during development
 
 ## Testing
 
