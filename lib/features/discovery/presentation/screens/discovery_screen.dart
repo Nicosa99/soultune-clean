@@ -49,6 +49,8 @@ class DiscoveryScreen extends ConsumerWidget {
         padding: const EdgeInsets.only(bottom: 24),
         children: [
           _buildHowToUseSection(context),
+          _buildWhyItWorksSection(context),
+          _buildDualLayerSection(context),
           _buildBrowserSection(context),
           _buildFrequenciesSection(context),
           _buildCIASection(context, ref),
@@ -147,6 +149,468 @@ class DiscoveryScreen extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+
+  /// Why Frequencies Work - Scientific Explanation.
+  Widget _buildWhyItWorksSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: ExpansionTile(
+        leading: const Text('🔬', style: TextStyle(fontSize: 32)),
+        title: const Text(
+          'Why Frequencies Work',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: const Text('The neuroscience behind brain synchronization'),
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'FREQUENCY FOLLOWING RESPONSE (FFR)',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Your brain naturally synchronizes with external rhythmic '
+                  'stimuli. This phenomenon, called Frequency Following '
+                  'Response, has been documented in neuroscience since the '
+                  '1930s.\n\n'
+                  'HOW IT WORKS:\n\n'
+                  '1️⃣ AUDITORY INPUT\n'
+                  'Sound waves enter your ears and activate the auditory '
+                  'cortex.\n\n'
+                  '2️⃣ BRAINWAVE ENTRAINMENT\n'
+                  'Your neurons begin firing in sync with the sound frequency. '
+                  'This is automatic and involuntary - your brain MUST '
+                  'respond.\n\n'
+                  '3️⃣ STATE CHANGE\n'
+                  'As brainwaves shift to match the target frequency, your '
+                  'mental state changes accordingly.\n\n'
+                  'EXAMPLE: 7 Hz Theta Frequency\n'
+                  '• Left ear: 200 Hz tone\n'
+                  '• Right ear: 207 Hz tone\n'
+                  '• Brain perceives: 7 Hz difference (binaural beat)\n'
+                  '• Brainwaves entrain: Theta state (deep meditation)\n'
+                  '• Result: Reduced anxiety, enhanced creativity\n\n'
+                  'SCIENTIFIC VALIDATION:\n'
+                  '• 2019 Nature Study: FFR originates from both subcortical '
+                  'AND cortical brain regions\n'
+                  '• Measurable on EEG within 5-10 minutes\n'
+                  '• Effects persist 15-30 minutes after exposure\n'
+                  '• Cumulative benefits with regular use',
+                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: colorScheme.secondaryContainer.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: colorScheme.secondary.withOpacity(0.5),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.psychology,
+                            color: colorScheme.secondary,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'BRAINWAVE STATES',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      _buildBrainwaveItem(
+                        'Delta (0.5-4 Hz)',
+                        'Deep sleep, healing, unconscious',
+                        Colors.indigo,
+                        theme,
+                      ),
+                      const SizedBox(height: 8),
+                      _buildBrainwaveItem(
+                        'Theta (4-8 Hz)',
+                        'Meditation, creativity, REM sleep',
+                        Colors.purple,
+                        theme,
+                      ),
+                      const SizedBox(height: 8),
+                      _buildBrainwaveItem(
+                        'Alpha (8-13 Hz)',
+                        'Relaxation, flow state, present moment',
+                        Colors.blue,
+                        theme,
+                      ),
+                      const SizedBox(height: 8),
+                      _buildBrainwaveItem(
+                        'Beta (13-30 Hz)',
+                        'Active thinking, focus, alertness',
+                        Colors.green,
+                        theme,
+                      ),
+                      const SizedBox(height: 8),
+                      _buildBrainwaveItem(
+                        'Gamma (30-100 Hz)',
+                        'Peak performance, learning, insight',
+                        Colors.orange,
+                        theme,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Helper to build brainwave state item.
+  Widget _buildBrainwaveItem(
+    String name,
+    String description,
+    Color color,
+    ThemeData theme,
+  ) {
+    return Row(
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                name,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                description,
+                style: theme.textTheme.bodySmall,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Dual-Layer Audio Feature - Combining Player & Generator.
+  Widget _buildDualLayerSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: ExpansionTile(
+        leading: const Text('🎭', style: TextStyle(fontSize: 32)),
+        title: const Text(
+          'Dual-Layer Audio System',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: const Text('Play music + frequencies simultaneously'),
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        colorScheme.primaryContainer.withOpacity(0.5),
+                        colorScheme.secondaryContainer.withOpacity(0.5),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: colorScheme.primary.withOpacity(0.3),
+                      width: 2,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.auto_awesome,
+                        color: colorScheme.primary,
+                        size: 32,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'UNIQUE FEATURE',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'SoulTune is one of the few apps that lets you run '
+                        'BOTH the music player AND frequency generator at '
+                        'the same time!',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'HOW IT WORKS',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Layer 1: Music Player (432 Hz)\n'
+                  '• Your favorite songs pitch-shifted to healing frequencies\n'
+                  '• Full volume, main audio focus\n'
+                  '• Enriches music with harmonic resonance\n\n'
+                  'Layer 2: Frequency Generator (Background)\n'
+                  '• Binaural beats, Solfeggio tones, or custom frequencies\n'
+                  '• Low volume (barely audible)\n'
+                  '• Subconscious brainwave entrainment\n\n'
+                  'Combined Effect:\n'
+                  '• Music enjoyment + therapeutic frequencies\n'
+                  '• Conscious listening + subconscious reprogramming\n'
+                  '• Entertainment + meditation simultaneously',
+                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'RECOMMENDED COMBINATIONS',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _buildCombinationCard(
+                  '🎯 Deep Focus Work',
+                  '• Music: Instrumental/Lo-fi (432 Hz)\n'
+                  '• Generator: 14 Hz Beta + 40 Hz Gamma (low volume)\n'
+                  '• Result: Enhanced concentration + flow state',
+                  Icons.work,
+                  Colors.blue,
+                  theme,
+                ),
+                const SizedBox(height: 12),
+                _buildCombinationCard(
+                  '😌 Relaxation & Stress Relief',
+                  '• Music: Ambient/Chill (432 Hz)\n'
+                  '• Generator: 396 Hz (fear release) + 7 Hz Theta\n'
+                  '• Result: Deep relaxation + emotional release',
+                  Icons.spa,
+                  Colors.green,
+                  theme,
+                ),
+                const SizedBox(height: 12),
+                _buildCombinationCard(
+                  '😴 Sleep Optimization',
+                  '• Music: Nature sounds/Soft piano (432 Hz)\n'
+                  '• Generator: 285 Hz (healing) + 2 Hz Delta\n'
+                  '• Result: Faster sleep onset + deeper rest',
+                  Icons.bedtime,
+                  Colors.indigo,
+                  theme,
+                ),
+                const SizedBox(height: 12),
+                _buildCombinationCard(
+                  '🧘 Meditation Enhancement',
+                  '• Music: Tibetan bowls/Mantras (432 Hz)\n'
+                  '• Generator: 528 Hz (DNA repair) + 6 Hz Theta\n'
+                  '• Result: Deeper states + cellular healing',
+                  Icons.self_improvement,
+                  Colors.purple,
+                  theme,
+                ),
+                const SizedBox(height: 12),
+                _buildCombinationCard(
+                  '💪 Exercise & Energy',
+                  '• Music: Upbeat/Motivational (432 Hz)\n'
+                  '• Generator: 15 Hz Beta + 639 Hz (vitality)\n'
+                  '• Result: Sustained energy + enhanced performance',
+                  Icons.fitness_center,
+                  Colors.orange,
+                  theme,
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Text('💡', style: TextStyle(fontSize: 24)),
+                          const SizedBox(width: 12),
+                          Text(
+                            'PRO TIP',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Start the Frequency Generator FIRST at low volume '
+                        '(10-20%), THEN play your music at normal volume. '
+                        'This ensures the frequencies work in the background '
+                        'without interfering with your listening experience.\n\n'
+                        'Adjust generator volume until you can BARELY hear it '
+                        '- that\'s the sweet spot for subconscious entrainment!',
+                        style: theme.textTheme.bodySmall?.copyWith(height: 1.6),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: colorScheme.tertiaryContainer.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: colorScheme.tertiary.withOpacity(0.5),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.science,
+                            color: colorScheme.tertiary,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'WHY THIS WORKS',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Your brain processes audio in two ways:\n\n'
+                        '1. CONSCIOUS ATTENTION\n'
+                        'Focus on music lyrics, melody, rhythm. '
+                        'This engages your prefrontal cortex.\n\n'
+                        '2. SUBCONSCIOUS PROCESSING\n'
+                        'Background frequencies bypass conscious awareness, '
+                        'directly influencing brainwave patterns via FFR '
+                        '(Frequency Following Response).\n\n'
+                        'By combining both, you get:\n'
+                        '• Entertainment value (music)\n'
+                        '• Therapeutic effects (frequencies)\n'
+                        '• No trade-off required!\n\n'
+                        'Studies show background binaural beats remain effective '
+                        'even at volumes below conscious perception threshold.',
+                        style: theme.textTheme.bodySmall?.copyWith(height: 1.6),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Helper to build combination recommendation card.
+  Widget _buildCombinationCard(
+    String title,
+    String description,
+    IconData icon,
+    Color color,
+    ThemeData theme,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: color.withOpacity(0.3),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 24),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: theme.textTheme.bodySmall?.copyWith(height: 1.4),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -347,6 +811,54 @@ class DiscoveryScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Text('💡', style: TextStyle(fontSize: 24)),
+                          const SizedBox(width: 12),
+                          Text(
+                            'HOW TO USE SOLFEGGIO FREQUENCIES',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        '1. IDENTIFY YOUR INTENTION\n'
+                        '   • Physical healing? → 174/285 Hz\n'
+                        '   • Emotional release? → 396/417 Hz\n'
+                        '   • Love & relationships? → 528/639 Hz\n'
+                        '   • Spiritual growth? → 741/852/963 Hz\n\n'
+                        '2. LISTEN DURATION\n'
+                        '   • Minimum: 15 minutes per session\n'
+                        '   • Optimal: 20-30 minutes\n'
+                        '   • Maximum benefit: 45-60 minutes\n\n'
+                        '3. BEST PRACTICES\n'
+                        '   • Use headphones for binaural beats\n'
+                        '   • Quiet, distraction-free environment\n'
+                        '   • Meditative or relaxed state\n'
+                        '   • Daily use for cumulative effects\n\n'
+                        '4. COMBINING FREQUENCIES\n'
+                        '   You can layer multiple Solfeggio tones:\n'
+                        '   • 528 Hz (DNA healing) + 432 Hz (base pitch)\n'
+                        '   • 396 Hz (fear release) + 639 Hz (love)\n'
+                        '   Use the Generator tab to create custom blends!',
+                        style: theme.textTheme.bodySmall?.copyWith(height: 1.6),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -448,25 +960,41 @@ class DiscoveryScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Document: "Analysis and Assessment of Gateway Process"\n'
-                  'Author: Lt. Col. Wayne M. McDonnell (U.S. Army Intelligence)\n'
-                  'Date: June 9, 1983 • Length: 29 pages\n'
-                  'Declassified: 2003 • Public: CIA CREST 2017\n\n'
-                  'The Missing Page 25:\n'
-                  'Page 25 was missing from declassified document until 2021, '
-                  'sparking conspiracy theories. When found, it contained '
-                  'technical explanation of out-of-body mechanics.\n\n'
-                  'Key CIA Conclusions:\n'
+                  'HISTORICAL CONTEXT:\n\n'
+                  '1950s-60s: CIA Interest Begins\n'
+                  'CIA learns Soviet Union is researching psychic phenomena. '
+                  'Fear of "psi gap" similar to missile gap.\n\n'
+                  '1970s: Monroe Institute Founded\n'
+                  'Robert Monroe develops Hemi-Sync technology. Claims to '
+                  'induce out-of-body experiences reliably.\n\n'
+                  '1983: U.S. Army Assessment\n'
+                  'Lt. Col. Wayne McDonnell commissioned to evaluate Monroe\'s '
+                  'claims. Conclusion: "The Gateway Process is a scientifically '
+                  'valid technique."\n\n'
+                  '1995: Stargate Declassified\n'
+                  'CIA terminates remote viewing program. AIR report: '
+                  '"Statistically significant effects observed but difficult '
+                  'to operationalize."\n\n'
+                  '2003: Gateway Report Released\n'
+                  'CIA declassifies Gateway Process document with page 25 '
+                  'missing.\n\n'
+                  '2021: Page 25 Found\n'
+                  'Missing page surfaces, explaining OBE mechanics. TikTok '
+                  'explodes with 10M+ views. Gen Z discovers 40-year-old '
+                  'consciousness research.\n\n'
+                  'TODAY:\n'
+                  'SoulTune implements these protocols digitally. What cost '
+                  'the government \$20M+ is now in your pocket.\n\n'
+                  'KEY CIA CONCLUSIONS:\n'
                   '• Binaural beats induce measurable brain changes\n'
                   '• Out-of-body experiences are trainable states\n'
                   '• Remote viewing capability can be developed\n'
                   '• "Consciousness may exist beyond spacetime"\n\n'
-                  'Focus States (Monroe Institute Protocol):\n'
+                  'FOCUS STATES (Monroe Institute Protocol):\n'
                   '• Focus 10: Mind Awake/Body Asleep\n'
                   '• Focus 12: Expanded Awareness\n'
                   '• Focus 15: "No-Time" State\n'
-                  '• Focus 21: Gateway to Other Energy Systems\n\n'
-                  'Viral Impact: 10M+ views on TikTok/YouTube (2021)',
+                  '• Focus 21: Gateway to Other Energy Systems',
                   style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
                 ),
                 const SizedBox(height: 16),
@@ -575,6 +1103,76 @@ class DiscoveryScreen extends ConsumerWidget {
                     },
                   ),
                 ),
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: colorScheme.tertiaryContainer.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: colorScheme.tertiary.withOpacity(0.5),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.menu_book,
+                            color: colorScheme.tertiary,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'OBE TRAINING PROTOCOL',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'BEGINNER PROTOCOL (Weeks 1-2):\n\n'
+                        'STEP 1: Master Focus 10 (Mind Awake, Body Asleep)\n'
+                        '• Practice: 20-30 minutes daily\n'
+                        '• Goal: Maintain awareness as body falls asleep\n'
+                        '• Frequency: Theta (4-7 Hz)\n'
+                        '• Signs: Body numbness, tingling, vibrations\n\n'
+                        'STEP 2: Progress to Focus 12 (Expanded Awareness)\n'
+                        '• Practice: Once comfortable with Focus 10\n'
+                        '• Goal: Perception beyond physical senses\n'
+                        '• Frequency: High Theta (6-8 Hz)\n'
+                        '• Signs: Floating sensation, spatial awareness shifts\n\n'
+                        'INTERMEDIATE PROTOCOL (Weeks 3-4):\n\n'
+                        'STEP 3: Focus 15 ("No-Time" State)\n'
+                        '• Practice: Build on Focus 12 stability\n'
+                        '• Goal: Consciousness beyond temporal constraints\n'
+                        '• Frequency: Theta/Alpha border (7-9 Hz)\n'
+                        '• Signs: Time distortion, increased lucidity\n\n'
+                        'ADVANCED PROTOCOL (Week 5+):\n\n'
+                        'STEP 4: Focus 21 (Gateway to OBE)\n'
+                        '• Practice: After mastering previous states\n'
+                        '• Goal: Full separation from physical body\n'
+                        '• Frequency: Deep Theta (4-6 Hz)\n'
+                        '• Optimal Time: 3-6 AM (melatonin peak)\n\n'
+                        'SUCCESS TIPS:\n'
+                        '• Don\'t force it - let it happen naturally\n'
+                        '• Exit fear is normal - stay calm\n'
+                        '• Vibrations = you\'re close (don\'t panic!)\n'
+                        '• First OBE often lasts only seconds\n'
+                        '• Practice = longer, more controlled experiences\n\n'
+                        'SAFETY NOTE:\n'
+                        'OBEs are considered safe. If uncomfortable, simply '
+                        'wiggle fingers/toes to return to body immediately.',
+                        style: theme.textTheme.bodySmall?.copyWith(height: 1.6),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -650,6 +1248,71 @@ class DiscoveryScreen extends ConsumerWidget {
                         'Remote Viewing Focus 15',
                       );
                     },
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: colorScheme.primary.withOpacity(0.5),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.psychology_alt,
+                            color: colorScheme.primary,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'BEGINNER RV EXERCISE',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Try this basic remote viewing exercise:\n\n'
+                        'SETUP:\n'
+                        '1. Have a friend/partner select a random image online\n'
+                        '2. They assign it a random 6-digit coordinate (e.g., 482-916)\n'
+                        '3. They DON\'T show you the image or describe it\n\n'
+                        'PROTOCOL:\n'
+                        '1. Play "RV Training Protocol" preset (15-20 minutes)\n'
+                        '2. Enter Focus 15 state (meditative but alert)\n'
+                        '3. Write down the 6-digit coordinate\n'
+                        '4. Relax and let impressions come naturally\n'
+                        '5. Sketch/describe whatever pops into your mind\n'
+                        '   • Colors? Shapes? Textures?\n'
+                        '   • Indoor or outdoor?\n'
+                        '   • Natural or man-made?\n'
+                        '   • Hot or cold feeling?\n\n'
+                        'IMPORTANT:\n'
+                        '• Don\'t judge or censor impressions\n'
+                        '• First thought = often correct\n'
+                        '• You\'re not "seeing" - receiving gestalt impressions\n'
+                        '• 30-40% accuracy is considered successful!\n\n'
+                        'AFTER 10-15 MINUTES:\n'
+                        'Compare your impressions to the actual image. '
+                        'Look for symbolic matches, not literal ones. '
+                        'Example: "Water" could mean ocean OR swimming pool.\n\n'
+                        'ADVANCED:\n'
+                        'After 10+ successful sessions, try real coordinates '
+                        'from verified databases (coordinates.remoteviewing.org).',
+                        style: theme.textTheme.bodySmall?.copyWith(height: 1.6),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -757,9 +1420,9 @@ class DiscoveryScreen extends ConsumerWidget {
                   'Additional 2024 Research:\n\n'
                   'Nature Study (1-month daily use):\n'
                   '• Week 2: Increased auditory P300 amplitude\n'
-                  '• Week 4: Reduced P300 latency (faster processing)\n'
+                  '• Week 3: Reduced P300 latency (faster processing)\n'
                   '• Week 4: Decreased reaction time (auditory + visual)\n'
-                  '• Conclusion: Enhanced cognitive function\n\n'
+                  '• Conclusion: Enhanced cognitive function with sustained use\n\n'
                   '40 Hz Gamma Study (48 subjects):\n'
                   '• Significantly enhanced reading comprehension\n'
                   '• Improved attention span\n'
